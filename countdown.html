@@ -1,1 +1,184 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>For You ♡</title></head><body style="margin:0;background:#151221;color:#fff;font-family:system-ui"><div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div><script src="./page-runtime-hook.js"></script><script src="./site-loader.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#f2eee6">
+<title>Until Your Birthday</title>
+<script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
+<style>
+:root{--paper:#f1eee7;--ink:#141312;--muted:#888078;--line:#cfc8bc}
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.25'/%3E%3C/svg%3E")}
+.chapter{position:fixed;left:18px;top:16px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#756f68}.sound{position:fixed;right:18px;top:12px;border:0;background:transparent;color:#777069;font-size:9px;letter-spacing:.13em;text-transform:uppercase;cursor:pointer}
+.stage{height:100%;display:grid;place-items:center;padding:28px}.inner{width:min(94vw,1180px);text-align:center}.eyebrow{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8b847d;margin-bottom:24px}.title{margin:0;font-family:Georgia,serif;font-size:clamp(38px,5.8vw,78px);font-weight:400;line-height:.95;letter-spacing:-.05em}.title em{font-style:italic}.count{margin:44px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.unit{padding:30px 12px;position:relative}.unit:not(:last-child){border-right:1px solid var(--line)}.num{display:block;font-family:Georgia,serif;font-size:clamp(50px,10vw,135px);line-height:.8;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.label{display:block;margin-top:18px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#777069}.sub{margin:28px auto 0;max-width:620px;font-size:13px;line-height:1.75;color:#746d66}.preview{margin-top:12px;font:9px "Courier New",monospace;color:#9a928a;letter-spacing:.08em;text-transform:uppercase}.next{display:inline-flex;margin-top:28px;background:#151413;color:#f4f1eb;text-decoration:none;padding:12px 16px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:0;pointer-events:none;transition:.5s ease}.next.show{opacity:1;pointer-events:auto}.arrived .title{font-size:clamp(52px,8vw,108px)}.arrived .count{display:none}.arrived .sub{font-family:Georgia,serif;font-size:clamp(22px,3vw,36px);color:#403b36}.pulse{position:fixed;left:50%;top:50%;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.08);transform:translate(-50%,-50%);pointer-events:none;animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{width:74vh;height:74vh;border-color:rgba(0,0,0,.025)}}
+@media(max-width:640px){.stage{padding:22px}.count{grid-template-columns:repeat(2,1fr)}.unit:nth-child(2){border-right:0}.unit:nth-child(-n+2){border-bottom:1px solid var(--line)}.unit{padding:26px 8px}.num{font-size:clamp(58px,19vw,90px)}}
+</style>
+</head>
+<body>
+<div class="pulse"></div><div class="chapter">07 / 08 · until your birthday</div><button class="sound" id="soundBtn">sound</button>
+<main class="stage" id="stage"><div class="inner"><div class="eyebrow" id="eyebrow">one last wait</div><h1 class="title" id="title">until the day that's<br><em>actually yours.</em></h1><div class="count" id="count"><div class="unit"><span class="num" id="days">00</span><span class="label">days</span></div><div class="unit"><span class="num" id="hours">00</span><span class="label">hours</span></div><div class="unit"><span class="num" id="minutes">00</span><span class="label">minutes</span></div><div class="unit"><span class="num" id="seconds">00</span><span class="label">seconds</span></div></div><p class="sub" id="sub">No giant decorations. No dramatic speech yet. Just time moving toward one very specific person.</p><div class="preview" id="preview"></div><a class="next" id="next" href="finale.html">the final reel is ready →</a></div></main>
+<script>
+const cfg=window.SITE_CONFIG||{};const stage=document.getElementById('stage'),next=document.getElementById('next'),preview=document.getElementById('preview');let previewMode=false;let target;
+if(cfg.birthdayISO){const parsed=new Date(cfg.birthdayISO);if(!isNaN(parsed))target=parsed}
+if(!target){previewMode=true;target=new Date(Date.now()+(Number(cfg.previewCountdownHours)||24)*3600000);preview.textContent='preview mode · set birthdayISO in config.js';next.classList.add('show')}
+function pad(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
+function tick(){let diff=target-Date.now();if(diff<=0&&!previewMode){stage.classList.add('arrived');document.getElementById('eyebrow').textContent='it is officially time';document.getElementById('title').innerHTML='happy birthday,<br><em>'+(cfg.nickname||'NICKNAME')+'.</em>';document.getElementById('sub').textContent='The waiting part is over. There is one last thing I made for you.';preview.textContent='';next.classList.add('show');return}diff=Math.max(0,diff);const d=diff/86400000,h=(diff%86400000)/3600000,m=(diff%3600000)/60000,s=(diff%60000)/1000;document.getElementById('days').textContent=pad(d);document.getElementById('hours').textContent=pad(h);document.getElementById('minutes').textContent=pad(m);document.getElementById('seconds').textContent=pad(s);requestAnimationFrame(()=>setTimeout(tick,250))}tick();
+let audio=document.createElement('audio');audio.src=cfg.musicFile||'song.mp3';audio.loop=true;audio.preload='metadata';audio.style.display='none';document.body.appendChild(audio);document.getElementById('soundBtn').onclick=async()=>{if(audio.paused){try{await audio.play();sessionStorage.setItem('birthdayMusic','on');document.getElementById('soundBtn').textContent='sound on'}catch(e){document.getElementById('soundBtn').textContent='add song.mp3'}}else{audio.pause();sessionStorage.setItem('birthdayMusic','off');document.getElementById('soundBtn').textContent='sound'}};
+</script>
+<script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<style>
+#next{display:none!important}
+.bday-lock-wrap{display:grid;place-items:center;margin:28px auto 0;gap:12px}
+.bday-lock{width:94px;height:94px;border-radius:50%;border:1px solid #cfc8bc;background:rgba(255,255,255,.22);display:grid;place-items:center;transition:.35s ease;position:relative;color:#504a44}
+.bday-lock svg{width:38px;height:38px;stroke:currentColor;fill:none;stroke-width:1.6}
+.bday-lock.ready{cursor:pointer;background:#151413;color:#f4f1eb;border-color:#151413;box-shadow:0 18px 55px rgba(20,19,18,.18);transform:translateY(-2px)}
+.bday-lock.ready:hover{transform:translateY(-4px) scale(1.02)}
+.bday-lock-label{font:9px/1.4 Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase;color:#777069}
+.bday-lock-note{font:12px/1.6 Georgia,serif;color:#746d66;max-width:420px}
+.lock-modal{position:fixed;inset:0;z-index:9999;background:rgba(20,19,18,.74);backdrop-filter:blur(12px);display:none;place-items:center;padding:22px}
+.lock-modal.open{display:grid}
+.lock-card{width:min(430px,100%);background:#f1eee7;color:#151413;border:1px solid #cfc8bc;border-radius:24px;padding:28px;text-align:center;box-shadow:0 26px 80px rgba(0,0,0,.25)}
+.lock-card small{display:block;font:9px Arial,sans-serif;letter-spacing:.17em;text-transform:uppercase;color:#888078;margin-bottom:10px}
+.lock-card h2{font:400 32px/1 Georgia,serif;margin:0 0 8px}
+.lock-card p{font:13px/1.65 Georgia,serif;color:#746d66;margin:0 0 18px}
+.lock-code{width:100%;text-align:center;font:30px/1.2 'Courier New',monospace;letter-spacing:.35em;padding:14px 10px;border:1px solid #cfc8bc;background:#fffdf8;color:#151413;border-radius:13px;outline:none}
+.lock-code:focus{border-color:#70675f}
+.lock-actions{display:flex;gap:9px;margin-top:12px}.lock-actions button{flex:1;border:1px solid #cfc8bc;background:transparent;color:#151413;border-radius:12px;padding:12px;cursor:pointer;font:10px Arial,sans-serif;letter-spacing:.12em;text-transform:uppercase}.lock-actions .go{background:#151413;color:#fff;border-color:#151413}
+.lock-error{min-height:18px;margin-top:10px!important;color:#8c403d!important;font-family:Arial,sans-serif!important;font-size:11px!important}
+@media(max-width:640px){.bday-lock{width:80px;height:80px}.lock-card{padding:23px}.lock-card h2{font-size:28px}.lock-code{font-size:27px}}
+</style>
+<script>
+(async()=>{
+  const PASSWORD='200905';
+  const preview=new URLSearchParams(location.search).get('adminPreview')==='1';
+  let cfg=window.SITE_CONFIG||{};
+  try{if(window.BDAY?.fetchRemote){const r=await window.BDAY.fetchRemote();cfg={...cfg,...(r.state?.general||{})}}}catch(e){}
+  const fallback='2026-09-20T00:00:00+05:30';
+  const parsed=new Date(cfg.birthdayISO||fallback);
+  const target=isNaN(parsed)?new Date(fallback):parsed;
+  const sub=document.getElementById('sub');
+  const chapter=document.querySelector('.chapter');
+  const inner=document.querySelector('.inner');
+  if(chapter)chapter.textContent='birthday lock · first screen';
+  const oldPreview=document.getElementById('preview');if(oldPreview)oldPreview.textContent='';
+  const oldNext=document.getElementById('next');if(oldNext)oldNext.remove();
+  const wrap=document.createElement('div');wrap.className='bday-lock-wrap';
+  wrap.innerHTML='<button class="bday-lock" id="birthdayLock" type="button" aria-label="Birthday lock" disabled><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="21" width="28" height="20" rx="6"></rect><path d="M16 21v-7a8 8 0 0 1 16 0v7"></path><circle cx="24" cy="31" r="2.2"></circle></svg></button><div class="bday-lock-label" id="lockLabel">locked until her birthday</div><div class="bday-lock-note" id="lockNote">The timer is the key. When it reaches zero, the lock can finally be opened.</div>';
+  inner?.appendChild(wrap);
+  const modal=document.createElement('div');modal.className='lock-modal';modal.id='lockModal';
+  modal.innerHTML='<div class="lock-card"><small>birthday access</small><h2>come on! you know the password</h2><p>Six digits. You definitely know this one.</p><input class="lock-code" id="lockCode" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••••" aria-label="Six digit password"><div class="lock-actions"><button type="button" id="lockCancel">not yet</button><button class="go" type="button" id="lockGo">unlock</button></div><p class="lock-error" id="lockError"></p></div>';
+  document.body.appendChild(modal);
+  const button=document.getElementById('birthdayLock'),label=document.getElementById('lockLabel'),note=document.getElementById('lockNote'),code=document.getElementById('lockCode'),error=document.getElementById('lockError');
+  function ready(){return preview||Date.now()>=target.getTime()}
+  function sync(){
+    const isReady=ready();button.disabled=!isReady;button.classList.toggle('ready',isReady);
+    label.textContent=isReady?'unlock':'locked until her birthday';
+    note.textContent=isReady?'The wait is over. One tiny password check and the rest is yours.':'The timer is the key. When it reaches zero, the lock can finally be opened.';
+    if(isReady&&sub)sub.textContent='The countdown is over. The lock is ready.';
+  }
+  sync();setInterval(sync,500);
+  button.addEventListener('click',()=>{if(!ready())return;modal.classList.add('open');code.value='';error.textContent='';setTimeout(()=>code.focus(),50)});
+  document.getElementById('lockCancel').addEventListener('click',()=>modal.classList.remove('open'));
+  modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+  function submit(){
+    const v=code.value.replace(/D/g,'').slice(0,6);code.value=v;
+    if(v===PASSWORD){localStorage.setItem('birthdayUnlocked','1');location.href='entry.html';return}
+    error.textContent='come on! you know the password';
+    code.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'translateX(0)'}],{duration:260});
+    code.select();
+  }
+  code.addEventListener('input',()=>{code.value=code.value.replace(/D/g,'').slice(0,6);error.textContent=''});
+  code.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
+  document.getElementById('lockGo').addEventListener('click',submit);
+})();
+</script>
+<script src="./page-patch-runtime.js?v=phase1"></script>
+</body></html>

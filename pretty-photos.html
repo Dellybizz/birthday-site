@@ -1,1 +1,904 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>For You ♡</title></head><body style="margin:0;background:#151221;color:#fff;font-family:system-ui"><div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div><script src="./page-runtime-hook.js"></script><script src="./site-loader.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+<meta name="theme-color" content="#f9f6f5" />
+<title>Pretty Girl Archive</title>
+<style>
+  :root{
+    --bg:#f8f4f3;
+    --ink:#171315;
+    --muted:#7b7075;
+    --rose:#d96c8d;
+    --rose-soft:#f3d8e0;
+    --cream:#fffaf7;
+    --line:rgba(23,19,21,.09);
+  }
+
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    overflow-x:hidden;
+    color:var(--ink);
+    font-family:Arial,Helvetica,sans-serif;
+    background:
+      radial-gradient(circle at 12% 8%, rgba(241,207,218,.62), transparent 28%),
+      radial-gradient(circle at 92% 30%, rgba(255,255,255,.88), transparent 30%),
+      linear-gradient(180deg,#faf7f6 0%,#f7f2f1 54%,#fbf8f7 100%);
+  }
+
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    pointer-events:none;
+    z-index:0;
+    opacity:.05;
+    background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.22'/%3E%3C/svg%3E");
+    mix-blend-mode:multiply;
+  }
+
+  .progress{
+    position:fixed;
+    top:0;left:0;right:0;
+    height:2px;
+    z-index:100;
+    background:rgba(0,0,0,.04);
+  }
+  .progress span{
+    display:block;
+    width:0;height:100%;
+    background:var(--rose);
+  }
+
+  .chrome{
+    position:fixed;
+    z-index:80;
+    top:16px;left:16px;right:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    pointer-events:none;
+  }
+
+  .chip{
+    pointer-events:auto;
+    padding:8px 11px;
+    border-radius:999px;
+    border:1px solid rgba(23,19,21,.08);
+    background:rgba(255,255,255,.58);
+    backdrop-filter:blur(18px);
+    font-size:10px;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+    color:rgba(23,19,21,.55);
+  }
+
+  button.chip{font:inherit;cursor:pointer}
+
+  main{position:relative;z-index:1}
+
+  .hero{
+    min-height:100dvh;
+    position:relative;
+    display:grid;
+    place-items:center;
+    padding:90px 18px 50px;
+    overflow:hidden;
+  }
+
+  .hero-orbit{
+    position:absolute;
+    width:52vw;
+    max-width:620px;
+    aspect-ratio:1;
+    border-radius:50%;
+    border:1px solid rgba(217,108,141,.16);
+    top:50%;
+    left:50%;
+    transform:translate(-50%,-50%);
+  }
+  .hero-orbit::before,
+  .hero-orbit::after{
+    content:"";
+    position:absolute;
+    inset:10%;
+    border-radius:50%;
+    border:1px dashed rgba(217,108,141,.13);
+  }
+  .hero-orbit::after{
+    inset:22%;
+    border-style:solid;
+  }
+
+  .hero-card{
+    width:min(90vw,430px);
+    aspect-ratio:4/5;
+    border-radius:30px;
+    overflow:hidden;
+    position:absolute;
+    right:7vw;
+    bottom:9vh;
+    box-shadow:0 32px 100px rgba(70,44,53,.16);
+    transform:rotate(5deg);
+    background:linear-gradient(135deg,#ead7dc,#fff);
+  }
+
+  .hero-card .placeholder{
+    width:100%;height:100%;
+    display:grid;place-items:center;
+    text-align:center;
+    padding:30px;
+    color:#7e7377;
+    font-size:12px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .hero-card::after{
+    content:"favorite evidence";
+    position:absolute;
+    left:20px;bottom:18px;
+    background:rgba(255,255,255,.76);
+    backdrop-filter:blur(10px);
+    padding:8px 10px;
+    border-radius:999px;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.11em;
+  }
+
+  .hero-copy{
+    width:min(96vw,1100px);
+    position:relative;
+    z-index:4;
+  }
+
+  .kicker{
+    font-size:11px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    color:rgba(23,19,21,.48);
+    margin-bottom:16px;
+  }
+
+  .hero h1{
+    margin:0;
+    max-width:760px;
+    font-size:clamp(64px,13vw,160px);
+    line-height:.82;
+    letter-spacing:-.075em;
+    font-weight:900;
+    text-transform:uppercase;
+  }
+
+  .hero h1 em{
+    display:block;
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:400;
+    text-transform:none;
+    color:var(--rose);
+    letter-spacing:-.04em;
+    transform:translateX(8vw) rotate(-4deg);
+  }
+
+  .hero-sub{
+    margin-top:28px;
+    width:min(92vw,430px);
+    color:var(--muted);
+    line-height:1.65;
+    font-size:14px;
+  }
+
+  .scribble{
+    position:absolute;
+    font-family:"Segoe Script","Brush Script MT",cursive;
+    color:var(--rose);
+    font-size:clamp(20px,4vw,30px);
+    z-index:5;
+  }
+
+  .scribble.one{left:7vw;bottom:8vh;transform:rotate(-7deg)}
+  .scribble.two{right:8vw;top:13vh;transform:rotate(5deg)}
+
+  .section{
+    width:min(100%,1180px);
+    margin:auto;
+    padding:120px 18px;
+  }
+
+  .spread{
+    display:grid;
+    grid-template-columns:1.05fr .95fr;
+    gap:26px;
+    align-items:center;
+    min-height:95vh;
+  }
+
+  .stack{
+    position:relative;
+    min-height:720px;
+  }
+
+  .photo{
+    position:absolute;
+    overflow:hidden;
+    box-shadow:0 28px 80px rgba(68,43,51,.12);
+    background:linear-gradient(135deg,#ead8de,#fff);
+  }
+
+  .photo .placeholder{
+    width:100%;height:100%;
+    display:grid;place-items:center;
+    text-align:center;
+    padding:24px;
+    color:#756a6f;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .p1{
+    width:62%;
+    aspect-ratio:4/5;
+    left:4%;top:4%;
+    border-radius:24px;
+    transform:rotate(-6deg);
+  }
+
+  .p2{
+    width:54%;
+    aspect-ratio:1;
+    right:2%;top:18%;
+    border-radius:50%;
+    transform:rotate(4deg);
+  }
+
+  .p3{
+    width:47%;
+    aspect-ratio:4/5;
+    left:28%;bottom:0;
+    border-radius:20px;
+    transform:rotate(7deg);
+  }
+
+  .spread-copy{
+    position:relative;
+    padding:30px 0;
+  }
+
+  .spread-copy .tiny{
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.16em;
+    color:rgba(23,19,21,.42);
+  }
+
+  .spread-copy h2{
+    margin:16px 0 0;
+    font-size:clamp(44px,8vw,92px);
+    line-height:.9;
+    letter-spacing:-.06em;
+    text-transform:uppercase;
+  }
+
+  .spread-copy h2 em{
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:400;
+    text-transform:none;
+    color:var(--rose);
+  }
+
+  .spread-copy p{
+    margin:22px 0 0;
+    max-width:430px;
+    color:var(--muted);
+    line-height:1.7;
+    font-size:15px;
+  }
+
+  .spread-copy .hand{
+    margin-top:22px;
+    font-family:"Segoe Script","Brush Script MT",cursive;
+    color:var(--rose);
+    font-size:23px;
+    transform:rotate(-3deg);
+  }
+
+  .floating-strip{
+    margin:80px 0 120px;
+    overflow:hidden;
+    transform:rotate(-2deg);
+  }
+
+  .floating-strip-track{
+    display:flex;
+    gap:16px;
+    width:max-content;
+    animation:floatRail 26s linear infinite;
+  }
+
+  @keyframes floatRail{
+    to{transform:translateX(-50%)}
+  }
+
+  .strip-card{
+    width:240px;
+    aspect-ratio:4/5;
+    border-radius:18px;
+    background:linear-gradient(135deg,#e9d8dd,#fff);
+    box-shadow:0 20px 60px rgba(72,46,54,.09);
+    overflow:hidden;
+    flex:none;
+  }
+
+  .strip-card .placeholder{
+    width:100%;height:100%;
+    display:grid;place-items:center;
+    color:#7a6e73;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:.08em;
+  }
+
+  .quote{
+    min-height:90vh;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    padding:100px 18px;
+    position:relative;
+  }
+
+  .quote::before{
+    content:"";
+    position:absolute;
+    width:min(70vw,650px);
+    aspect-ratio:1;
+    border-radius:50%;
+    background:radial-gradient(circle,rgba(243,216,224,.66),rgba(243,216,224,0) 70%);
+    filter:blur(18px);
+  }
+
+  .quote-inner{
+    position:relative;
+    z-index:2;
+    width:min(95vw,950px);
+  }
+
+  .quote h2{
+    margin:0;
+    font-family:Georgia,"Times New Roman",serif;
+    font-size:clamp(44px,9vw,108px);
+    line-height:.98;
+    letter-spacing:-.055em;
+    font-weight:400;
+  }
+
+  .quote h2 span{color:var(--rose)}
+
+  .quote p{
+    margin:22px auto 0;
+    max-width:500px;
+    color:var(--muted);
+    line-height:1.65;
+  }
+
+  .solo{
+    min-height:100vh;
+    display:grid;
+    grid-template-columns:.8fr 1.2fr;
+    gap:40px;
+    align-items:center;
+    padding:100px 18px;
+    width:min(100%,1180px);
+    margin:auto;
+  }
+
+  .solo-copy{
+    align-self:end;
+    padding-bottom:60px;
+  }
+
+  .solo-copy .mini{
+    font-size:10px;
+    letter-spacing:.14em;
+    text-transform:uppercase;
+    color:rgba(23,19,21,.42);
+  }
+
+  .solo-copy h2{
+    font-size:clamp(42px,7vw,84px);
+    line-height:.92;
+    letter-spacing:-.055em;
+    margin:16px 0 0;
+    text-transform:uppercase;
+  }
+
+  .solo-copy p{
+    margin-top:20px;
+    color:var(--muted);
+    max-width:390px;
+    line-height:1.65;
+  }
+
+  .solo-image{
+    aspect-ratio:4/5;
+    border-radius:44px 44px 8px 44px;
+    background:linear-gradient(135deg,#e7d3d9,#fff);
+    box-shadow:0 35px 100px rgba(70,44,52,.15);
+    overflow:hidden;
+    transform:rotate(2deg);
+  }
+
+  .solo-image .placeholder{
+    width:100%;height:100%;
+    display:grid;place-items:center;
+    padding:30px;
+    text-align:center;
+    color:#74686d;
+    font-size:11px;
+    letter-spacing:.08em;
+    text-transform:uppercase;
+  }
+
+  .ending{
+    min-height:100dvh;
+    padding:120px 18px;
+    display:grid;
+    place-items:center;
+    text-align:center;
+    background:#171315;
+    color:#fff;
+    position:relative;
+    overflow:hidden;
+  }
+
+  .ending::before,
+  .ending::after{
+    content:"";
+    position:absolute;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.08);
+  }
+  .ending::before{width:70vw;aspect-ratio:1}
+  .ending::after{width:38vw;aspect-ratio:1}
+
+  .ending-inner{
+    position:relative;
+    z-index:2;
+    width:min(95vw,900px);
+  }
+
+  .ending .small{
+    font-size:10px;
+    letter-spacing:.16em;
+    text-transform:uppercase;
+    opacity:.5;
+    margin-bottom:20px;
+  }
+
+  .ending h2{
+    margin:0;
+    font-size:clamp(50px,11vw,128px);
+    line-height:.86;
+    letter-spacing:-.07em;
+    text-transform:uppercase;
+  }
+
+  .ending h2 em{
+    display:block;
+    font-family:Georgia,"Times New Roman",serif;
+    font-weight:400;
+    color:#f29ab4;
+    text-transform:none;
+  }
+
+  .ending p{
+    margin:26px auto 32px;
+    max-width:540px;
+    color:#b8afb2;
+    line-height:1.65;
+  }
+
+  .next{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:52px;
+    padding:0 20px;
+    border-radius:999px;
+    color:#171315;
+    background:white;
+    text-decoration:none;
+    font-size:11px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.1em;
+    transition:.2s ease;
+  }
+
+  .next:hover{
+    transform:translateY(-2px) scale(1.02);
+    background:#f29ab4;
+  }
+
+  .reveal{
+    opacity:0;
+    transform:translateY(30px);
+    transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1);
+  }
+  .reveal.visible{opacity:1;transform:none}
+
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:76px;
+    transform:translate(-50%,10px);
+    background:#171315;
+    color:white;
+    padding:10px 13px;
+    border-radius:999px;
+    font-size:12px;
+    opacity:0;
+    pointer-events:none;
+    transition:.25s ease;
+    z-index:90;
+  }
+  .toast.show{opacity:1;transform:translate(-50%,0)}
+
+  @media(max-width:800px){
+    .hero-card{
+      width:48vw;
+      right:-6vw;
+      bottom:8vh;
+      opacity:.9;
+    }
+    .hero-copy{align-self:start;padding-top:9vh}
+    .scribble.one{left:6vw;bottom:10vh}
+    .spread{grid-template-columns:1fr}
+    .stack{min-height:560px}
+    .spread-copy{padding-top:0}
+    .solo{grid-template-columns:1fr;padding-top:70px}
+    .solo-copy{order:2;padding-bottom:0}
+    .solo-image{order:1}
+  }
+
+  @media(max-width:520px){
+    .hero{padding-left:15px;padding-right:15px}
+    .hero h1{font-size:clamp(58px,19vw,92px)}
+    .hero-card{
+      width:52vw;
+      right:-12vw;
+      bottom:11vh;
+    }
+    .hero-orbit{width:82vw}
+    .section{padding-left:14px;padding-right:14px}
+    .stack{min-height:490px}
+    .p1{width:66%}
+    .p2{width:57%}
+    .p3{width:48%}
+    .strip-card{width:190px}
+    .solo{padding-left:14px;padding-right:14px}
+    .solo-image{border-radius:34px 34px 8px 34px}
+  }
+
+  @media(prefers-reduced-motion:reduce){
+    *{animation-duration:.01ms!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
+  }
+</style>
+  <script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
+</head>
+<body>
+
+<div class="progress"><span id="progressBar"></span></div>
+
+<div class="chrome">
+  <div class="chip">03 / 08 · pretty archive</div>
+  <button class="chip" id="musicBtn">sound on</button>
+</div>
+
+<main>
+  <section class="hero">
+    <div class="hero-orbit"></div>
+
+    <div class="hero-card">
+      <div class="placeholder">replace with favourite portrait</div>
+    </div>
+
+    <div class="scribble one" id="scribbleOne">yes, I made a whole page.</div>
+    <div class="scribble two" id="scribbleTwo">you’re welcome.</div>
+
+    <div class="hero-copy">
+      <div class="kicker">a private visual archive for <span id="nickname">NICKNAME</span></div>
+      <h1>
+        Pretty
+        <em>Girl</em>
+        Archive
+      </h1>
+      <p class="hero-sub" id="heroSub">
+        I had too many photos where you looked unfairly good,
+        so instead of choosing one, I made this.
+      </p>
+    </div>
+  </section>
+
+  <section class="section reveal">
+    <div class="spread">
+      <div class="stack">
+        <div class="photo p1"><div class="placeholder">photo 01</div></div>
+        <div class="photo p2"><div class="placeholder">photo 02</div></div>
+        <div class="photo p3"><div class="placeholder">photo 03</div></div>
+      </div>
+
+      <div class="spread-copy">
+        <div class="tiny">selected evidence</div>
+        <h2>you look <em>good</em> in literally everything.</h2>
+        <p id="spreadText">
+          One polished photo. One candid. One slightly chaotic one.
+          Somehow they all work.
+        </p>
+        <div class="hand" id="handNote">annoying talent, honestly.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="floating-strip reveal">
+    <div class="floating-strip-track">
+      <div class="strip-card"><div class="placeholder">photo 04</div></div>
+      <div class="strip-card"><div class="placeholder">photo 05</div></div>
+      <div class="strip-card"><div class="placeholder">photo 06</div></div>
+      <div class="strip-card"><div class="placeholder">photo 07</div></div>
+      <div class="strip-card"><div class="placeholder">photo 08</div></div>
+      <div class="strip-card"><div class="placeholder">photo 04</div></div>
+      <div class="strip-card"><div class="placeholder">photo 05</div></div>
+      <div class="strip-card"><div class="placeholder">photo 06</div></div>
+      <div class="strip-card"><div class="placeholder">photo 07</div></div>
+      <div class="strip-card"><div class="placeholder">photo 08</div></div>
+    </div>
+  </section>
+
+  <section class="quote reveal">
+    <div class="quote-inner">
+      <h2 id="quoteText">
+        you somehow look better in the photos you <span>weren’t even trying</span> in.
+      </h2>
+      <p id="quoteSub">
+        Which is deeply unfair to the rest of us.
+      </p>
+    </div>
+  </section>
+
+  <section class="solo reveal">
+    <div class="solo-copy">
+      <div class="mini">the one I’d keep</div>
+      <h2 id="soloTitle">not the fanciest.<br>just very you.</h2>
+      <p id="soloCopy">
+        Put the photo here that feels most like her — not necessarily the prettiest,
+        but the one that instantly feels familiar.
+      </p>
+    </div>
+
+    <div class="solo-image">
+      <div class="placeholder">replace with the most “her” photo</div>
+    </div>
+  </section>
+
+  <section class="quote reveal">
+    <div class="quote-inner">
+      <h2 id="quoteTwo">
+        okay fine.<br><span>you’re very pretty.</span>
+      </h2>
+      <p id="quoteTwoSub">
+        There. I said it. Please remain normal about this.
+      </p>
+    </div>
+  </section>
+
+  <section class="ending">
+    <div class="ending-inner">
+      <div class="small">end of chapter three</div>
+      <h2>
+        next,<br>
+        we leave
+        <em>the page.</em>
+      </h2>
+      <p>
+        The next experience is not a gallery at all.
+        The next page is not a gallery. The memories become something you can look at from my heart — or step inside.
+      </p>
+      <a class="next" href="heart.html">enter my heart →</a>
+    </div>
+  </section>
+</main>
+
+<div class="toast" id="toast"></div>
+
+<audio id="bgMusic" loop preload="metadata">
+  <source src="song.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const CONFIG = {
+  nickname: "NICKNAME",
+  heroSub:
+    "I had too many photos where you looked unfairly good, so instead of choosing one, I made this.",
+  scribbleOne:
+    "yes, I made a whole page.",
+  scribbleTwo:
+    "you’re welcome.",
+  spreadText:
+    "One polished photo. One candid. One slightly chaotic one. Somehow they all work.",
+  handNote:
+    "annoying talent, honestly.",
+  quoteText:
+    "you somehow look better in the photos you weren’t even trying in.",
+  quoteSub:
+    "Which is deeply unfair to the rest of us.",
+  soloTitle:
+    "not the fanciest. just very you.",
+  soloCopy:
+    "Put the photo here that feels most like her — not necessarily the prettiest, but the one that instantly feels familiar.",
+  quoteTwo:
+    "okay fine. you’re very pretty.",
+  quoteTwoSub:
+    "There. I said it. Please remain normal about this."
+};
+/* BIRTHDAY_CONTROL_CONFIG_PATCH */
+Object.assign(CONFIG,(window.SITE_CONFIG?.pages?.pretty)||{});
+CONFIG.nickname=window.SITE_CONFIG?.nickname||CONFIG.nickname;
+
+
+document.getElementById("nickname").textContent = CONFIG.nickname;
+document.getElementById("heroSub").textContent = CONFIG.heroSub;
+document.getElementById("scribbleOne").textContent = CONFIG.scribbleOne;
+document.getElementById("scribbleTwo").textContent = CONFIG.scribbleTwo;
+document.getElementById("spreadText").textContent = CONFIG.spreadText;
+document.getElementById("handNote").textContent = CONFIG.handNote;
+
+const q1 = document.getElementById("quoteText");
+q1.innerHTML = CONFIG.quoteText.replace("weren’t even trying","<span>weren’t even trying</span>");
+document.getElementById("quoteSub").textContent = CONFIG.quoteSub;
+
+document.getElementById("soloTitle").innerHTML = CONFIG.soloTitle.replace(". ",".<br>");
+document.getElementById("soloCopy").textContent = CONFIG.soloCopy;
+
+const q2 = document.getElementById("quoteTwo");
+const parts = CONFIG.quoteTwo.split("you’re very pretty.");
+q2.innerHTML = `${parts[0]}<span>you’re very pretty.</span>`;
+document.getElementById("quoteTwoSub").textContent = CONFIG.quoteTwoSub;
+
+const observer = new IntersectionObserver(entries=>{
+  entries.forEach(entry=>{
+    if(entry.isIntersecting) entry.target.classList.add("visible");
+  });
+},{threshold:.12});
+document.querySelectorAll(".reveal").forEach(el=>observer.observe(el));
+
+const bar = document.getElementById("progressBar");
+function updateProgress(){
+  const max = document.documentElement.scrollHeight - innerHeight;
+  bar.style.width = (max > 0 ? (scrollY/max)*100 : 0) + "%";
+}
+addEventListener("scroll",updateProgress,{passive:true});
+updateProgress();
+
+const music = document.getElementById("bgMusic");
+const musicBtn = document.getElementById("musicBtn");
+const toast = document.getElementById("toast");
+let timer;
+
+function showToast(msg){
+  clearTimeout(timer);
+  toast.textContent = msg;
+  toast.classList.add("show");
+  timer = setTimeout(()=>toast.classList.remove("show"),2200);
+}
+
+musicBtn.addEventListener("click",async()=>{
+  if(music.paused){
+    try{
+      await music.play();
+      musicBtn.textContent = "sound off";
+    }catch{
+      showToast("add song.mp3 beside this page");
+    }
+  }else{
+    music.pause();
+    musicBtn.textContent = "sound on";
+  }
+});
+</script>
+  <script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<script src="./page-patch-runtime.js?v=phase1"></script>
+</body>
+</html>

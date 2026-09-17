@@ -1,1 +1,1125 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>For You ♡</title></head><body style="margin:0;background:#151221;color:#fff;font-family:system-ui"><div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div><script src="./page-runtime-hook.js?v=12"></script><script src="./site-loader.js?v=12"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff9f7" />
+  <title>Things I Don't Want to Forget ♡</title>
+
+  <style>
+    :root{
+      --bg:#fff9f7;
+      --bg-warm:#fff4f5;
+      --paper:#fffefd;
+      --ink:#2f272a;
+      --muted:#8d7e84;
+      --soft:#f4d9e0;
+      --soft-2:#f8e9ed;
+      --pink:#d57f98;
+      --pink-deep:#b95f79;
+      --line:rgba(86,57,67,.10);
+      --shadow:0 28px 90px rgba(94,58,70,.10);
+    }
+
+    *{box-sizing:border-box}
+    html{scroll-behavior:smooth}
+
+    body{
+      margin:0;
+      color:var(--ink);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      background:
+        radial-gradient(circle at 12% 3%, rgba(246,216,224,.58), transparent 26%),
+        radial-gradient(circle at 88% 20%, rgba(255,255,255,.9), transparent 22%),
+        linear-gradient(180deg,var(--bg),var(--bg-warm) 47%,var(--bg));
+      overflow-x:hidden;
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.07;
+      z-index:0;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 170 170' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='.20'/%3E%3C/svg%3E");
+      mix-blend-mode:multiply;
+    }
+
+    .progress{
+      position:fixed;
+      top:0;left:0;right:0;
+      height:2px;
+      background:rgba(185,95,121,.08);
+      z-index:80;
+    }
+
+    .progress > div{
+      height:100%;
+      width:0;
+      background:linear-gradient(90deg,var(--soft),var(--pink-deep));
+      transition:width .08s linear;
+    }
+
+    .floating-ui{
+      position:fixed;
+      left:14px;
+      right:14px;
+      bottom:max(13px,env(safe-area-inset-bottom));
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      z-index:60;
+      pointer-events:none;
+    }
+
+    .pill{
+      pointer-events:auto;
+      border:1px solid rgba(86,57,67,.08);
+      background:rgba(255,255,255,.68);
+      backdrop-filter:blur(15px);
+      color:rgba(70,50,58,.5);
+      border-radius:999px;
+      padding:8px 11px;
+      font-size:11px;
+      box-shadow:0 8px 30px rgba(80,52,61,.05);
+    }
+
+    button.pill{font:inherit;cursor:pointer}
+    .chapter{letter-spacing:.08em;text-transform:uppercase}
+
+    main{position:relative;z-index:1}
+
+    .hero{
+      min-height:100dvh;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:90px 24px 84px;
+    }
+
+    .hero-inner{width:min(94vw,780px)}
+
+    .private-line{
+      font-family:"Segoe Script","Snell Roundhand","Brush Script MT",cursive;
+      font-size:clamp(22px,5vw,30px);
+      color:var(--pink-deep);
+      margin-bottom:14px;
+      transform:rotate(-1deg);
+    }
+
+    .chapter-kicker{
+      font-size:11px;
+      letter-spacing:.15em;
+      text-transform:uppercase;
+      color:rgba(68,48,56,.43);
+      margin-bottom:22px;
+    }
+
+    .hero h1{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(42px,9vw,78px);
+      line-height:1.03;
+      letter-spacing:-.045em;
+      font-weight:500;
+    }
+
+    .hero p{
+      margin:28px auto 0;
+      width:min(100%,590px);
+      font-size:clamp(16px,3.6vw,19px);
+      line-height:1.85;
+      color:var(--muted);
+    }
+
+    .hero .ps{
+      margin-top:20px;
+      font-size:13px;
+      color:rgba(68,48,56,.45);
+      font-style:italic;
+    }
+
+    .scroll-cue{
+      margin-top:44px;
+      font-size:12px;
+      color:rgba(68,48,56,.38);
+      animation:bob 2.3s ease-in-out infinite;
+    }
+
+    @keyframes bob{
+      0%,100%{transform:translateY(0)}
+      50%{transform:translateY(7px)}
+    }
+
+    .story{
+      width:min(100%,1080px);
+      margin:auto;
+      padding:0 20px 130px;
+    }
+
+    .beat{
+      min-height:88vh;
+      display:grid;
+      align-items:center;
+      margin:0 auto 90px;
+      opacity:0;
+      transform:translateY(34px);
+      transition:opacity .9s ease,transform .9s cubic-bezier(.2,.7,.2,1);
+    }
+
+    .beat.visible{opacity:1;transform:none}
+
+    .beat-inner{
+      width:100%;
+      display:grid;
+      grid-template-columns:minmax(0,1.12fr) minmax(280px,.88fr);
+      gap:clamp(28px,6vw,78px);
+      align-items:center;
+    }
+
+    .beat.reverse .visual{order:2}
+    .beat.reverse .copy{order:1}
+
+    .visual{position:relative}
+
+    .photo{
+      position:relative;
+      width:100%;
+      overflow:hidden;
+      border-radius:28px;
+      background:linear-gradient(135deg,rgba(244,217,224,.72),rgba(255,255,255,.92));
+      box-shadow:var(--shadow);
+      border:1px solid rgba(86,57,67,.07);
+    }
+
+    .photo.portrait{aspect-ratio:4/5}
+    .photo.landscape{aspect-ratio:16/11}
+
+    .photo-placeholder{
+      width:100%;
+      height:100%;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:30px;
+      color:rgba(69,49,57,.34);
+      font-size:13px;
+    }
+
+    .photo img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+      display:block;
+    }
+
+    .scribble{
+      position:absolute;
+      z-index:3;
+      font-family:"Segoe Script","Snell Roundhand","Brush Script MT",cursive;
+      color:var(--pink-deep);
+      font-size:clamp(22px,4.5vw,34px);
+      line-height:1.15;
+      pointer-events:none;
+      text-shadow:0 3px 16px rgba(255,255,255,.55);
+    }
+
+    .scribble.top{top:-20px;right:12px;transform:rotate(3deg)}
+    .scribble.bottom{bottom:-20px;left:16px;transform:rotate(-3deg)}
+
+    .mini-tag{
+      position:absolute;
+      top:14px;
+      left:14px;
+      z-index:4;
+      background:rgba(255,255,255,.74);
+      border:1px solid rgba(86,57,67,.08);
+      border-radius:999px;
+      padding:7px 10px;
+      font-size:10px;
+      color:rgba(67,48,56,.55);
+      backdrop-filter:blur(10px);
+    }
+
+    .copy{max-width:520px}
+
+    .index{
+      font-size:11px;
+      letter-spacing:.13em;
+      text-transform:uppercase;
+      color:rgba(68,48,56,.4);
+      margin-bottom:14px;
+    }
+
+    .copy h2{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(31px,5vw,46px);
+      line-height:1.13;
+      font-weight:500;
+      letter-spacing:-.025em;
+    }
+
+    .meta{
+      margin-top:14px;
+      color:rgba(68,48,56,.45);
+      font-size:12px;
+      letter-spacing:.04em;
+    }
+
+    .caption{
+      margin:20px 0 0;
+      color:var(--muted);
+      font-size:16px;
+      line-height:1.8;
+    }
+
+    .expand{
+      margin-top:18px;
+      border:0;
+      background:transparent;
+      padding:0;
+      color:var(--pink-deep);
+      font:inherit;
+      font-weight:650;
+      cursor:pointer;
+    }
+
+    .hidden-note{
+      margin-top:0;
+      max-height:0;
+      overflow:hidden;
+      opacity:0;
+      color:var(--ink);
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:17px;
+      line-height:1.7;
+      transition:max-height .5s ease,opacity .35s ease,margin .35s ease;
+    }
+
+    .hidden-note.open{
+      max-height:300px;
+      opacity:1;
+      margin-top:14px;
+    }
+
+    .quote-beat{
+      min-height:92vh;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:80px 18px;
+      margin:0 auto 70px;
+      opacity:0;
+      transform:translateY(30px);
+      transition:.9s ease;
+    }
+
+    .quote-beat.visible{opacity:1;transform:none}
+
+    .quote-wrap{width:min(94vw,820px)}
+
+    .quote{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(34px,7vw,62px);
+      line-height:1.22;
+      letter-spacing:-.035em;
+      font-weight:500;
+    }
+
+    .quote-note{
+      margin-top:22px;
+      color:var(--muted);
+      font-size:13px;
+      line-height:1.65;
+    }
+
+    .secret-note{
+      margin:28px auto 0;
+      width:min(100%,500px);
+      border-top:1px solid rgba(86,57,67,.08);
+      padding-top:20px;
+      font-family:"Segoe Script","Snell Roundhand","Brush Script MT",cursive;
+      font-size:22px;
+      color:var(--pink-deep);
+    }
+
+    .chat-beat{
+      min-height:90vh;
+      display:grid;
+      grid-template-columns:minmax(260px,.8fr) minmax(0,1.2fr);
+      gap:clamp(30px,6vw,74px);
+      align-items:center;
+      margin:0 auto 100px;
+      opacity:0;
+      transform:translateY(30px);
+      transition:.9s ease;
+    }
+
+    .chat-beat.visible{opacity:1;transform:none}
+
+    .chat-copy h2{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(31px,5vw,46px);
+      line-height:1.14;
+      font-weight:500;
+    }
+
+    .phone{
+      width:min(100%,430px);
+      margin-left:auto;
+      border-radius:34px;
+      padding:15px;
+      background:rgba(255,255,255,.72);
+      border:1px solid rgba(86,57,67,.08);
+      box-shadow:var(--shadow);
+      backdrop-filter:blur(14px);
+    }
+
+    .phone-inner{
+      border-radius:25px;
+      background:#fffdfd;
+      overflow:hidden;
+      border:1px solid rgba(86,57,67,.06);
+    }
+
+    .chat-top{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:14px 14px 12px;
+      border-bottom:1px solid rgba(86,57,67,.07);
+    }
+
+    .avatar{
+      width:34px;height:34px;border-radius:50%;
+      display:grid;place-items:center;
+      background:var(--soft);
+      color:var(--pink-deep);
+      font-family:Georgia,serif;
+    }
+
+    .chat-name{font-weight:700;font-size:13px}
+    .chat-status{font-size:10px;color:var(--muted);margin-top:2px}
+    .messages{padding:10px 12px 14px}
+
+    .bubble{
+      max-width:83%;
+      width:max-content;
+      padding:10px 12px;
+      margin-top:8px;
+      border-radius:17px;
+      line-height:1.45;
+      font-size:13px;
+    }
+
+    .bubble.her{
+      background:#f5f1f2;
+      border-bottom-left-radius:6px;
+    }
+
+    .bubble.me{
+      background:#f6dfe6;
+      margin-left:auto;
+      border-bottom-right-radius:6px;
+    }
+
+    .aside-note{
+      margin-top:14px;
+      font-family:"Segoe Script","Snell Roundhand","Brush Script MT",cursive;
+      color:var(--pink-deep);
+      font-size:23px;
+      transform:rotate(-2deg);
+    }
+
+    .collage-beat{
+      min-height:96vh;
+      display:grid;
+      align-items:center;
+      margin:0 auto 100px;
+      opacity:0;
+      transform:translateY(28px);
+      transition:.9s ease;
+    }
+
+    .collage-beat.visible{opacity:1;transform:none}
+
+    .collage-head{
+      width:min(100%,640px);
+      margin:0 auto 34px;
+      text-align:center;
+    }
+
+    .collage-head h2{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(32px,5vw,48px);
+      font-weight:500;
+      line-height:1.15;
+    }
+
+    .collage{
+      width:min(100%,820px);
+      margin:auto;
+      display:grid;
+      grid-template-columns:1.05fr .95fr;
+      gap:14px;
+    }
+
+    .tile{
+      overflow:hidden;
+      border-radius:24px;
+      background:linear-gradient(135deg,var(--soft-2),white);
+      box-shadow:var(--shadow);
+      border:1px solid rgba(86,57,67,.06);
+      display:grid;
+      place-items:center;
+      min-height:260px;
+      color:rgba(69,49,57,.32);
+      font-size:13px;
+      text-align:center;
+      padding:24px;
+    }
+
+    .tile img{
+      width:100%;
+      height:100%;
+      object-fit:cover;
+    }
+
+    .tile.tall{grid-row:span 2;min-height:550px}
+    .tile.short{min-height:265px}
+
+    .bridge{
+      min-height:62vh;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:60px 18px;
+      opacity:0;
+      transform:translateY(24px);
+      transition:.8s ease;
+    }
+
+    .bridge.visible{opacity:1;transform:none}
+
+    .bridge p{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(28px,6vw,48px);
+      line-height:1.25;
+    }
+
+    .bridge span{
+      display:block;
+      margin-top:12px;
+      font-family:Inter,ui-sans-serif,system-ui,sans-serif;
+      font-size:12px;
+      color:var(--muted);
+    }
+
+    .ending{
+      min-height:98dvh;
+      display:grid;
+      place-items:center;
+      text-align:center;
+      padding:90px 24px 130px;
+    }
+
+    .ending-inner{width:min(92vw,680px)}
+
+    .ending h2{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(40px,8vw,66px);
+      line-height:1.08;
+      font-weight:500;
+      letter-spacing:-.035em;
+    }
+
+    .ending p{
+      margin:24px auto 34px;
+      max-width:520px;
+      color:var(--muted);
+      line-height:1.75;
+      font-size:16px;
+    }
+
+    .next{
+      display:inline-flex;
+      align-items:center;
+      gap:8px;
+      border-radius:999px;
+      padding:14px 19px;
+      background:rgba(255,255,255,.7);
+      color:var(--pink-deep);
+      text-decoration:none;
+      font-weight:700;
+      border:1px solid rgba(86,57,67,.08);
+      box-shadow:0 14px 40px rgba(94,58,70,.08);
+      backdrop-filter:blur(12px);
+      transition:.25s ease;
+    }
+
+    .next:hover{transform:translateY(-2px)}
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:72px;
+      z-index:100;
+      transform:translate(-50%,10px);
+      background:rgba(47,39,42,.9);
+      color:white;
+      padding:10px 14px;
+      border-radius:999px;
+      font-size:13px;
+      opacity:0;
+      pointer-events:none;
+      transition:.28s ease;
+      max-width:88vw;
+      white-space:nowrap;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    @media (max-width:760px){
+      .story{padding-left:16px;padding-right:16px}
+      .beat{min-height:auto;margin-bottom:118px}
+      .beat-inner{grid-template-columns:1fr;gap:32px}
+      .beat.reverse .visual,.beat.reverse .copy{order:initial}
+      .copy{max-width:100%}
+      .chat-beat{min-height:auto;grid-template-columns:1fr;margin-bottom:120px}
+      .phone{margin:0 auto}
+      .chat-copy{text-align:center}
+      .collage{grid-template-columns:1fr 1fr}
+      .tile.tall{grid-column:1/-1;grid-row:auto;min-height:420px}
+      .tile.short{min-height:220px}
+    }
+
+    @media (max-width:520px){
+      .collage{gap:9px}
+      .tile{border-radius:18px;padding:14px}
+      .tile.short{min-height:180px}
+      .tile.tall{min-height:360px}
+      .photo{border-radius:22px}
+      .floating-ui{left:12px;right:12px}
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{
+        scroll-behavior:auto!important;
+        animation-duration:.01ms!important;
+        transition-duration:.01ms!important;
+      }
+    }
+  </style>
+  <script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
+</head>
+
+<body>
+  <div class="progress"><div id="progressBar"></div></div>
+
+  <div class="floating-ui">
+    <button class="pill" id="musicBtn">♫ soundtrack</button>
+    <div class="pill chapter">02 / 08 · memories</div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <main>
+    <section class="hero">
+      <div class="hero-inner">
+        <div class="private-line" id="privateLine">for NICKNAME, obviously.</div>
+        <div class="chapter-kicker">chapter two · memories</div>
+        <h1>things I don’t want to forget.</h1>
+        <p id="heroText">
+          I know we have way too many random moments, stupid conversations and pictures that probably make no sense to anyone else.
+          These are just a few that stayed with me.
+        </p>
+        <div class="ps" id="heroPS">p.s. no, I did not choose the embarrassing ones. yet.</div>
+        <div class="scroll-cue">scroll slowly ↓</div>
+      </div>
+    </section>
+
+    <section class="story">
+
+      <article class="beat">
+        <div class="beat-inner">
+          <div class="visual">
+            <div class="photo portrait">
+              <div class="mini-tag" id="tag1">one of my favourites</div>
+              <div class="photo-placeholder">replace with your actual photo</div>
+            </div>
+            <div class="scribble bottom" id="scribble1">you looked too happy here ♡</div>
+          </div>
+
+          <div class="copy">
+            <div class="index">memory 01</div>
+            <h2 id="m1Title">I still remember this day.</h2>
+            <div class="meta" id="m1Meta">DATE / PLACE — optional</div>
+            <p class="caption" id="m1Caption">
+              Not because anything huge happened. I just remember being really happy that day.
+            </p>
+            <button class="expand">why I remember this ↓</button>
+            <div class="hidden-note" id="m1Note">
+              Replace this with the real reason this memory stayed with you.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <section class="quote-beat">
+        <div class="quote-wrap">
+          <p class="quote" id="tinyMemory">
+            “that one tiny thing you did that you probably don’t even remember.”
+          </p>
+          <div class="quote-note">you probably forgot. I didn’t.</div>
+          <div class="secret-note" id="tinyMemoryNote">this is exactly the kind of thing I notice.</div>
+        </div>
+      </section>
+
+      <article class="chat-beat">
+        <div class="chat-copy">
+          <div class="index">kept from the archives</div>
+          <h2 id="chatTitle">the kind of conversation only we could have.</h2>
+          <p class="caption" id="chatCaption">
+            I genuinely don’t know how we get from normal conversations to this.
+          </p>
+          <div class="aside-note" id="chatAside">and somehow this is normal for us</div>
+        </div>
+
+        <div class="phone">
+          <div class="phone-inner">
+            <div class="chat-top">
+              <div class="avatar">♡</div>
+              <div>
+                <div class="chat-name" id="chatName">HER NAME</div>
+                <div class="chat-status" id="chatStatus">certified yapper</div>
+              </div>
+            </div>
+            <div class="messages">
+              <div class="bubble her" id="msg1">replace this with something she actually said</div>
+              <div class="bubble me" id="msg2">replace this with your reply</div>
+              <div class="bubble her" id="msg3">and then the unnecessary follow-up</div>
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <section class="bridge">
+        <div>
+          <p id="bridge1">some of my favourite memories with you are the completely ordinary ones.</p>
+          <span id="bridge1Sub">the ones we probably didn’t even realise we were making.</span>
+        </div>
+      </section>
+
+      <article class="beat reverse">
+        <div class="beat-inner">
+          <div class="visual">
+            <div class="photo landscape">
+              <div class="mini-tag" id="tag2">very random, very us</div>
+              <div class="photo-placeholder">replace with an ordinary-day photo</div>
+            </div>
+            <div class="scribble top" id="scribble2">nothing special. still special.</div>
+          </div>
+
+          <div class="copy">
+            <div class="index">memory 04</div>
+            <h2 id="m2Title">the completely ordinary one.</h2>
+            <p class="caption" id="m2Caption">
+              Nothing important happened here. I just remember feeling comfortable.
+            </p>
+            <button class="expand">why this one stayed ↓</button>
+            <div class="hidden-note" id="m2Note">
+              Add the detail here that made this ordinary day feel special to you.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <article class="collage-beat">
+        <div>
+          <div class="collage-head">
+            <div class="index">memory 05</div>
+            <h2 id="collageTitle">proof that we cannot take one normal picture.</h2>
+            <p class="caption" id="collageCaption" style="margin-left:auto;margin-right:auto">
+              One decent photo, one chaotic one, and one that should probably never see daylight.
+            </p>
+          </div>
+
+          <div class="collage">
+            <div class="tile tall">photo 1</div>
+            <div class="tile short">photo 2</div>
+            <div class="tile short">photo 3</div>
+          </div>
+        </div>
+      </article>
+
+      <section class="quote-beat">
+        <div class="quote-wrap">
+          <p class="quote" id="favoritePersonLine">
+            “somewhere in between all the stupid conversations, you became one of my favourite people.”
+          </p>
+          <div class="quote-note" id="favoritePersonSub">annoying, but true.</div>
+        </div>
+      </section>
+
+      <section class="bridge">
+        <div>
+          <p id="skipLine">I told you not to skip anything.</p>
+          <span id="skipSub">yes, this is me checking.</span>
+        </div>
+      </section>
+
+      <article class="beat">
+        <div class="beat-inner">
+          <div class="visual">
+            <div class="photo portrait">
+              <div class="mini-tag" id="tag3">this one matters</div>
+              <div class="photo-placeholder">replace with one genuinely important photo</div>
+            </div>
+            <div class="scribble bottom" id="scribble3">this one stays.</div>
+          </div>
+
+          <div class="copy">
+            <div class="index">one of the important ones</div>
+            <h2 id="m3Title">this one deserved its own space.</h2>
+            <p class="caption" id="m3Caption">
+              I don’t really need to say much here. You probably already know why.
+            </p>
+            <button class="expand">why this one matters ↓</button>
+            <div class="hidden-note" id="m3Note">
+              Put the real story here — something sincere, specific, and private.
+            </div>
+          </div>
+        </div>
+      </article>
+
+      <section class="quote-beat">
+        <div class="quote-wrap">
+          <p class="quote" id="finalMemoryLine">“there are a lot more.”</p>
+          <div class="quote-note" id="finalMemorySub">
+            these are just the ones I wanted to keep somewhere permanent.
+          </div>
+          <div class="secret-note" id="finalSecret">and yes, I remember more than you think.</div>
+        </div>
+      </section>
+    </section>
+
+    <section class="ending">
+      <div class="ending-inner">
+        <div class="chapter-kicker">end of chapter two</div>
+        <h2 id="endingTitle">okay, enough nostalgia.</h2>
+        <p id="endingText">
+          Next is something much less serious: a completely unnecessary amount of evidence that you are very, very pretty.
+        </p>
+        <a class="next" id="nextLink" href="pretty-photos.html">
+          next: the pretty girl archive →
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <audio id="bgMusic" loop preload="metadata">
+    <source src="song.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    /*
+      PERSONALISE THIS SECTION ONLY
+      --------------------------------------
+      Put your real details here and the page updates automatically.
+    */
+    const CONFIG = {
+      name: "HER NAME",
+      nickname: "NICKNAME",
+
+      heroText:
+        "I know we have way too many random moments, stupid conversations and pictures that probably make no sense to anyone else. These are just a few that stayed with me.",
+      heroPS:
+        "p.s. no, I did not choose the embarrassing ones. yet.",
+
+      memory1: {
+        title: "I still remember this day.",
+        meta: "DATE / PLACE — optional",
+        caption: "Not because anything huge happened. I just remember being really happy that day.",
+        note: "Write the real reason here — the tiny detail that made this day stay with you.",
+        tag: "one of my favourites",
+        scribble: "you looked too happy here ♡"
+      },
+
+      tinyMemory:
+        "that one tiny thing you did that you probably don’t even remember.",
+      tinyMemoryNote:
+        "this is exactly the kind of thing I notice.",
+
+      chat: {
+        title: "the kind of conversation only we could have.",
+        caption: "I genuinely don’t know how we get from normal conversations to this.",
+        status: "certified yapper",
+        aside: "and somehow this is normal for us",
+        her1: "replace this with something she actually said",
+        me1: "replace this with your reply",
+        her2: "and then the unnecessary follow-up"
+      },
+
+      bridge1:
+        "some of my favourite memories with you are the completely ordinary ones.",
+      bridge1Sub:
+        "the ones we probably didn’t even realise we were making.",
+
+      memory2: {
+        title: "the completely ordinary one.",
+        caption: "Nothing important happened here. I just remember feeling comfortable.",
+        note: "Add the detail here that made this ordinary day feel special to you.",
+        tag: "very random, very us",
+        scribble: "nothing special. still special."
+      },
+
+      collageTitle:
+        "proof that we cannot take one normal picture.",
+      collageCaption:
+        "One decent photo, one chaotic one, and one that should probably never see daylight.",
+
+      favoritePersonLine:
+        "somewhere in between all the stupid conversations, you became one of my favourite people.",
+      favoritePersonSub:
+        "annoying, but true.",
+
+      memory3: {
+        title: "this one deserved its own space.",
+        caption: "I don’t really need to say much here. You probably already know why.",
+        note: "Put the real story here — something sincere, specific, and private.",
+        tag: "this one matters",
+        scribble: "this one stays."
+      },
+
+      finalMemoryLine:
+        "there are a lot more.",
+      finalMemorySub:
+        "these are just the ones I wanted to keep somewhere permanent.",
+      finalSecret:
+        "and yes, I remember more than you think.",
+
+      endingTitle:
+        "okay, enough nostalgia.",
+      endingText:
+        "Next is something much less serious: a completely unnecessary amount of evidence that you are very, very pretty.",
+
+      nextPage: "pretty-photos.html"
+    };
+/* BIRTHDAY_CONTROL_CONFIG_PATCH */
+    Object.assign(CONFIG,(window.SITE_CONFIG?.pages?.memories)||{});
+    CONFIG.name=window.SITE_CONFIG?.name||CONFIG.name;
+    CONFIG.nickname=window.SITE_CONFIG?.nickname||CONFIG.nickname;
+
+
+    // Apply config
+    document.getElementById("privateLine").textContent = `for ${CONFIG.nickname}, obviously.`;
+    document.getElementById("heroText").textContent = CONFIG.heroText;
+    document.getElementById("heroPS").textContent = CONFIG.heroPS;
+
+    document.getElementById("m1Title").textContent = CONFIG.memory1.title;
+    document.getElementById("m1Meta").textContent = CONFIG.memory1.meta;
+    document.getElementById("m1Caption").textContent = CONFIG.memory1.caption;
+    document.getElementById("m1Note").textContent = CONFIG.memory1.note;
+    document.getElementById("tag1").textContent = CONFIG.memory1.tag;
+    document.getElementById("scribble1").textContent = CONFIG.memory1.scribble;
+
+    document.getElementById("tinyMemory").textContent = `“${CONFIG.tinyMemory}”`;
+    document.getElementById("tinyMemoryNote").textContent = CONFIG.tinyMemoryNote;
+
+    document.getElementById("chatTitle").textContent = CONFIG.chat.title;
+    document.getElementById("chatCaption").textContent = CONFIG.chat.caption;
+    document.getElementById("chatAside").textContent = CONFIG.chat.aside;
+    document.getElementById("chatName").textContent = CONFIG.name;
+    document.getElementById("chatStatus").textContent = CONFIG.chat.status;
+    document.getElementById("msg1").textContent = CONFIG.chat.her1;
+    document.getElementById("msg2").textContent = CONFIG.chat.me1;
+    document.getElementById("msg3").textContent = CONFIG.chat.her2;
+
+    document.getElementById("bridge1").textContent = CONFIG.bridge1;
+    document.getElementById("bridge1Sub").textContent = CONFIG.bridge1Sub;
+
+    document.getElementById("m2Title").textContent = CONFIG.memory2.title;
+    document.getElementById("m2Caption").textContent = CONFIG.memory2.caption;
+    document.getElementById("m2Note").textContent = CONFIG.memory2.note;
+    document.getElementById("tag2").textContent = CONFIG.memory2.tag;
+    document.getElementById("scribble2").textContent = CONFIG.memory2.scribble;
+
+    document.getElementById("collageTitle").textContent = CONFIG.collageTitle;
+    document.getElementById("collageCaption").textContent = CONFIG.collageCaption;
+
+    document.getElementById("favoritePersonLine").textContent = `“${CONFIG.favoritePersonLine}”`;
+    document.getElementById("favoritePersonSub").textContent = CONFIG.favoritePersonSub;
+
+    document.getElementById("m3Title").textContent = CONFIG.memory3.title;
+    document.getElementById("m3Caption").textContent = CONFIG.memory3.caption;
+    document.getElementById("m3Note").textContent = CONFIG.memory3.note;
+    document.getElementById("tag3").textContent = CONFIG.memory3.tag;
+    document.getElementById("scribble3").textContent = CONFIG.memory3.scribble;
+
+    document.getElementById("finalMemoryLine").textContent = `“${CONFIG.finalMemoryLine}”`;
+    document.getElementById("finalMemorySub").textContent = CONFIG.finalMemorySub;
+    document.getElementById("finalSecret").textContent = CONFIG.finalSecret;
+
+    document.getElementById("endingTitle").textContent = CONFIG.endingTitle;
+    document.getElementById("endingText").textContent = CONFIG.endingText;
+    document.getElementById("nextLink").href = CONFIG.nextPage;
+
+    // Reveal sections
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if(entry.isIntersecting) entry.target.classList.add("visible");
+      });
+    }, { threshold: 0.14 });
+
+    document.querySelectorAll(".beat,.quote-beat,.chat-beat,.collage-beat,.bridge")
+      .forEach(el => observer.observe(el));
+
+    // Expand personal notes
+    document.querySelectorAll(".expand").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const note = btn.nextElementSibling;
+        const open = note.classList.toggle("open");
+        btn.textContent = open ? "hide this ↑" : "why I remember this ↓";
+      });
+    });
+
+    // Scroll progress
+    const progressBar = document.getElementById("progressBar");
+    function updateProgress(){
+      const max = document.documentElement.scrollHeight - window.innerHeight;
+      const pct = max > 0 ? (window.scrollY / max) * 100 : 0;
+      progressBar.style.width = pct + "%";
+    }
+    window.addEventListener("scroll", updateProgress, { passive:true });
+    updateProgress();
+
+    // Soundtrack
+    const music = document.getElementById("bgMusic");
+    const musicBtn = document.getElementById("musicBtn");
+    const toast = document.getElementById("toast");
+    let toastTimer;
+
+    function showToast(message){
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("show");
+      toastTimer = setTimeout(() => toast.classList.remove("show"), 2200);
+    }
+
+    musicBtn.addEventListener("click", async () => {
+      if(music.paused){
+        try{
+          await music.play();
+          musicBtn.textContent = "❚❚ soundtrack";
+          sessionStorage.setItem("birthdayMusic","on");
+        }catch{
+          showToast("Add song.mp3 beside this page ♫");
+        }
+      }else{
+        music.pause();
+        musicBtn.textContent = "♫ soundtrack";
+        sessionStorage.setItem("birthdayMusic","off");
+      }
+    });
+  </script>
+  <script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<script src="./page-patch-runtime.js?v=phase1"></script>
+</body>
+</html>

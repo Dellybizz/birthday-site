@@ -1,1 +1,1346 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>For You ♡</title></head><body style="margin:0;background:#151221;color:#fff;font-family:system-ui"><div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div><script src="./page-runtime-hook.js?v=15"></script><script src="./site-loader.js?v=15"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="theme-color" content="#1b0814" />
+<title>In My Heart</title>
+<style>
+:root{
+  --bg:#160811;
+  --bg2:#24101d;
+  --bg3:#341425;
+  --text:#fff6fb;
+  --muted:rgba(255,240,248,.64);
+  --soft:rgba(255,240,248,.38);
+  --pink:#ff8cbc;
+  --rose:#ff679f;
+  --blush:#ffc9df;
+  --violet:#d4a6ff;
+  --line:rgba(255,145,190,.22);
+  --glass:rgba(35,12,26,.58);
+  --border:rgba(255,214,232,.18);
+}
+
+*{box-sizing:border-box}
+html,body{
+  margin:0;
+  width:100%;
+  height:100%;
+  overflow:hidden;
+  font-family:Inter,Arial,sans-serif;
+  background:
+    radial-gradient(circle at 50% 35%, rgba(255,110,160,.22), transparent 28%),
+    radial-gradient(circle at 20% 18%, rgba(255,181,214,.12), transparent 18%),
+    radial-gradient(circle at 80% 82%, rgba(212,166,255,.11), transparent 22%),
+    linear-gradient(180deg,var(--bg3),var(--bg) 72%);
+  color:var(--text);
+}
+button,a{font:inherit}
+
+#particles{
+  position:fixed;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:0;
+}
+
+.soft-hearts{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  overflow:hidden;
+}
+.soft-hearts span{
+  position:absolute;
+  width:18px;
+  height:18px;
+  transform:rotate(45deg);
+  background:radial-gradient(circle at 35% 35%, rgba(255,210,230,.75), rgba(255,140,190,.18) 72%, transparent 75%);
+  opacity:.18;
+  filter:blur(.2px);
+  animation:floatUp linear infinite;
+}
+.soft-hearts span::before,
+.soft-hearts span::after{
+  content:"";
+  position:absolute;
+  width:18px;
+  height:18px;
+  border-radius:50%;
+  background:inherit;
+}
+.soft-hearts span::before{left:-9px;top:0}
+.soft-hearts span::after{left:0;top:-9px}
+
+@keyframes floatUp{
+  from{transform:translateY(30px) rotate(45deg) scale(.8);opacity:0}
+  18%{opacity:.22}
+  to{transform:translateY(-120vh) rotate(45deg) scale(1.25);opacity:0}
+}
+
+.grain{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:2;
+  opacity:.045;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.28'/%3E%3C/svg%3E");
+}
+.vignette{
+  position:fixed;
+  inset:0;
+  pointer-events:none;
+  z-index:3;
+  box-shadow:inset 0 0 220px 100px rgba(0,0,0,.55);
+}
+
+.boot{
+  position:fixed;
+  inset:0;
+  z-index:100;
+  display:grid;
+  place-items:center;
+  background:
+    radial-gradient(circle at center, rgba(255,140,188,.18), transparent 30%),
+    rgba(19,7,15,.972);
+  transition:opacity .8s ease, visibility .8s ease;
+}
+.boot.hide{opacity:0;visibility:hidden}
+.boot-inner{
+  width:min(92vw,780px);
+  text-align:center;
+  padding:22px;
+}
+.boot-top{
+  font-size:10px;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  color:rgba(255,196,222,.8);
+  margin-bottom:18px;
+}
+.boot h1{
+  margin:0;
+  font-size:clamp(46px,10vw,106px);
+  line-height:.9;
+  letter-spacing:-.07em;
+  text-transform:uppercase;
+  font-weight:800;
+}
+.boot h1 em{
+  display:block;
+  font-family:Georgia,serif;
+  font-weight:400;
+  text-transform:none;
+  color:var(--blush);
+  letter-spacing:-.04em;
+  text-shadow:0 0 34px rgba(255,210,230,.14);
+}
+.boot p{
+  max-width:620px;
+  margin:24px auto 0;
+  color:var(--muted);
+  line-height:1.75;
+  font-size:14px;
+}
+.boot-btn{
+  margin-top:28px;
+  min-height:50px;
+  padding:0 22px;
+  border:1px solid rgba(255,175,208,.38);
+  border-radius:999px;
+  background:rgba(255,141,191,.09);
+  color:#fff;
+  text-transform:uppercase;
+  letter-spacing:.14em;
+  font-size:10px;
+  cursor:pointer;
+  box-shadow:0 0 60px rgba(255,103,159,.10);
+}
+
+.hud{
+  position:fixed;
+  top:12px;
+  left:12px;
+  right:12px;
+  z-index:50;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  pointer-events:none;
+}
+.brand,.tools,.pov-switch,.status,.next{pointer-events:auto}
+
+.brand{
+  font-size:9px;
+  letter-spacing:.15em;
+  text-transform:uppercase;
+  color:rgba(255,240,248,.42);
+  line-height:1.55;
+}
+.brand strong{
+  display:block;
+  font-size:11px;
+  color:rgba(255,255,255,.95);
+  letter-spacing:.18em;
+}
+
+.tools{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  justify-content:flex-end;
+}
+.ctrl{
+  min-height:35px;
+  padding:0 12px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.11);
+  background:var(--glass);
+  backdrop-filter:blur(14px);
+  color:rgba(255,246,251,.74);
+  font-size:9px;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  cursor:pointer;
+  transition:.2s ease;
+}
+.ctrl:hover,.ctrl.active{
+  color:#fff;
+  border-color:rgba(255,158,201,.42);
+  background:rgba(255,124,178,.10);
+  box-shadow:0 0 28px rgba(255,103,159,.10);
+}
+
+.pov-switch{
+  position:fixed;
+  left:50%;
+  top:14px;
+  transform:translateX(-50%);
+  z-index:52;
+  display:flex;
+  gap:6px;
+  padding:5px;
+  border:1px solid rgba(255,255,255,.10);
+  border-radius:999px;
+  background:rgba(34,12,24,.54);
+  backdrop-filter:blur(16px);
+}
+.pov-btn{
+  min-height:32px;
+  padding:0 12px;
+  border:0;
+  border-radius:999px;
+  background:transparent;
+  color:rgba(255,240,248,.48);
+  font-size:9px;
+  letter-spacing:.11em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.pov-btn.active{
+  background:rgba(255,143,192,.12);
+  color:#fff;
+}
+
+.stage{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  touch-action:none;
+  cursor:grab;
+  z-index:10;
+  transition:filter .25s ease, opacity .25s ease;
+}
+.stage.dragging{cursor:grabbing}
+.stage.popup-open{
+  filter:blur(1.7px) brightness(.88) saturate(1.05);
+  opacity:.94;
+}
+
+#meshLines{
+  position:absolute;
+  inset:0;
+  width:100%;
+  height:100%;
+  pointer-events:none;
+  z-index:1;
+}
+#meshLines line{
+  stroke:var(--line);
+  stroke-width:.95;
+}
+#meshLines line.hot{
+  stroke:rgba(255,198,222,.38);
+  stroke-width:1.28;
+}
+
+.heart-outline{
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  z-index:1;
+  opacity:.36;
+}
+.heart-outline svg{
+  width:100%;
+  height:100%;
+}
+.heart-outline path{
+  fill:none;
+  stroke:rgba(255,176,210,.24);
+  stroke-width:2.2;
+  filter:drop-shadow(0 0 26px rgba(255,115,170,.16));
+}
+
+.center-heart{
+  position:fixed;
+  left:50%;
+  top:50%;
+  width:150px;
+  height:132px;
+  transform:translate(-50%,-50%);
+  z-index:6;
+  pointer-events:none;
+  opacity:.6;
+}
+.center-heart svg{
+  width:100%;
+  height:100%;
+  filter:drop-shadow(0 0 28px rgba(255,115,170,.20));
+}
+.center-heart path{
+  fill:rgba(255,105,160,.05);
+  stroke:rgba(255,184,214,.28);
+  stroke-width:1.35;
+}
+.center-heart .pulse{
+  fill:rgba(255,167,203,.12);
+  animation:beat 2.2s ease-in-out infinite;
+  transform-origin:center;
+}
+@keyframes beat{
+  0%,100%{transform:scale(1)}
+  18%{transform:scale(1.05)}
+  36%{transform:scale(.99)}
+  52%{transform:scale(1.08)}
+  76%{transform:scale(1)}
+}
+
+.node-layer{
+  position:absolute;
+  inset:0;
+  z-index:2;
+  pointer-events:none;
+}
+.node{
+  position:absolute;
+  width:114px;
+  aspect-ratio:4/5;
+  border-radius:18px;
+  overflow:hidden;
+  transform-origin:center center;
+  background:linear-gradient(135deg,#42192d,#180913);
+  border:1px solid rgba(255,208,228,.22);
+  box-shadow:0 22px 58px rgba(0,0,0,.38), 0 0 26px rgba(255,110,168,.06);
+  cursor:pointer;
+  pointer-events:auto;
+  transition:border-color .18s ease, box-shadow .18s ease, opacity .18s ease, filter .18s ease;
+}
+.node:hover{
+  border-color:rgba(255,215,232,.62);
+  box-shadow:0 22px 62px rgba(0,0,0,.44), 0 0 34px rgba(255,140,190,.14);
+}
+.node::before{
+  content:"";
+  position:absolute;
+  inset:0;
+  background:linear-gradient(145deg,rgba(255,255,255,.11),transparent 34%);
+  z-index:2;
+  pointer-events:none;
+}
+.node::after{
+  content:"";
+  position:absolute;
+  inset:auto 12px 10px 12px;
+  height:36px;
+  background:linear-gradient(180deg,transparent,rgba(0,0,0,.32));
+  z-index:1;
+  border-radius:0 0 10px 10px;
+}
+.node img,.node video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.placeholder{
+  width:100%;
+  height:100%;
+  display:grid;
+  place-items:center;
+  text-align:center;
+  padding:10px;
+  background:
+    radial-gradient(circle at 35% 30%, rgba(255,204,227,.12), transparent 28%),
+    linear-gradient(135deg,#4a1d32,#160811);
+  color:rgba(255,233,244,.58);
+  font-size:8px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+}
+.badge{
+  position:absolute;
+  left:8px;
+  top:8px;
+  z-index:3;
+  height:19px;
+  padding:0 6px;
+  border-radius:999px;
+  display:inline-flex;
+  align-items:center;
+  background:rgba(0,0,0,.30);
+  backdrop-filter:blur(8px);
+  border:1px solid rgba(255,255,255,.10);
+  color:rgba(255,255,255,.84);
+  font-size:7px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+.label{
+  position:absolute;
+  left:8px;
+  right:8px;
+  bottom:7px;
+  z-index:3;
+  color:rgba(255,255,255,.80);
+  font-size:7px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  text-shadow:0 2px 8px #000;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+
+.zoom-hint{
+  position:fixed;
+  left:50%;
+  bottom:62px;
+  transform:translateX(-50%);
+  z-index:45;
+  color:rgba(255,240,248,.32);
+  font-size:8px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+  white-space:nowrap;
+}
+.status{
+  position:fixed;
+  left:12px;
+  bottom:12px;
+  z-index:46;
+  padding:10px 13px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.11);
+  background:rgba(34,12,24,.58);
+  backdrop-filter:blur(16px);
+  color:rgba(255,240,248,.58);
+  font-size:8px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.next{
+  position:fixed;
+  right:12px;
+  bottom:12px;
+  z-index:52;
+  min-height:39px;
+  display:inline-flex;
+  align-items:center;
+  padding:0 13px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.11);
+  background:rgba(34,12,24,.58);
+  backdrop-filter:blur(12px);
+  color:rgba(255,240,248,.66);
+  text-decoration:none;
+  font-size:8px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+}
+
+.corner-popup{
+  position:fixed;
+  right:18px;
+  bottom:66px;
+  z-index:80;
+  width:min(336px,calc(100vw - 36px));
+  opacity:0;
+  visibility:hidden;
+  transform:translateY(16px) scale(.97);
+  transition:.26s cubic-bezier(.2,.7,.2,1);
+}
+.corner-popup.show{opacity:1;visibility:visible;transform:none}
+.popup-card{
+  border:1px solid rgba(255,208,228,.18);
+  border-radius:26px;
+  padding:10px;
+  background:linear-gradient(180deg,rgba(43,16,30,.92),rgba(21,8,18,.88));
+  backdrop-filter:blur(18px);
+  box-shadow:0 24px 72px rgba(0,0,0,.44),0 0 42px rgba(255,110,168,.08);
+}
+.popup-media{
+  width:100%;
+  aspect-ratio:4/5;
+  border-radius:18px;
+  overflow:hidden;
+  background:linear-gradient(135deg,#4a1d32,#160811);
+}
+.popup-media img,.popup-media video{
+  width:100%;
+  height:100%;
+  object-fit:cover;
+  display:block;
+}
+.popup-media .placeholder{font-size:10px}
+.popup-top{
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-start;
+  gap:12px;
+  padding:11px 4px 4px;
+}
+.popup-copy strong{
+  display:block;
+  font-size:10px;
+  letter-spacing:.13em;
+  text-transform:uppercase;
+}
+.popup-copy span{
+  display:block;
+  margin-top:5px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.5;
+}
+.popup-type{
+  font-size:7px;
+  letter-spacing:.12em;
+  text-transform:uppercase;
+  color:rgba(255,190,219,.66);
+  white-space:nowrap;
+}
+.popup-actions{
+  display:flex;
+  gap:7px;
+  padding:8px 4px 4px;
+}
+.popup-btn{
+  min-height:32px;
+  padding:0 11px;
+  border-radius:999px;
+  border:1px solid rgba(255,255,255,.11);
+  background:rgba(255,255,255,.03);
+  color:rgba(255,246,251,.72);
+  font-size:8px;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  cursor:pointer;
+}
+.popup-close{
+  position:absolute;
+  right:-8px;
+  top:-8px;
+  width:32px;
+  height:32px;
+  border-radius:50%;
+  border:1px solid rgba(255,255,255,.13);
+  background:rgba(24,9,18,.94);
+  color:#fff;
+  font-size:16px;
+  cursor:pointer;
+}
+
+
+/* HEARTBEAT SYSTEM */
+:root{
+  --beat-scale:1;
+  --beat-glow:.08;
+}
+body.heartbeat-on .center-heart{
+  animation:heartBeatShell 1.35s ease-in-out infinite;
+}
+body.heartbeat-on .heart-outline{
+  animation:heartBeatOutline 1.35s ease-in-out infinite;
+}
+body.heartbeat-on .node{
+  animation:memoryBeat 1.35s ease-in-out infinite;
+}
+body.heartbeat-on #meshLines{
+  animation:lineBeat 1.35s ease-in-out infinite;
+}
+body.heartbeat-on::after{
+  content:"";
+  position:fixed;
+  inset:-10%;
+  z-index:4;
+  pointer-events:none;
+  background:radial-gradient(circle at 50% 50%, rgba(255,112,170,.12), transparent 42%);
+  opacity:0;
+  animation:screenBeat 1.35s ease-in-out infinite;
+}
+@keyframes heartBeatShell{
+  0%,100%{transform:translate(-50%,-50%) scale(1)}
+  12%{transform:translate(-50%,-50%) scale(1.08)}
+  22%{transform:translate(-50%,-50%) scale(.995)}
+  34%{transform:translate(-50%,-50%) scale(1.045)}
+  50%{transform:translate(-50%,-50%) scale(1)}
+}
+@keyframes heartBeatOutline{
+  0%,100%{opacity:.32;filter:none}
+  12%{opacity:.5;filter:drop-shadow(0 0 28px rgba(255,120,175,.18))}
+  22%{opacity:.34}
+  34%{opacity:.44;filter:drop-shadow(0 0 18px rgba(255,120,175,.12))}
+  50%{opacity:.32;filter:none}
+}
+@keyframes memoryBeat{
+  0%,100%{box-shadow:0 22px 58px rgba(0,0,0,.38),0 0 26px rgba(255,110,168,.06)}
+  12%{box-shadow:0 22px 62px rgba(0,0,0,.42),0 0 34px rgba(255,110,168,.13)}
+  22%{box-shadow:0 22px 58px rgba(0,0,0,.38),0 0 26px rgba(255,110,168,.06)}
+  34%{box-shadow:0 22px 60px rgba(0,0,0,.40),0 0 30px rgba(255,110,168,.10)}
+  50%{box-shadow:0 22px 58px rgba(0,0,0,.38),0 0 26px rgba(255,110,168,.06)}
+}
+@keyframes lineBeat{
+  0%,100%{opacity:.72}
+  12%{opacity:1}
+  22%{opacity:.76}
+  34%{opacity:.92}
+  50%{opacity:.72}
+}
+@keyframes screenBeat{
+  0%,100%{opacity:0}
+  12%{opacity:1}
+  22%{opacity:.08}
+  34%{opacity:.55}
+  50%{opacity:0}
+}
+
+@media(max-width:760px){
+  .brand{display:none}
+  .pov-switch{top:56px}
+  .node{width:86px;border-radius:13px}
+  .corner-popup{right:10px;bottom:58px;width:min(292px,calc(100vw - 20px))}
+  .zoom-hint{bottom:56px}
+  .center-heart{width:122px;height:108px}
+}
+@media(max-width:430px){
+  .tools .ctrl:nth-child(3){display:none}
+  .pov-btn{padding:0 10px;font-size:8px}
+  .status{display:none}
+}
+@media(prefers-reduced-motion:reduce){
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
+</style>
+  <script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
+</head>
+<body>
+
+<canvas id="particles"></canvas>
+
+<div class="soft-hearts">
+  <span style="left:8%;bottom:-24px;animation-duration:15s;animation-delay:-2s;"></span>
+  <span style="left:21%;bottom:-30px;animation-duration:17s;animation-delay:-8s;"></span>
+  <span style="left:38%;bottom:-18px;animation-duration:14s;animation-delay:-4s;"></span>
+  <span style="left:53%;bottom:-26px;animation-duration:16s;animation-delay:-9s;"></span>
+  <span style="left:69%;bottom:-28px;animation-duration:18s;animation-delay:-5s;"></span>
+  <span style="left:83%;bottom:-22px;animation-duration:15s;animation-delay:-7s;"></span>
+</div>
+
+<div class="grain"></div>
+<div class="vignette"></div>
+
+<div class="boot" id="boot">
+  <div class="boot-inner">
+    <div class="boot-top">chapter four · heart memory field</div>
+    <h1>these memories live<br><em>in my heart.</em></h1>
+    <p>
+      Not in a universe. Not in space. Just here — in my heart.  
+      You can look at it from my heart, or step in my heart and be surrounded by the little moments that stay with me.
+    </p>
+    <button class="boot-btn" id="bootBtn">enter my heart</button>
+  </div>
+</div>
+
+<div class="hud">
+  <div class="brand">
+    <strong>IN.MY.HEART</strong>
+    04 / 08 · PERSONAL MEMORY FIELD
+  </div>
+
+  <div class="tools">
+    <button class="ctrl active" id="orbitBtn">drifting</button>
+    <button class="ctrl" id="expandBtn">open heart</button>
+    <button class="ctrl" id="collapseBtn">hold close</button>
+    <button class="ctrl active" id="heartbeatBtn">heartbeat</button>
+  </div>
+</div>
+
+<div class="pov-switch">
+  <button class="pov-btn active" id="overviewPov">from my heart</button>
+  <button class="pov-btn" id="corePov">in my heart</button>
+</div>
+
+<div class="stage" id="stage">
+  <svg id="meshLines"></svg>
+
+  <div class="heart-outline">
+    <svg viewBox="0 0 1000 900" preserveAspectRatio="xMidYMid meet">
+      <path d="M500,800
+               C380,690 185,570 135,370
+               C95,210 195,85 340,85
+               C430,85 485,138 500,184
+               C515,138 570,85 660,85
+               C805,85 905,210 865,370
+               C815,570 620,690 500,800Z"/>
+    </svg>
+  </div>
+
+  <div class="node-layer" id="nodeLayer"></div>
+</div>
+
+<div class="center-heart">
+  <svg viewBox="0 0 200 180">
+    <path d="M100 165
+             C80 145, 30 115, 22 70
+             C14 34, 40 15, 72 15
+             C88 15, 97 24, 100 35
+             C103 24, 112 15, 128 15
+             C160 15, 186 34, 178 70
+             C170 115, 120 145, 100 165Z"/>
+    <path class="pulse" d="M100 150
+             C84 134, 44 110, 36 73
+             C29 43, 50 28, 74 28
+             C88 28, 97 36, 100 46
+             C103 36, 112 28, 126 28
+             C150 28, 171 43, 164 73
+             C156 110, 116 134, 100 150Z"/>
+  </svg>
+</div>
+
+<div class="zoom-hint">drag to look · scroll / pinch to zoom · click any memory</div>
+<div class="status" id="status">camera: from my heart</div>
+
+<a class="next" href="yapping.html">continue →</a>
+
+<div class="corner-popup" id="cornerPopup">
+  <button class="popup-close" id="popupClose" type="button">×</button>
+  <div class="popup-card">
+    <div class="popup-media" id="popupMedia"></div>
+    <div class="popup-top">
+      <div class="popup-copy">
+        <strong id="popupTitle"></strong>
+        <span id="popupNote"></span>
+      </div>
+      <div class="popup-type" id="popupType"></div>
+    </div>
+    <div class="popup-actions">
+      <button class="popup-btn" id="popupPrev" type="button">previous</button>
+      <button class="popup-btn" id="popupNext" type="button">next</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const MEMORIES = [
+  {type:"image",src:null,title:"memory 01",note:"one of my favourites."},
+  {type:"image",src:null,title:"memory 02",note:"saved immediately."},
+  {type:"video",src:null,title:"memory 03",note:"tiny video memory."},
+  {type:"image",src:null,title:"memory 04",note:"this one stays."},
+  {type:"image",src:null,title:"memory 05",note:"quiet favourite."},
+  {type:"video",src:null,title:"memory 06",note:"the funny one."},
+  {type:"image",src:null,title:"memory 07",note:"I still remember this."},
+  {type:"image",src:null,title:"memory 08",note:"very random, very us."},
+  {type:"video",src:null,title:"memory 09",note:"peak nonsense."},
+  {type:"image",src:null,title:"memory 10",note:"you probably forgot this."},
+  {type:"image",src:null,title:"memory 11",note:"small but important."},
+  {type:"video",src:null,title:"memory 12",note:"one of those clips."},
+  {type:"image",src:null,title:"memory 13",note:"top tier."},
+  {type:"image",src:null,title:"memory 14",note:"never deleting this."},
+  {type:"video",src:null,title:"memory 15",note:"yes, this one."},
+  {type:"image",src:null,title:"memory 16",note:"case closed."},
+  {type:"image",src:null,title:"memory 17",note:"another favourite."},
+  {type:"video",src:null,title:"memory 18",note:"one more clip."},
+  {type:"image",src:null,title:"memory 19",note:"bonus memory."},
+  {type:"image",src:null,title:"memory 20",note:"you thought I was done?"}
+];
+
+const stage = document.getElementById("stage");
+const nodeLayer = document.getElementById("nodeLayer");
+const lineSvg = document.getElementById("meshLines");
+const status = document.getElementById("status");
+
+const popup = document.getElementById("cornerPopup");
+const popupMedia = document.getElementById("popupMedia");
+const popupTitle = document.getElementById("popupTitle");
+const popupNote = document.getElementById("popupNote");
+const popupType = document.getElementById("popupType");
+
+let nodes = [];
+let pov = "overview";
+let yaw = 0;
+let pitch = -0.06;
+let drag = false;
+let lastX = 0;
+let lastY = 0;
+let yawVelocity = 0.0010;
+let pitchVelocity = 0;
+let drifting = true;
+
+let zoom = 1;
+let targetZoom = 1;
+const ZOOM_SPEED = 3;
+
+let spread = 1;
+let targetSpread = 1;
+
+let popupIndex = 0;
+let pinchStart = null;
+
+const CAMERA = {
+  overview: {x:0,y:0,z:-800},
+  core: {x:0,y:0,z:-30}
+};
+
+function buildParticles(){
+  const c = document.getElementById("particles");
+  const ctx = c.getContext("2d");
+
+  function resize(){
+    c.width = innerWidth * devicePixelRatio;
+    c.height = innerHeight * devicePixelRatio;
+    c.style.width = innerWidth + "px";
+    c.style.height = innerHeight + "px";
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  }
+  resize();
+  addEventListener("resize", resize);
+
+  const dots = Array.from({length: Math.min(220, Math.floor(innerWidth*innerHeight/6200))}, () => ({
+    x: Math.random()*innerWidth,
+    y: Math.random()*innerHeight,
+    r: Math.random()*1.8 + .35,
+    a: Math.random()*.55 + .08,
+    tw: Math.random()*.014 + .004,
+    hue: Math.random() > .72 ? 275 : 335
+  }));
+
+  function draw(){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    for(const d of dots){
+      d.a += (Math.random() - .5) * d.tw;
+      d.a = Math.max(.05, Math.min(.78, d.a));
+      ctx.beginPath();
+      ctx.fillStyle = d.hue === 335
+        ? `hsla(335, 100%, 82%, ${d.a})`
+        : `hsla(275, 90%, 80%, ${d.a*.65})`;
+      ctx.arc(d.x, d.y, d.r, 0, Math.PI*2);
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+  draw();
+}
+
+function heart2D(t, scale){
+  const x = 16 * Math.pow(Math.sin(t),3);
+  const y = 13*Math.cos(t) - 5*Math.cos(2*t) - 2*Math.cos(3*t) - Math.cos(4*t);
+  return {x:x*scale, y:-y*scale};
+}
+
+function buildHeartPoints(count){
+  const points = [];
+  const shells = 4;
+  const baseScale = innerWidth < 760 ? 15.5 : 21;
+
+  for(let i=0;i<count;i++){
+    const t = (i / count) * Math.PI * 2;
+    const shell = i % shells;
+    const depth = (shell - 1.5) * (innerWidth < 760 ? 38 : 54);
+    const p = heart2D(t + shell * 0.17, baseScale * (0.82 + shell*.12));
+
+    points.push({
+      x: p.x + Math.cos(t*3.2 + shell) * 14,
+      y: p.y + Math.sin(t*2.7) * 10,
+      z: depth + Math.sin(t*2.1 + shell) * 26
+    });
+  }
+
+  return points;
+}
+
+function buildMesh(){
+  const points = buildHeartPoints(MEMORIES.length);
+
+  MEMORIES.forEach((item, index) => {
+    const el = document.createElement("button");
+    el.type = "button";
+    el.className = "node";
+    el.setAttribute("aria-label", `${item.title}: ${item.note}`);
+
+    if(item.type === "video" && item.src){
+      el.innerHTML = `
+        <video src="${item.src}" muted playsinline preload="metadata"></video>
+        <div class="badge">video</div>
+        <div class="label">${item.title}</div>
+      `;
+    } else if(item.type === "image" && item.src){
+      el.innerHTML = `
+        <img src="${item.src}" alt="">
+        <div class="badge">photo</div>
+        <div class="label">${item.title}</div>
+      `;
+    } else {
+      el.innerHTML = `
+        <div class="placeholder">${item.title}</div>
+        <div class="badge">${item.type}</div>
+        <div class="label">${item.title}</div>
+      `;
+    }
+
+    el.addEventListener("click", e => {
+      e.stopPropagation();
+      openPopup(index);
+    });
+
+    nodeLayer.appendChild(el);
+
+    nodes.push({
+      el,
+      base: {...points[index]},
+      pos: {...points[index]},
+      screen: {x:0,y:0,z:0,visible:false}
+    });
+  });
+}
+
+function rotateWorld(point){
+  const cy = Math.cos(yaw), sy = Math.sin(yaw);
+  const cp = Math.cos(pitch), sp = Math.sin(pitch);
+
+  const x1 = point.x*cy - point.z*sy;
+  const z1 = point.x*sy + point.z*cy;
+
+  const y2 = point.y*cp - z1*sp;
+  const z2 = point.y*sp + z1*cp;
+
+  return {x:x1, y:y2, z:z2};
+}
+
+function toCameraSpace(point){
+  const rotated = rotateWorld(point);
+  const cam = CAMERA[pov];
+  return {
+    x: rotated.x - cam.x,
+    y: rotated.y - cam.y,
+    z: rotated.z - cam.z
+  };
+}
+
+function project(point){
+  const p = toCameraSpace(point);
+  if(p.z <= 55) return {visible:false, x:0, y:0, z:p.z, scale:0};
+
+  const focal = (pov === "overview" ? 705 : 545) * zoom;
+  const scale = focal / p.z;
+
+  return {
+    visible: true,
+    x: innerWidth/2 + p.x*scale,
+    y: innerHeight/2 + p.y*scale,
+    z: p.z,
+    scale
+  };
+}
+
+function meshPairs(){
+  const pairs = [];
+  for(let i=0;i<nodes.length;i++){
+    const ranked = [];
+    for(let j=0;j<nodes.length;j++){
+      if(i===j) continue;
+      const a = nodes[i].base;
+      const b = nodes[j].base;
+      const d = (a.x-b.x)**2 + (a.y-b.y)**2 + (a.z-b.z)**2;
+      ranked.push([d,j]);
+    }
+    ranked.sort((a,b)=>a[0]-b[0]);
+    for(let k=0;k<Math.min(3,ranked.length);k++){
+      const j = ranked[k][1];
+      if(i < j) pairs.push([i,j]);
+    }
+  }
+  return pairs;
+}
+const PAIRS = [];
+
+function buildPairs(){
+  PAIRS.push(...meshPairs());
+}
+
+function updateLines(){
+  const lines = [];
+  for(const [aIndex,bIndex] of PAIRS){
+    const a = nodes[aIndex].screen;
+    const b = nodes[bIndex].screen;
+    if(!a.visible || !b.visible) continue;
+
+    const dx = a.x-b.x;
+    const dy = a.y-b.y;
+    if(Math.hypot(dx,dy) > Math.max(innerWidth, innerHeight) * .72) continue;
+
+    const hot = (a.scale > .92 || b.scale > .92);
+
+    lines.push(
+      `<line ${hot ? 'class="hot"' : ''} x1="${a.x.toFixed(1)}" y1="${a.y.toFixed(1)}" x2="${b.x.toFixed(1)}" y2="${b.y.toFixed(1)}"></line>`
+    );
+  }
+  lineSvg.innerHTML = lines.join("");
+}
+
+function setPov(next){
+  pov = next;
+  document.getElementById("overviewPov").classList.toggle("active", pov==="overview");
+  document.getElementById("corePov").classList.toggle("active", pov==="core");
+
+  targetZoom = pov==="overview" ? 1 : .96;
+
+  if(pov==="overview"){
+    pitch = -0.06;
+    status.textContent = "camera: from my heart";
+  } else {
+    pitch = 0;
+    status.textContent = "camera: in my heart";
+  }
+}
+
+function openPopup(index){
+  popupIndex = ((index % MEMORIES.length) + MEMORIES.length) % MEMORIES.length;
+  const item = MEMORIES[popupIndex];
+
+  popupMedia.innerHTML = "";
+
+  if(item.type==="video" && item.src){
+    const video = document.createElement("video");
+    video.src = item.src;
+    video.controls = true;
+    video.autoplay = true;
+    video.loop = true;
+    video.playsInline = true;
+    popupMedia.appendChild(video);
+  } else if(item.type==="image" && item.src){
+    const img = document.createElement("img");
+    img.src = item.src;
+    img.alt = "";
+    popupMedia.appendChild(img);
+  } else {
+    const ph = document.createElement("div");
+    ph.className = "placeholder";
+    ph.textContent = item.title;
+    popupMedia.appendChild(ph);
+  }
+
+  popupTitle.textContent = item.title;
+  popupNote.textContent = item.note;
+  popupType.textContent = `${item.type} · ${String(popupIndex+1).padStart(2,"0")}/${MEMORIES.length}`;
+
+  popup.classList.add("show");
+  stage.classList.add("popup-open");
+}
+
+function closePopup(){
+  const video = popupMedia.querySelector("video");
+  if(video) video.pause();
+  popup.classList.remove("show");
+  stage.classList.remove("popup-open");
+}
+
+function animate(){
+  if(drifting && !drag){
+    yaw += .00062;
+  } else if(!drag){
+    yaw += yawVelocity;
+    pitch += pitchVelocity;
+    yawVelocity *= .965;
+    pitchVelocity *= .965;
+  }
+
+  pitch = Math.max(-1.12, Math.min(1.12, pitch));
+  targetZoom = Math.max(.42, Math.min(2.4, targetZoom));
+  zoom += (targetZoom - zoom) * .075 * ZOOM_SPEED;
+  spread += (targetSpread - spread) * .065;
+
+  for(const node of nodes){
+    node.pos.x = node.base.x * spread;
+    node.pos.y = node.base.y * spread;
+    node.pos.z = node.base.z * spread;
+
+    const projected = project(node.pos);
+    node.screen = projected;
+
+    if(!projected.visible){
+      node.el.style.opacity = "0";
+      node.el.style.pointerEvents = "none";
+      continue;
+    }
+
+    node.el.style.pointerEvents = "auto";
+
+    const baseScale = pov==="core"
+      ? Math.max(.56, Math.min(1.50, projected.scale*.84))
+      : Math.max(.50, Math.min(1.24, projected.scale*.92));
+
+    const tiltY = Math.sin((node.base.x+node.base.z)*.004+yaw)*8;
+    const tiltX = Math.cos((node.base.y-node.base.z)*.004+pitch)*5;
+
+    node.el.style.left = `${projected.x}px`;
+    node.el.style.top = `${projected.y}px`;
+    node.el.style.transform =
+      `translate(-50%,-50%) perspective(620px) rotateY(${tiltY}deg) rotateX(${tiltX}deg) scale(${baseScale})`;
+
+    const depthOpacity = pov==="core"
+      ? Math.max(.28, Math.min(1, .34 + (1/projected.z)*340))
+      : Math.max(.3, Math.min(1, .34 + projected.scale*.58));
+
+    node.el.style.opacity = depthOpacity;
+    node.el.style.filter = projected.z > 1200 ? "brightness(.60) saturate(.72)" : "none";
+    node.el.style.zIndex = String(Math.max(1, 5000 - Math.round(projected.z)));
+  }
+
+  updateLines();
+  requestAnimationFrame(animate);
+}
+
+stage.addEventListener("pointerdown", e => {
+  if(e.target.closest(".node")) return;
+  drag = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  stage.classList.add("dragging");
+  stage.setPointerCapture?.(e.pointerId);
+});
+
+stage.addEventListener("pointermove", e => {
+  if(!drag) return;
+  const dx = e.clientX - lastX;
+  const dy = e.clientY - lastY;
+
+  yaw -= dx * .0044;
+  pitch -= dy * .0038;
+
+  yawVelocity = -dx * .00022;
+  pitchVelocity = -dy * .00018;
+
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+
+stage.addEventListener("pointerup", () => {
+  drag = false;
+  stage.classList.remove("dragging");
+});
+
+stage.addEventListener("wheel", e => {
+  if(e.target.closest(".corner-popup")) return;
+  e.preventDefault();
+  targetZoom -= e.deltaY * .0032;
+}, {passive:false});
+
+stage.addEventListener("touchstart", e => {
+  if(e.touches.length===2){
+    pinchStart = Math.hypot(
+      e.touches[0].clientX-e.touches[1].clientX,
+      e.touches[0].clientY-e.touches[1].clientY
+    );
+  }
+}, {passive:true});
+
+stage.addEventListener("touchmove", e => {
+  if(e.touches.length===2 && pinchStart){
+    const d = Math.hypot(
+      e.touches[0].clientX-e.touches[1].clientX,
+      e.touches[0].clientY-e.touches[1].clientY
+    );
+    targetZoom += (d-pinchStart)/95;
+    pinchStart = d;
+  }
+}, {passive:true});
+
+stage.addEventListener("touchend", ()=>pinchStart=null, {passive:true});
+
+document.getElementById("bootBtn").addEventListener("click",()=>{
+  document.getElementById("boot").classList.add("hide");
+});
+
+document.getElementById("orbitBtn").addEventListener("click",e=>{
+  drifting = !drifting;
+  e.currentTarget.classList.toggle("active", drifting);
+  e.currentTarget.textContent = drifting ? "drifting" : "paused";
+});
+
+document.getElementById("expandBtn").addEventListener("click",()=>{ targetSpread = 1.40; });
+document.getElementById("collapseBtn").addEventListener("click",()=>{ targetSpread = .72; });
+
+document.getElementById("overviewPov").addEventListener("click",()=>setPov("overview"));
+document.getElementById("corePov").addEventListener("click",()=>setPov("core"));
+
+document.getElementById("popupClose").addEventListener("click",closePopup);
+document.getElementById("popupPrev").addEventListener("click",()=>openPopup(popupIndex-1));
+document.getElementById("popupNext").addEventListener("click",()=>openPopup(popupIndex+1));
+
+document.addEventListener("keydown",e=>{
+  if(popup.classList.contains("show")){
+    if(e.key==="Escape") closePopup();
+    if(e.key==="ArrowLeft") openPopup(popupIndex-1);
+    if(e.key==="ArrowRight") openPopup(popupIndex+1);
+    return;
+  }
+
+  if(e.key==="1") setPov("overview");
+  if(e.key==="2") setPov("core");
+
+  if(e.key==="ArrowLeft") yaw += .12;
+  if(e.key==="ArrowRight") yaw -= .12;
+  if(e.key==="ArrowUp") pitch += .10;
+  if(e.key==="ArrowDown") pitch -= .10;
+  if(e.key==="+" || e.key==="=") targetZoom += .24;
+  if(e.key==="-") targetZoom -= .24;
+});
+
+
+let heartbeatEnabled = true;
+document.body.classList.add("heartbeat-on");
+
+const heartbeatBtn = document.getElementById("heartbeatBtn");
+const heartbeatAudio = document.getElementById("heartbeatAudio");
+
+heartbeatBtn.addEventListener("click", async () => {
+  heartbeatEnabled = !heartbeatEnabled;
+  document.body.classList.toggle("heartbeat-on", heartbeatEnabled);
+  heartbeatBtn.classList.toggle("active", heartbeatEnabled);
+  heartbeatBtn.textContent = heartbeatEnabled ? "heartbeat" : "heartbeat off";
+
+  if(heartbeatEnabled){
+    try{
+      await heartbeatAudio.play();
+    }catch{
+      // Visual heartbeat still works even without heartbeat.mp3.
+    }
+  }else{
+    heartbeatAudio.pause();
+  }
+});
+
+buildParticles();
+buildMesh();
+buildPairs();
+setPov("overview");
+animate();
+</script>
+<audio id="heartbeatAudio" loop preload="metadata"><source src="heartbeat.mp3" type="audio/mpeg"></audio>
+  <script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<script src="./page-patch-runtime.js?v=phase1"></script>
+</body>
+</html>

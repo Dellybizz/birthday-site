@@ -1,14 +1,758 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <meta name="theme-color" content="#151221">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <meta name="theme-color" content="#fff7f7" />
   <title>For You ♡</title>
+
+  <style>
+    :root{
+      --bg:#fff9f8;
+      --bg2:#fff1f4;
+      --ink:#2f2529;
+      --muted:#8d7d84;
+      --pink:#d97f9a;
+      --pink-deep:#ba617b;
+      --pink-soft:#f4ccd7;
+      --paper:rgba(255,255,255,.72);
+      --paper-solid:#fffdfd;
+      --line:rgba(186,97,123,.15);
+      --shadow:0 24px 70px rgba(113,69,83,.13);
+    }
+
+    *{box-sizing:border-box}
+
+    html,body{
+      margin:0;
+      min-height:100%;
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+      color:var(--ink);
+      background:var(--bg);
+    }
+
+    body{
+      min-height:100dvh;
+      overflow:hidden;
+      background:
+        radial-gradient(circle at 10% 10%, rgba(244,204,215,.42), transparent 28%),
+        radial-gradient(circle at 88% 18%, rgba(255,255,255,.95), transparent 25%),
+        linear-gradient(160deg,var(--bg),var(--bg2));
+    }
+
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      opacity:.1;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.18'/%3E%3C/svg%3E");
+      mix-blend-mode:multiply;
+    }
+
+    .orb{
+      position:fixed;
+      width:280px;
+      height:280px;
+      border-radius:50%;
+      filter:blur(80px);
+      pointer-events:none;
+      opacity:.2;
+      background:#edadc0;
+    }
+    .orb.a{left:-110px;top:18%}
+    .orb.b{right:-110px;bottom:5%}
+
+    .shell{
+      min-height:100dvh;
+      width:min(100%,650px);
+      margin:auto;
+      padding:max(20px,env(safe-area-inset-top)) 22px max(20px,env(safe-area-inset-bottom));
+      display:grid;
+      place-items:center;
+      position:relative;
+      z-index:2;
+    }
+
+    .screen{
+      width:100%;
+      min-height:100dvh;
+      display:none;
+      place-items:center;
+      text-align:center;
+      position:absolute;
+      inset:0;
+      padding:28px 22px 76px;
+    }
+    .screen.active{display:grid}
+    .fade-in{animation:fadeIn .7s cubic-bezier(.2,.7,.2,1) both}
+    .fade-out{animation:fadeOut .45s ease both}
+
+    @keyframes fadeIn{
+      from{opacity:0;transform:translateY(10px)}
+      to{opacity:1;transform:none}
+    }
+    @keyframes fadeOut{
+      to{opacity:0;transform:translateY(-8px)}
+    }
+
+    .tiny{
+      font-size:13px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      color:rgba(89,67,77,.52);
+    }
+
+    .start-card{
+      width:min(92vw,430px);
+      padding:30px 24px 26px;
+      border:1px solid var(--line);
+      background:var(--paper);
+      backdrop-filter:blur(16px);
+      border-radius:28px;
+      box-shadow:var(--shadow);
+    }
+
+    .start-heart{
+      font-family:Georgia,serif;
+      font-size:27px;
+      color:var(--pink);
+      margin-bottom:14px;
+    }
+
+    .start-card h1{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(31px,8vw,44px);
+      font-weight:500;
+      line-height:1.12;
+      letter-spacing:-.025em;
+    }
+
+    .start-card p{
+      color:var(--muted);
+      line-height:1.6;
+      margin:16px auto 24px;
+      max-width:320px;
+      font-size:15px;
+    }
+
+    .btn{
+      border:0;
+      min-height:52px;
+      border-radius:999px;
+      padding:0 23px;
+      font:inherit;
+      cursor:pointer;
+      -webkit-tap-highlight-color:transparent;
+      transition:.22s ease;
+    }
+
+    .btn-primary{
+      background:#fff;
+      border:1px solid var(--line);
+      box-shadow:0 14px 40px rgba(113,69,83,.11);
+      color:var(--ink);
+    }
+    .btn-primary:hover{transform:translateY(-2px)}
+    .btn-primary:active{transform:scale(.98)}
+
+    .intro-wrap{
+      width:min(92vw,520px);
+    }
+
+    .eyebrow{
+      color:var(--muted);
+      font-size:16px;
+      margin-bottom:18px;
+    }
+
+    .intro-title{
+      margin:0;
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(34px,9vw,54px);
+      font-weight:500;
+      line-height:1.12;
+      letter-spacing:-.035em;
+    }
+
+    .name{
+      margin-top:18px;
+      font-family:"Segoe Script","Snell Roundhand","Brush Script MT",cursive;
+      font-size:clamp(54px,17vw,92px);
+      color:var(--pink-deep);
+      line-height:1;
+      text-shadow:0 12px 35px rgba(186,97,123,.12);
+    }
+
+    .personal-line{
+      margin:22px auto 0;
+      color:var(--muted);
+      max-width:400px;
+      font-size:16px;
+      line-height:1.6;
+    }
+
+    .wait-note{
+      margin-top:9px;
+      font-size:13px;
+      color:rgba(89,67,77,.5);
+    }
+
+    .envelope-stage{
+      width:min(92vw,480px);
+      position:relative;
+      perspective:1000px;
+    }
+
+    .envelope{
+      width:100%;
+      aspect-ratio:1.48/1;
+      position:relative;
+      background:#f8dce4;
+      border-radius:20px;
+      box-shadow:var(--shadow);
+      overflow:hidden;
+      border:1px solid rgba(186,97,123,.12);
+    }
+
+    .envelope::before,.envelope::after{
+      content:"";
+      position:absolute;
+      bottom:0;
+      width:72%;
+      height:80%;
+      background:#f3cbd7;
+      z-index:2;
+    }
+    .envelope::before{
+      left:-15%;
+      transform:skewX(38deg);
+      transform-origin:bottom left;
+    }
+    .envelope::after{
+      right:-15%;
+      transform:skewX(-38deg);
+      transform-origin:bottom right;
+    }
+
+    .flap{
+      position:absolute;
+      top:0;
+      left:0;
+      width:100%;
+      height:62%;
+      background:#efc1cf;
+      clip-path:polygon(0 0,100% 0,50% 100%);
+      transform-origin:top center;
+      transition:transform .75s cubic-bezier(.2,.8,.2,1);
+      z-index:5;
+    }
+
+    .letter{
+      position:absolute;
+      left:7%;
+      right:7%;
+      bottom:7%;
+      height:79%;
+      background:var(--paper-solid);
+      border-radius:18px;
+      padding:24px 20px;
+      box-shadow:0 10px 30px rgba(113,69,83,.08);
+      z-index:3;
+      transition:transform .8s cubic-bezier(.2,.8,.2,1) .15s;
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+      align-items:center;
+    }
+
+    .envelope.open .flap{transform:rotateX(180deg)}
+    .envelope.open .letter{transform:translateY(-30%)}
+
+    .letter .for{
+      color:var(--muted);
+      font-size:13px;
+      letter-spacing:.08em;
+      text-transform:uppercase;
+    }
+    .letter .nick{
+      font-family:"Segoe Script","Snell Roundhand","Brush Script MT",cursive;
+      color:var(--pink-deep);
+      font-size:clamp(35px,10vw,50px);
+      margin:5px 0 8px;
+    }
+    .letter .only{
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:20px;
+      line-height:1.35;
+      max-width:300px;
+    }
+
+    .seal{
+      position:absolute;
+      width:54px;
+      height:54px;
+      border-radius:50%;
+      left:50%;
+      top:47%;
+      transform:translate(-50%,-50%);
+      z-index:7;
+      background:var(--pink-deep);
+      color:white;
+      display:grid;
+      place-items:center;
+      font-family:Georgia,serif;
+      box-shadow:0 10px 30px rgba(186,97,123,.22);
+      cursor:pointer;
+      transition:.25s ease;
+    }
+    .seal:hover{transform:translate(-50%,-50%) scale(1.05)}
+    .seal.hidden{opacity:0;pointer-events:none;transform:translate(-50%,-50%) scale(.85)}
+
+    .envelope-caption{
+      margin-top:22px;
+      color:var(--muted);
+      font-size:14px;
+    }
+
+    .rule-wrap{
+      width:min(92vw,500px);
+    }
+
+    .rule-small{
+      color:var(--muted);
+      margin-bottom:14px;
+    }
+
+    .rule-big{
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(34px,9vw,50px);
+      line-height:1.15;
+      margin:0;
+      font-weight:500;
+    }
+
+    .rule-sub{
+      margin:18px auto 30px;
+      max-width:390px;
+      color:var(--muted);
+      line-height:1.65;
+    }
+
+    .next{
+      color:var(--pink-deep);
+      text-decoration:none;
+      font-weight:650;
+      display:inline-flex;
+      gap:7px;
+      align-items:center;
+      padding:12px 8px;
+    }
+
+    .next:hover{text-decoration:underline}
+
+    .footer{
+      position:fixed;
+      left:22px;
+      right:22px;
+      bottom:max(16px,env(safe-area-inset-bottom));
+      z-index:20;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+      font-size:12px;
+      color:rgba(89,67,77,.48);
+    }
+
+    .music{
+      border:0;
+      background:transparent;
+      color:inherit;
+      font:inherit;
+      padding:7px 0;
+      cursor:pointer;
+    }
+
+    .chapter{
+      letter-spacing:.08em;
+      text-transform:uppercase;
+      white-space:nowrap;
+    }
+
+    .note{
+      position:fixed;
+      font-family:Georgia,serif;
+      color:rgba(186,97,123,.62);
+      cursor:pointer;
+      user-select:none;
+      z-index:6;
+      animation:float 6s ease-in-out infinite;
+    }
+
+    .n1{left:8%;top:15%;font-size:17px}
+    .n2{right:9%;top:23%;font-size:15px;animation-delay:1.2s}
+    .n3{left:11%;bottom:18%;font-size:14px;animation-delay:2s}
+    .n4{right:12%;bottom:15%;font-size:18px;animation-delay:.5s}
+
+    @keyframes float{
+      0%,100%{transform:translateY(0) rotate(0deg)}
+      50%{transform:translateY(-9px) rotate(6deg)}
+    }
+
+    .toast{
+      position:fixed;
+      left:50%;
+      bottom:82px;
+      transform:translate(-50%,12px);
+      z-index:50;
+      padding:10px 14px;
+      border-radius:999px;
+      background:rgba(47,37,41,.9);
+      color:#fff;
+      font-size:13px;
+      opacity:0;
+      pointer-events:none;
+      transition:.28s ease;
+      white-space:nowrap;
+      max-width:88vw;
+      overflow:hidden;
+      text-overflow:ellipsis;
+    }
+    .toast.show{opacity:1;transform:translate(-50%,0)}
+
+    .tap-heart{
+      position:fixed;
+      pointer-events:none;
+      z-index:100;
+      font-family:Georgia,serif;
+      color:var(--pink);
+      animation:heartPop .8s ease forwards;
+    }
+
+    @keyframes heartPop{
+      0%{opacity:0;transform:translate(-50%,-50%) scale(.5)}
+      25%{opacity:1}
+      100%{opacity:0;transform:translate(-50%,-110%) scale(1.3) rotate(10deg)}
+    }
+
+    @media (min-width:800px){
+      .footer{left:32px;right:32px}
+    }
+
+    @media (prefers-reduced-motion:reduce){
+      *,*::before,*::after{
+        animation-duration:.01ms!important;
+        animation-delay:0ms!important;
+        transition-duration:.01ms!important;
+      }
+    }
+  </style>
+  <script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
 </head>
-<body style="margin:0;background:#151221;color:#fff;font-family:system-ui">
-  <div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div>
-  <script src="./page-runtime-hook.js"></script>
-  <script src="./site-loader.js"></script>
+
+<body>
+  <div class="orb a"></div>
+  <div class="orb b"></div>
+
+  <div class="note n1" data-note="yes, this entire thing is for you.">♡</div>
+  <div class="note n2" data-note="I may have gone a little overboard.">✦</div>
+  <div class="note n3" data-note="you better not skip anything 👀">✧</div>
+  <div class="note n4" data-note="worth it, obviously.">⋆</div>
+
+  <main class="shell">
+    <!-- SCREEN 1 -->
+    <section class="screen active fade-in" id="screenStart">
+      <div class="start-card">
+        <div class="start-heart">♡</div>
+        <div class="tiny">private delivery</div>
+        <h1 id="deliveryTitle">this is for one person only.</h1>
+        <p id="deliveryText">If your name is <strong>HER NAME</strong>, you may continue. Everyone else, please leave politely.</p>
+        <button class="btn btn-primary" id="startBtn">yes, that’s me →</button>
+      </div>
+    </section>
+
+    <!-- SCREEN 2 -->
+    <section class="screen" id="screenIntro">
+      <div class="intro-wrap">
+        <div class="eyebrow" id="heyLine">hey, NICKNAME…</div>
+        <h1 class="intro-title">I made something<br>for you.</h1>
+        <div class="name" id="bigName">HER NAME</div>
+        <p class="personal-line" id="personalLine">
+          Actually… I made a few things. Some cute, some stupid, and some that I probably spent way too long on.
+        </p>
+        <div class="wait-note">tap anywhere when you’re ready ♡</div>
+      </div>
+    </section>
+
+    <!-- SCREEN 3 -->
+    <section class="screen" id="screenEnvelope">
+      <div class="envelope-stage">
+        <div class="envelope" id="envelope">
+          <div class="flap"></div>
+
+          <div class="letter">
+            <div class="for">made especially for</div>
+            <div class="nick" id="letterName">NICKNAME</div>
+            <div class="only" id="insideJoke">
+              because apparently a normal birthday message was too boring.
+            </div>
+          </div>
+
+          <button class="seal" id="sealBtn" aria-label="Open the envelope">♡</button>
+        </div>
+
+        <div class="envelope-caption" id="envelopeCaption">tap the seal to open it</div>
+      </div>
+    </section>
+
+    <!-- SCREEN 4 -->
+    <section class="screen" id="screenRule">
+      <div class="rule-wrap">
+        <div class="rule-small">okay, one tiny rule…</div>
+        <h2 class="rule-big">don’t skip anything.</h2>
+        <p class="rule-sub" id="ruleSub">
+          There are eight little pieces to this. Go in order, take your time, and please appreciate my unnecessary level of effort.
+        </p>
+        <a class="next" id="nextLink" href="memories.html">chapter two starts here →</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <button class="music" id="musicBtn">
+      <span id="musicIcon">♫</span>
+      <span id="musicText">play the soundtrack</span>
+    </button>
+    <div class="chapter">chapter 01 / 08</div>
+  </footer>
+
+  <div class="toast" id="toast"></div>
+
+  <audio id="bgMusic" loop preload="metadata">
+    <source src="song.mp3" type="audio/mpeg">
+  </audio>
+
+  <script>
+    /*
+      PERSONALISE ONLY THIS SECTION
+      --------------------------------
+      Replace the values below and the whole page updates automatically.
+    */
+    const CONFIG = {
+      name: "HER NAME",
+      nickname: "NICKNAME",
+      insideJoke: "because apparently a normal birthday message was too boring.",
+      introLine: "Actually… I made a few things. Some cute, some stupid, and some that I probably spent way too long on.",
+      memoriesPage: "memories.html"
+    };
+/* BIRTHDAY_CONTROL_CONFIG_PATCH */
+    Object.assign(CONFIG,(window.SITE_CONFIG?.pages?.entry)||{});
+    CONFIG.name=window.SITE_CONFIG?.name||CONFIG.name;
+    CONFIG.nickname=window.SITE_CONFIG?.nickname||CONFIG.nickname;
+    CONFIG.insideJoke=window.SITE_CONFIG?.insideJoke||CONFIG.insideJoke;
+    CONFIG.introLine=window.SITE_CONFIG?.introLine||CONFIG.introLine;
+
+
+    // Fill personal details
+    document.getElementById("deliveryText").innerHTML =
+      `If your name is <strong>${CONFIG.name}</strong>, you may continue. Everyone else, please leave politely.`;
+
+    document.getElementById("heyLine").textContent = `hey, ${CONFIG.nickname}…`;
+    document.getElementById("bigName").textContent = CONFIG.name;
+    document.getElementById("letterName").textContent = CONFIG.nickname;
+    document.getElementById("insideJoke").textContent = CONFIG.insideJoke;
+    document.getElementById("personalLine").textContent = CONFIG.introLine;
+    document.getElementById("nextLink").href = CONFIG.memoriesPage;
+
+    const screens = [...document.querySelectorAll(".screen")];
+    const startBtn = document.getElementById("startBtn");
+    const intro = document.getElementById("screenIntro");
+    const envelopeScreen = document.getElementById("screenEnvelope");
+    const envelope = document.getElementById("envelope");
+    const sealBtn = document.getElementById("sealBtn");
+    const caption = document.getElementById("envelopeCaption");
+    const musicBtn = document.getElementById("musicBtn");
+    const musicText = document.getElementById("musicText");
+    const musicIcon = document.getElementById("musicIcon");
+    const music = document.getElementById("bgMusic");
+    const toast = document.getElementById("toast");
+
+    function showScreen(id){
+      const current = screens.find(s => s.classList.contains("active"));
+      const next = document.getElementById(id);
+
+      if(current){
+        current.classList.remove("fade-in");
+        current.classList.add("fade-out");
+        setTimeout(()=>{
+          current.classList.remove("active","fade-out");
+          next.classList.add("active","fade-in");
+        },420);
+      }else{
+        next.classList.add("active","fade-in");
+      }
+    }
+
+    startBtn.addEventListener("click", ()=>{
+      showScreen("screenIntro");
+    });
+
+    let introReady = false;
+    setTimeout(()=> introReady = true, 850);
+
+    intro.addEventListener("click", ()=>{
+      if(introReady) showScreen("screenEnvelope");
+    });
+
+    sealBtn.addEventListener("click", (e)=>{
+      e.stopPropagation();
+      envelope.classList.add("open");
+      sealBtn.classList.add("hidden");
+      caption.textContent = "okay… now this officially begins.";
+      setTimeout(()=> showScreen("screenRule"), 1450);
+    });
+
+    // Hidden notes
+    let toastTimer;
+    function showToast(message){
+      clearTimeout(toastTimer);
+      toast.textContent = message;
+      toast.classList.add("show");
+      toastTimer = setTimeout(()=>toast.classList.remove("show"),2200);
+    }
+
+    document.querySelectorAll("[data-note]").forEach(el=>{
+      el.addEventListener("click",(e)=>{
+        e.stopPropagation();
+        showToast(el.dataset.note);
+      });
+    });
+
+    // Music state can be reused later across pages through sessionStorage.
+    async function setMusic(shouldPlay){
+      if(shouldPlay){
+        try{
+          await music.play();
+          musicText.textContent = "soundtrack playing";
+          musicIcon.textContent = "❚❚";
+          sessionStorage.setItem("birthdayMusic","on");
+        }catch{
+          showToast("Add a file called song.mp3 beside this page ♫");
+        }
+      }else{
+        music.pause();
+        musicText.textContent = "play the soundtrack";
+        musicIcon.textContent = "♫";
+        sessionStorage.setItem("birthdayMusic","off");
+      }
+    }
+
+    musicBtn.addEventListener("click",()=>{
+      setMusic(music.paused);
+    });
+
+    // Tiny tap-heart effect: subtle and playful.
+    document.addEventListener("pointerdown",(e)=>{
+      if(e.target.closest("button,a,.note")) return;
+      const heart = document.createElement("div");
+      heart.className = "tap-heart";
+      heart.textContent = "♡";
+      heart.style.left = e.clientX + "px";
+      heart.style.top = e.clientY + "px";
+      document.body.appendChild(heart);
+      setTimeout(()=>heart.remove(),850);
+    });
+  </script>
+  <script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<script src="./page-patch-runtime.js?v=phase1"></script>
 </body>
 </html>

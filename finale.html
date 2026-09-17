@@ -1,1 +1,647 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>For You ♡</title></head><body style="margin:0;background:#151221;color:#fff;font-family:system-ui"><div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div><script src="./page-runtime-hook.js"></script><script src="./site-loader.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080706">
+<title>Final Reel</title>
+<style>
+:root{
+  --bg:#080706;
+  --ivory:#eee6d5;
+  --muted:#9f9687;
+  --amber:#d39a54;
+  --burn:#bc6337;
+}
+*{box-sizing:border-box}
+html,body{
+  margin:0;width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(--ivory);
+  font-family:Georgia,serif;
+}
+button{font:inherit}
+body{position:relative}
+
+#dust{
+  position:fixed;inset:0;width:100%;height:100%;z-index:0;pointer-events:none
+}
+.grain{
+  position:fixed;inset:0;z-index:2;pointer-events:none;opacity:.12;mix-blend-mode:screen;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter id='n'/%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.32'/%3E%3C/svg%3E");
+}
+.flicker{
+  position:fixed;inset:0;z-index:3;pointer-events:none;
+  background:rgba(255,245,218,.018);
+  animation:flicker 3.2s steps(1) infinite;
+}
+@keyframes flicker{
+  0%,100%{opacity:.16}
+  6%{opacity:.03}
+  9%{opacity:.22}
+  11%{opacity:.07}
+  47%{opacity:.13}
+  51%{opacity:.025}
+  78%{opacity:.18}
+}
+
+.beam{
+  position:fixed;left:-12vw;top:18%;width:72vw;height:60vh;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,rgba(225,185,120,.10),rgba(225,185,120,.025),transparent);
+  transform:skewX(-12deg) rotate(-3deg);
+  filter:blur(8px);
+  opacity:.55;
+}
+
+.projector-edge{
+  position:fixed;inset:0;z-index:4;pointer-events:none;
+  box-shadow:inset 0 0 180px 90px rgba(0,0,0,.82);
+}
+
+.stage{
+  position:fixed;inset:0;z-index:10;display:grid;place-items:center;padding:34px
+}
+.scene{
+  position:absolute;inset:0;display:grid;place-items:center;padding:34px;
+  opacity:0;visibility:hidden;transition:opacity .9s ease,visibility .9s ease;
+  text-align:center
+}
+.scene.active{opacity:1;visibility:visible}
+.scene-inner{width:min(92vw,980px)}
+.production{
+  font-family:"Courier New",monospace;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#716a60;margin-bottom:24px
+}
+.line{
+  margin:0;font-weight:400;font-size:clamp(34px,6.5vw,84px);line-height:.98;letter-spacing:-.045em
+}
+.line.small{font-size:clamp(26px,4vw,52px);line-height:1.1}
+.line em{font-style:italic;color:#d4b690}
+.sub{
+  margin:24px auto 0;max-width:680px;font-family:Arial,Helvetica,sans-serif;font-size:13px;line-height:1.8;color:#8f877a
+}
+
+.play{
+  margin-top:30px;border:1px solid #696157;background:transparent;color:var(--ivory);
+  padding:12px 16px;font-family:"Courier New",monospace;text-transform:uppercase;letter-spacing:.13em;font-size:10px;cursor:pointer
+}
+.play:hover{border-color:#d0b791;color:#fff}
+.tiny-control{
+  position:fixed;right:16px;top:14px;z-index:50;border:0;background:transparent;color:#6f685f;
+  font-family:"Courier New",monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;cursor:pointer
+}
+
+/* callback scene */
+.callbacks{
+  position:relative;width:min(90vw,900px);height:min(65vh,520px);margin:auto
+}
+.callback{
+  position:absolute;font-family:"Courier New",monospace;font-size:clamp(12px,2vw,20px);
+  text-transform:lowercase;letter-spacing:.05em;color:#b8ad9e;opacity:0;
+  animation:flash 5.6s ease forwards;
+}
+.callback:nth-child(1){left:7%;top:14%;animation-delay:.2s}
+.callback:nth-child(2){right:6%;top:26%;animation-delay:1s}
+.callback:nth-child(3){left:19%;bottom:24%;animation-delay:1.8s}
+.callback:nth-child(4){right:14%;bottom:15%;animation-delay:2.6s}
+.callback:nth-child(5){left:42%;top:48%;animation-delay:3.4s}
+@keyframes flash{
+  0%{opacity:0;filter:blur(7px);transform:scale(.96)}
+  14%{opacity:1;filter:blur(0);transform:none}
+  42%{opacity:.92}
+  78%{opacity:.15}
+  100%{opacity:0;filter:blur(4px)}
+}
+
+/* photo scene */
+.photo-wrap{
+  width:min(76vw,520px);margin:auto;position:relative
+}
+.photo-frame{
+  width:100%;aspect-ratio:4/5;background:#15120f;border:1px solid #342e28;
+  box-shadow:0 28px 90px rgba(0,0,0,.58);overflow:hidden;position:relative
+}
+.photo-frame img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-placeholder{
+  width:100%;height:100%;display:grid;place-items:center;color:#665f56;
+  font-family:"Courier New",monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase
+}
+.photo-caption{
+  margin-top:18px;font-family:"Courier New",monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;color:#71695f
+}
+
+/* message scene */
+.message{
+  width:min(90vw,850px);margin:auto;display:grid;gap:16px
+}
+.message p{
+  margin:0;font-size:clamp(24px,4vw,48px);line-height:1.04;letter-spacing:-.035em;color:#d9d1c3;
+  opacity:0;transform:translateY(10px)
+}
+.message p.show{animation:rise .8s ease forwards}
+@keyframes rise{to{opacity:1;transform:none}}
+.message p:nth-child(2){animation-delay:1.05s}
+.message p:nth-child(3){animation-delay:2.1s}
+.message p:nth-child(4){animation-delay:3.15s}
+.message p:nth-child(5){animation-delay:4.2s}
+.message p:nth-child(6){animation-delay:5.25s}
+.message p:nth-child(7){animation-delay:6.45s;color:#e2c29a;font-style:italic}
+
+/* end */
+.endmark{
+  font-family:"Courier New",monospace;font-size:clamp(24px,5vw,60px);letter-spacing:.18em;text-transform:uppercase;color:#d7d1c6
+}
+.actually{
+  margin-top:22px;font-size:clamp(28px,4vw,52px);font-style:italic;color:#9b8f80;opacity:0
+}
+.actually.show{animation:rise .8s ease forwards}
+.final-birthday{
+  margin-top:18px;font-size:clamp(44px,8vw,102px);line-height:.95;letter-spacing:-.05em;opacity:0;
+  color:#f0e5d3;text-shadow:0 0 22px rgba(222,172,112,.06)
+}
+.final-birthday.show{animation:rise 1s ease forwards}
+
+.spark{
+  position:fixed;width:4px;height:4px;border-radius:50%;background:#d9b16d;z-index:20;pointer-events:none;
+  animation:spark 1.5s ease-out forwards
+}
+@keyframes spark{
+  from{opacity:1;transform:translate(0,0) scale(1)}
+  to{opacity:0;transform:translate(var(--x),var(--y)) scale(.2)}
+}
+
+.one-more{
+  margin-top:28px;border:0;border-bottom:1px solid #6e655a;background:transparent;color:#a59b8d;
+  font-family:"Courier New",monospace;font-size:9px;letter-spacing:.13em;text-transform:uppercase;padding:6px 0;cursor:pointer
+}
+.handnote{
+  margin:24px auto 0;max-width:620px;font-family:"Segoe Print","Bradley Hand",cursive;font-size:clamp(18px,3vw,30px);
+  color:#d6c5b1;line-height:1.45;opacity:0;transform:translateY(8px)
+}
+.handnote.show{animation:rise .8s ease forwards}
+
+.end-actions{
+  position:fixed;left:50%;bottom:18px;transform:translateX(-50%);z-index:30;display:flex;gap:12px;
+  opacity:0;pointer-events:none;transition:.5s ease
+}
+.end-actions.show{opacity:1;pointer-events:auto}
+.end-actions button{
+  border:1px solid #464039;background:rgba(8,7,6,.58);color:#80786e;padding:9px 11px;
+  font-family:"Courier New",monospace;font-size:8px;letter-spacing:.11em;text-transform:uppercase;cursor:pointer
+}
+.end-actions button:hover{color:#ddd0bf;border-color:#8c8175}
+
+.hide-ui .tiny-control,
+.hide-ui .end-actions{opacity:0!important;pointer-events:none!important}
+
+@media(max-width:640px){
+  .stage,.scene{padding:24px}
+  .beam{width:100vw;left:-25vw}
+  .photo-wrap{width:min(82vw,420px)}
+  .message{gap:14px}
+}
+
+.pause-mark{
+  position:fixed;
+  left:50%;
+  bottom:18px;
+  transform:translateX(-50%);
+  z-index:22;
+  font-family:"Courier New",monospace;
+  font-size:8px;
+  letter-spacing:.18em;
+  text-transform:uppercase;
+  color:#504a43;
+  opacity:.55;
+  pointer-events:none;
+}
+</style>
+  <script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
+</head>
+<body>
+
+<canvas id="dust"></canvas>
+<div class="grain"></div>
+<div class="flicker"></div>
+<div class="beam"></div>
+<div class="projector-edge"></div>
+<div class="pause-mark">let it play</div>
+
+<button class="tiny-control" id="soundBtn">sound</button>
+
+<div class="stage">
+
+  <section class="scene active" id="scene0">
+    <div class="scene-inner">
+      <div class="production">FINAL REEL · 08 / 08</div>
+      <h1 class="line small">okay.</h1>
+      <p class="sub">this is the last one.</p>
+      <button class="play" id="startBtn">play final reel</button>
+    </div>
+  </section>
+
+  <section class="scene" id="scene1">
+    <div class="scene-inner">
+      <div class="production">SCENE 01 · WHY THIS EXISTS</div>
+      <h2 class="line small">I started making this because it was your birthday.</h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene2">
+    <div class="scene-inner">
+      <h2 class="line small">somewhere along the way,<br><em>it became about something else.</em></h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene3">
+    <div class="scene-inner">
+      <h2 class="line small">how much of you I’ve somehow collected in my head.</h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene4">
+    <div class="callbacks">
+      <span class="callback">the stupid conversations</span>
+      <span class="callback">the photos I saved</span>
+      <span class="callback">the things you probably forgot</span>
+      <span class="callback">your unnecessary yapping</span>
+      <span class="callback">the tiny things I notice</span>
+    </div>
+  </section>
+
+  <section class="scene" id="scene5">
+    <div class="scene-inner">
+      <div class="production">SCENE 03 · FAVOURITE PART</div>
+      <div class="photo-wrap">
+        <div class="photo-frame" id="photoFrame">
+          <div class="photo-placeholder">replace with your favourite photo of her</div>
+        </div>
+        <div class="photo-caption">not necessarily the prettiest one. just the one that feels most like her.</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="scene6">
+    <div class="scene-inner">
+      <h2 class="line small">out of everything I put in here…</h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene7">
+    <div class="scene-inner">
+      <h2 class="line">this is still my favourite part.</h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene8">
+    <div class="scene-inner">
+      <h2 class="line small">not the picture.</h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene9">
+    <div class="scene-inner">
+      <h2 class="line"><em>you.</em></h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene10">
+    <div class="scene-inner">
+      <div class="production">SCENE 04 · ACTUAL BIRTHDAY MESSAGE</div>
+      <div class="message" id="message">
+        <p>I hope this year is good to you.</p>
+        <p>I hope you get more of the things that make you excited.</p>
+        <p>less of the things that quietly drain you.</p>
+        <p>more days that feel easy.</p>
+        <p>more people who make you feel understood.</p>
+        <p>and enough stupid moments to keep everything interesting.</p>
+        <p>and selfishly, I hope I get to be around for some of it.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene" id="scene11">
+    <div class="scene-inner">
+      <div class="production">SCENE 05 · ONE THING I MEAN</div>
+      <h2 class="line small">
+        I hope you never become less of yourself just to make life easier for everyone else.
+      </h2>
+      <p class="sub">
+        Keep the loud parts. The soft parts. The weird parts. The parts that take time to understand.
+      </p>
+    </div>
+  </section>
+
+  <section class="scene" id="scene12">
+    <div class="scene-inner">
+      <h2 class="line small">
+        and I hope this year gives you reasons to be proud of yourself
+        <br><em>even on the days nobody else notices.</em>
+      </h2>
+    </div>
+  </section>
+
+  <section class="scene" id="scene13">
+    <div class="scene-inner">
+      <div class="endmark">END.</div>
+      <div class="actually" id="actually">…actually</div>
+      <div class="final-birthday" id="birthdayLine">happy birthday, NICKNAME. ♡</div>
+      <button class="one-more" id="oneMoreBtn">one more thing?</button>
+      <div class="handnote" id="handNote">thank you for being someone worth making all of this for.</div>
+    </div>
+  </section>
+
+</div>
+
+<div class="end-actions" id="endActions">
+  <button id="replayBtn">replay from beginning</button>
+  <button id="quietBtn">keep this open for a while</button>
+  <a href="index.html" style="border:1px solid #464039;background:rgba(8,7,6,.58);color:#80786e;padding:9px 11px;font-family:'Courier New',monospace;font-size:8px;letter-spacing:.11em;text-transform:uppercase;text-decoration:none">start from chapter one</a>
+</div>
+
+<audio id="projectorAudio" loop preload="metadata">
+  <source src="projector.mp3" type="audio/mpeg">
+</audio>
+
+<script>
+const CONFIG = {
+  nickname: "NICKNAME",
+  favoritePhoto: (window.SITE_CONFIG && window.SITE_CONFIG.favoritePhoto) || null
+};
+/* BIRTHDAY_CONTROL_CONFIG_PATCH */
+Object.assign(CONFIG,(window.SITE_CONFIG?.pages?.finale)||{});
+CONFIG.nickname=window.SITE_CONFIG?.nickname||CONFIG.nickname;
+CONFIG.favoritePhoto=window.SITE_CONFIG?.favoritePhoto||CONFIG.favoritePhoto;
+
+
+const scenes = [...document.querySelectorAll(".scene")];
+const soundBtn = document.getElementById("soundBtn");
+const audio = document.getElementById("projectorAudio");
+const messageLines = [...document.querySelectorAll("#message p")];
+let timers = [];
+
+function showScene(i){
+  scenes.forEach((s,idx)=>s.classList.toggle("active",idx===i));
+}
+
+function clearTimers(){
+  timers.forEach(clearTimeout);
+  timers = [];
+}
+
+function later(fn,ms){
+  const id = setTimeout(fn,ms);
+  timers.push(id);
+  return id;
+}
+
+function setupPhoto(){
+  if(CONFIG.favoritePhoto){
+    document.getElementById("photoFrame").innerHTML = `<img src="${CONFIG.favoritePhoto}" alt="">`;
+  }
+}
+setupPhoto();
+
+async function toggleSound(){
+  if(audio.paused){
+    try{
+      await audio.play();
+      soundBtn.textContent = "sound on";
+    }catch{
+      soundBtn.textContent = "add projector.mp3";
+    }
+  }else{
+    audio.pause();
+    soundBtn.textContent = "sound";
+  }
+}
+soundBtn.addEventListener("click",toggleSound);
+
+function runFinale(){
+  clearTimers();
+  document.body.classList.remove("hide-ui");
+  document.getElementById("endActions").classList.remove("show");
+  document.getElementById("actually").classList.remove("show");
+  document.getElementById("birthdayLine").classList.remove("show");
+  document.getElementById("handNote").classList.remove("show");
+  messageLines.forEach(p=>p.classList.remove("show"));
+
+  showScene(1);
+
+  // Slower pacing: each thought gets room to sit.
+  later(()=>showScene(2),4300);
+  later(()=>showScene(3),8400);
+  later(()=>showScene(4),12700);
+
+  // Memory callback scene stays up longer.
+  later(()=>showScene(5),19800);
+
+  later(()=>showScene(6),24600);
+  later(()=>showScene(7),28600);
+  later(()=>showScene(8),32900);
+  later(()=>showScene(9),36800);
+
+  // Birthday message now has more lines and more breathing room.
+  later(()=>{
+    showScene(10);
+    messageLines.forEach(p=>p.classList.add("show"));
+  },41200);
+
+  // Let the full birthday message stay visible.
+  later(()=>showScene(11),52000);
+  later(()=>showScene(12),58000);
+
+  // Fake ending comes much later now.
+  later(()=>showScene(13),64600);
+
+  later(()=>{
+    document.getElementById("actually").classList.add("show");
+  },68100);
+
+  later(()=>{
+    document.getElementById("birthdayLine").classList.add("show");
+    burst();
+  },70400);
+
+  later(()=>{
+    document.getElementById("endActions").classList.add("show");
+  },73500);
+}
+
+document.getElementById("startBtn").addEventListener("click",runFinale);
+
+document.getElementById("oneMoreBtn").addEventListener("click",()=>{
+  document.getElementById("handNote").classList.add("show");
+});
+
+document.getElementById("replayBtn").addEventListener("click",()=>{
+  showScene(0);
+  clearTimers();
+  document.getElementById("endActions").classList.remove("show");
+  document.getElementById("actually").classList.remove("show");
+  document.getElementById("birthdayLine").classList.remove("show");
+  document.getElementById("handNote").classList.remove("show");
+});
+
+document.getElementById("quietBtn").addEventListener("click",()=>{
+  document.body.classList.add("hide-ui");
+});
+
+function burst(){
+  for(let i=0;i<36;i++){
+    const s = document.createElement("div");
+    s.className = "spark";
+    s.style.left = "50%";
+    s.style.top = "48%";
+    const angle = Math.random()*Math.PI*2;
+    const dist = 80 + Math.random()*240;
+    s.style.setProperty("--x",Math.cos(angle)*dist+"px");
+    s.style.setProperty("--y",Math.sin(angle)*dist+"px");
+    s.style.animationDelay = (Math.random()*.18)+"s";
+    document.body.appendChild(s);
+    setTimeout(()=>s.remove(),1800);
+  }
+}
+
+function buildDust(){
+  const c = document.getElementById("dust");
+  const ctx = c.getContext("2d");
+  let motes = [];
+
+  function resize(){
+    c.width = innerWidth*devicePixelRatio;
+    c.height = innerHeight*devicePixelRatio;
+    c.style.width = innerWidth+"px";
+    c.style.height = innerHeight+"px";
+    ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+
+    motes = Array.from({length:Math.min(120,Math.floor(innerWidth*innerHeight/9000))},()=>({
+      x:Math.random()*innerWidth,
+      y:Math.random()*innerHeight,
+      r:Math.random()*1.7+.3,
+      a:Math.random()*.24+.02,
+      vx:(Math.random()-.5)*.08,
+      vy:Math.random()*.08+.01
+    }));
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,innerWidth,innerHeight);
+    for(const m of motes){
+      m.x += m.vx;
+      m.y += m.vy;
+      if(m.y>innerHeight+3)m.y=-3;
+      if(m.x< -3)m.x=innerWidth+3;
+      if(m.x>innerWidth+3)m.x=-3;
+
+      ctx.beginPath();
+      ctx.fillStyle=`rgba(230,215,188,${m.a})`;
+      ctx.arc(m.x,m.y,m.r,0,Math.PI*2);
+      ctx.fill();
+    }
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  addEventListener("resize",resize);
+  draw();
+}
+buildDust();
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="Escape"){
+    clearTimers();
+    showScene(0);
+    document.getElementById("endActions").classList.remove("show");
+  }
+});
+</script>
+
+  <script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<script src="./page-patch-runtime.js?v=phase1"></script>
+</body>
+</html>

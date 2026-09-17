@@ -1,1 +1,629 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>For You ♡</title></head><body style="margin:0;background:#151221;color:#fff;font-family:system-ui"><div id="boot" style="min-height:100vh;display:grid;place-items:center;font-size:12px;letter-spacing:.12em;text-transform:uppercase;opacity:.7">opening your page…</div><script src="./page-runtime-hook.js"></script><script src="./site-loader.js"></script></body></html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0c0d0c">
+<title>Yapping Archive</title>
+<style>
+:root{
+  --bg:#0d0f0d;
+  --panel:#d7d0bb;
+  --paper:#ece5cf;
+  --ink:#11120f;
+  --muted:#6d685d;
+  --acid:#c7ff38;
+  --red:#ff5b44;
+  --blue:#61b9ff;
+  --line:#22241f;
+}
+*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;overflow:hidden;font-family:"Courier New",monospace;background:var(--bg);color:var(--ink)}
+button,a{font:inherit}
+body::before{
+  content:"";position:fixed;inset:0;pointer-events:none;z-index:1;
+  background:repeating-linear-gradient(180deg,rgba(255,255,255,.025) 0 1px,transparent 1px 4px);
+}
+.noise{
+  position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.09;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='.4'/%3E%3C/svg%3E");
+}
+
+.boot{
+  position:fixed;inset:0;z-index:1000;background:#090a08;color:var(--acid);
+  display:grid;place-items:center;transition:.5s ease
+}
+.boot.hide{opacity:0;visibility:hidden}
+.boot-box{width:min(92vw,760px);padding:28px;border:1px solid #39402d;background:#0d100b;box-shadow:0 0 0 8px #090a08}
+.boot-kicker{font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:#7e8a65}
+.boot h1{margin:15px 0 0;font-size:clamp(34px,8vw,76px);line-height:.92;letter-spacing:-.06em;text-transform:uppercase}
+.boot h1 span{display:block;color:#fff}
+.boot-log{margin-top:22px;font-size:12px;line-height:1.7;color:#a8b18f}
+.boot-btn{
+  margin-top:22px;background:var(--acid);border:0;color:#0a0b09;padding:12px 14px;cursor:pointer;
+  text-transform:uppercase;letter-spacing:.11em;font-weight:bold
+}
+
+.desktop{
+  position:fixed;inset:0;z-index:2;
+  background:
+    linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px),
+    linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),
+    #1a1d18;
+  background-size:28px 28px;
+}
+.topbar{
+  position:absolute;top:0;left:0;right:0;height:38px;background:#11130f;color:#dfe5d0;
+  border-bottom:1px solid #353a2d;display:flex;align-items:center;justify-content:space-between;padding:0 12px;z-index:900
+}
+.topbar strong{font-size:11px;letter-spacing:.14em;text-transform:uppercase}
+.topbar .right{display:flex;gap:16px;font-size:10px;color:#8c947c}
+.signal{color:var(--acid)}
+
+.sidebar{
+  position:absolute;top:54px;left:14px;width:150px;display:grid;gap:12px;z-index:20
+}
+.file-icon{
+  background:transparent;border:0;color:#d7deca;cursor:pointer;text-align:left;padding:0
+}
+.icon-shape{
+  width:62px;height:48px;border:1px solid #6e7564;background:#cfc6aa;color:#111;
+  box-shadow:4px 4px 0 #080907;display:grid;place-items:center;font-size:22px;margin-bottom:5px
+}
+.file-icon span{display:block;font-size:9px;line-height:1.25;letter-spacing:.06em;text-transform:uppercase}
+
+.diag{
+  position:absolute;top:54px;right:14px;width:230px;background:#10120f;border:1px solid #33372e;color:#cdd4bf;z-index:40
+}
+.diag-head{padding:9px 10px;border-bottom:1px solid #33372e;color:var(--acid);font-size:9px;letter-spacing:.13em;text-transform:uppercase}
+.diag-body{padding:10px}
+.stat{margin-bottom:9px}
+.stat-top{display:flex;justify-content:space-between;font-size:9px;text-transform:uppercase;letter-spacing:.07em}
+.bar{height:6px;background:#252820;margin-top:4px}
+.bar i{display:block;height:100%;background:var(--acid)}
+.bad-stat .bar i{background:var(--red)}
+.diag-note{margin-top:12px;padding-top:10px;border-top:1px dashed #34382f;font-size:9px;line-height:1.5;color:#89917c}
+
+.window{
+  position:absolute;background:var(--paper);border:2px solid #10110f;box-shadow:7px 7px 0 rgba(0,0,0,.45);min-width:270px;z-index:100
+}
+.window.active{z-index:700}
+.titlebar{
+  height:30px;background:#151713;color:#edf3df;display:flex;align-items:center;justify-content:space-between;
+  padding:0 8px;cursor:move;user-select:none
+}
+.titlebar strong{font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+.win-actions{display:flex;gap:5px}
+.win-btn{
+  width:18px;height:18px;border:1px solid #d9dfcf;background:#d7d0bb;color:#111;padding:0;cursor:pointer;display:grid;place-items:center
+}
+.win-content{padding:11px}
+
+.main-window{left:19%;top:15%;width:min(560px,58vw)}
+.player{
+  aspect-ratio:16/10;background:#050605;border:2px inset #787268;display:grid;place-items:center;overflow:hidden
+}
+.player video{width:100%;height:100%;object-fit:cover;display:block}
+.player-placeholder{
+  color:#848b79;font-size:11px;letter-spacing:.12em;text-transform:uppercase;text-align:center;padding:20px
+}
+.player-placeholder strong{display:block;color:#e7eadf;font-size:24px;margin-bottom:8px}
+.tape-row{display:flex;justify-content:space-between;gap:12px;margin-top:9px;font-size:9px;text-transform:uppercase}
+.controls{display:flex;gap:7px;margin-top:10px}
+.control-btn{
+  border:1px solid #25251f;background:#d9d1ba;color:#111;padding:7px 10px;cursor:pointer;font-size:9px;text-transform:uppercase
+}
+.control-btn:hover{background:var(--acid)}
+
+.evidence-strip{
+  margin-top:12px;display:flex;gap:8px;overflow-x:auto;padding-bottom:4px
+}
+.evidence-strip::-webkit-scrollbar{height:6px}
+.evidence-strip::-webkit-scrollbar-thumb{background:#878170}
+.clip{
+  flex:0 0 98px;border:1px solid #312f28;background:#c9c1aa;padding:5px;cursor:pointer
+}
+.clip-thumb{
+  aspect-ratio:4/3;background:#191b17;display:grid;place-items:center;color:#747b6b;font-size:9px;margin-bottom:5px
+}
+.clip.active{outline:2px solid var(--acid)}
+.clip strong{font-size:8px;display:block;text-transform:uppercase}
+.clip span{font-size:8px;color:#676255}
+
+.note-window{left:11%;bottom:8%;width:280px;transform:rotate(-1.5deg)}
+.note{
+  font-family:Georgia,serif;font-size:20px;line-height:1.25;padding:8px 6px 4px
+}
+.note small{
+  display:block;font-family:"Courier New",monospace;font-size:9px;margin-top:9px;text-transform:uppercase;color:#6f695d
+}
+
+.alert-window{right:10%;bottom:11%;width:300px}
+.alert-box{
+  border:2px solid #181814;padding:12px;background:#f0e8d1
+}
+.alert-title{color:var(--red);font-weight:bold;font-size:12px;text-transform:uppercase}
+.alert-text{margin-top:8px;font-size:10px;line-height:1.55}
+.alert-btn{
+  margin-top:10px;border:1px solid #222;background:#d5cdb6;padding:7px 10px;font-size:9px;text-transform:uppercase;cursor:pointer
+}
+
+.popup{
+  position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.96);z-index:950;
+  width:min(340px,calc(100vw - 32px));background:#ede5cf;border:2px solid #10110f;box-shadow:8px 8px 0 rgba(0,0,0,.52);
+  opacity:0;visibility:hidden;transition:.18s ease
+}
+.popup.show{opacity:1;visibility:visible;transform:translate(-50%,-50%) scale(1)}
+.popup .titlebar{cursor:default}
+.popup-body{padding:14px}
+.popup-body strong{display:block;font-size:13px;text-transform:uppercase}
+.popup-body p{font-size:10px;line-height:1.55;margin:8px 0 0}
+.popup-ok{margin-top:12px;border:1px solid #222;background:#d7d0bb;padding:8px 12px;font-size:9px;text-transform:uppercase;cursor:pointer}
+
+.footer-tip{
+  position:absolute;bottom:12px;left:50%;transform:translateX(-50%);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:#72796b
+}
+.next{
+  position:absolute;right:14px;bottom:12px;z-index:910;color:#0c0d0b;background:var(--acid);padding:9px 12px;text-decoration:none;
+  font-size:9px;letter-spacing:.1em;text-transform:uppercase;border:1px solid #111
+}
+
+@media(max-width:880px){
+  .diag{display:none}
+  .main-window{left:17%;top:14%;width:70vw}
+  .note-window{left:6%;bottom:12%}
+  .alert-window{right:5%;bottom:9%}
+}
+@media(max-width:650px){
+  body{overflow:hidden}
+  .sidebar{top:48px;left:8px;display:flex;width:calc(100% - 16px);gap:8px;overflow-x:auto}
+  .file-icon{flex:0 0 74px}
+  .icon-shape{width:50px;height:40px;font-size:18px}
+  .main-window{left:5%;top:145px;width:90vw}
+  .note-window,.alert-window{display:none}
+  .footer-tip{display:none}
+}
+</style>
+  <script>(function(){
+const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
+const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
+const KEY='birthday-site-state-v2';
+const DEFAULTS={
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
+  fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
+};
+function clone(x){return JSON.parse(JSON.stringify(x))}
+function merge(base,extra){
+  if(Array.isArray(base)) return Array.isArray(extra)?clone(extra):clone(base);
+  if(base&&typeof base==='object'){
+    const out=clone(base);
+    if(extra&&typeof extra==='object'&&!Array.isArray(extra)) for(const k of Object.keys(extra)) out[k]=(k in out)?merge(out[k],extra[k]):clone(extra[k]);
+    return out;
+  }
+  return extra===undefined?base:extra;
+}
+function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||'{}'))}catch{return clone(DEFAULTS)}}
+function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
+function syncSiteConfig(state){
+  const g=state.general||{};
+  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+}
+async function fetchRemote(){
+  const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
+  if(!r.ok) throw new Error('Could not load live settings');
+  const rows=await r.json();
+  const row=rows&&rows[0];
+  if(!row) return {state:read(),updated_at:null};
+  const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+async function publish(state,adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
+  const j=await r.json().catch(()=>({})); if(!r.ok) throw new Error(j.error||'Publish failed'); write(state); return j;
+}
+async function ping(adminKey){
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'ping'})});
+  return r.ok;
+}
+async function upload(file,adminKey,folder='uploads'){
+  const fd=new FormData();fd.append('file',file);fd.append('folder',folder);
+  const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-media`,{method:'POST',headers:{'x-admin-key':adminKey},body:fd});
+  const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
+}
+const initial=read();syncSiteConfig(initial);
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+})();
+</script>
+</head>
+<body>
+
+<div class="noise"></div>
+
+<div class="boot" id="boot">
+  <div class="boot-box">
+    <div class="boot-kicker">CAUTION: audio evidence detected</div>
+    <h1>YAPPING<span>ARCHIVE</span></h1>
+    <div class="boot-log">
+&gt; loading voice/video evidence...
+&gt; subject identified: NICKNAME
+&gt; side stories found: excessive
+&gt; actual point reached: unknown
+&gt; listener status: still here
+    </div>
+    <button class="boot-btn" id="bootBtn">access archive</button>
+  </div>
+</div>
+
+<div class="desktop">
+
+  <div class="topbar">
+    <div><strong>YAP_OS 5.0</strong></div>
+    <div class="right">
+      <span class="signal">● LIVE</span>
+      <span id="clock">00:00</span>
+    </div>
+  </div>
+
+  <div class="sidebar">
+    <button class="file-icon" data-open="videos">
+      <div class="icon-shape">▶</div>
+      <span>YAPPING<br>VIDEOS</span>
+    </button>
+
+    <button class="file-icon" data-open="screens">
+      <div class="icon-shape">▧</div>
+      <span>UNNECESSARY<br>SCREENSHOTS</span>
+    </button>
+
+    <button class="file-icon" data-open="voice">
+      <div class="icon-shape">♫</div>
+      <span>VOICE NOTE<br>EVIDENCE</span>
+    </button>
+
+    <button class="file-icon" data-open="dont">
+      <div class="icon-shape">!</div>
+      <span>DO_NOT<br>OPEN</span>
+    </button>
+
+    <button class="file-icon" data-open="final">
+      <div class="icon-shape">TXT</div>
+      <span>FINAL<br>REPORT</span>
+    </button>
+  </div>
+
+  <div class="diag">
+    <div class="diag-head">live subject diagnostics</div>
+    <div class="diag-body">
+      <div class="stat">
+        <div class="stat-top"><span>yapping detected</span><span>93%</span></div>
+        <div class="bar"><i style="width:93%"></i></div>
+      </div>
+      <div class="stat bad-stat">
+        <div class="stat-top"><span>topic consistency</span><span>12%</span></div>
+        <div class="bar"><i style="width:12%"></i></div>
+      </div>
+      <div class="stat">
+        <div class="stat-top"><span>side quests</span><span>88%</span></div>
+        <div class="bar"><i style="width:88%"></i></div>
+      </div>
+      <div class="stat bad-stat">
+        <div class="stat-top"><span>point reached</span><span>3%</span></div>
+        <div class="bar"><i style="width:3%"></i></div>
+      </div>
+      <div class="diag-note">
+        STATUS: conversation remains active despite repeated topic loss.
+      </div>
+    </div>
+  </div>
+
+  <div class="window main-window active" id="videosWindow">
+    <div class="titlebar">
+      <strong>YAPPING_VIDEOS / session_004</strong>
+      <div class="win-actions">
+        <button class="win-btn">_</button>
+        <button class="win-btn">□</button>
+        <button class="win-btn">×</button>
+      </div>
+    </div>
+    <div class="win-content">
+      <div class="player" id="player">
+        <div class="player-placeholder">
+          <strong>YAP SESSION 004</strong>
+          replace with your video
+        </div>
+      </div>
+
+      <div class="tape-row">
+        <span>DURATION: unfortunately 03:47</span>
+        <span>TOPIC: unclear</span>
+      </div>
+
+      <div class="controls">
+        <button class="control-btn" id="playFake">play evidence</button>
+        <button class="control-btn" id="flagBtn">flag as excessive</button>
+      </div>
+
+      <div class="evidence-strip" id="evidenceStrip"></div>
+    </div>
+  </div>
+
+  <div class="window note-window">
+    <div class="titlebar">
+      <strong>listener_note.txt</strong>
+      <div class="win-actions"><button class="win-btn">×</button></div>
+    </div>
+    <div class="win-content">
+      <div class="note">
+        somehow every story has another story inside it.
+        <small>and somehow I still listen to all of them.</small>
+      </div>
+    </div>
+  </div>
+
+  <div class="window alert-window">
+    <div class="titlebar">
+      <strong>system_warning.exe</strong>
+      <div class="win-actions"><button class="win-btn">×</button></div>
+    </div>
+    <div class="win-content">
+      <div class="alert-box">
+        <div class="alert-title">warning</div>
+        <div class="alert-text">
+          Subject has started another story before finishing the previous one.
+        </div>
+        <button class="alert-btn" id="understoodBtn">understood unfortunately</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="popup" id="popup">
+    <div class="titlebar">
+      <strong id="popupTitle">SYSTEM MESSAGE</strong>
+      <div class="win-actions"><button class="win-btn" id="popupClose">×</button></div>
+    </div>
+    <div class="popup-body">
+      <strong id="popupStrong">ERROR</strong>
+      <p id="popupText"></p>
+      <button class="popup-ok" id="popupOk">okay</button>
+    </div>
+  </div>
+
+  <div style="position:fixed;right:14px;top:12px;z-index:9999;font:9px monospace;letter-spacing:.12em;color:#8f8b80">05 / 08</div>
+  <div class="footer-tip">drag windows · open files · investigate responsibly</div>
+  <a class="next" href="fair.html">next file →</a>
+</div>
+
+<script>
+const CONFIG = {
+  nickname: "NICKNAME",
+  clips: [
+    {title:"session 001", note:"topic lost at 00:43", src:null},
+    {title:"session 002", note:"side quest detected", src:null},
+    {title:"session 003", note:"actually funny", src:null},
+    {title:"session 004", note:"still talking", src:null},
+    {title:"session 005", note:"no conclusion", src:null}
+  ]
+};
+/* BIRTHDAY_CONTROL_CONFIG_PATCH */
+Object.assign(CONFIG,(window.SITE_CONFIG?.pages?.yapping)||{});
+CONFIG.nickname=window.SITE_CONFIG?.nickname||CONFIG.nickname;
+
+
+const boot = document.getElementById("boot");
+const popup = document.getElementById("popup");
+const popupTitle = document.getElementById("popupTitle");
+const popupStrong = document.getElementById("popupStrong");
+const popupText = document.getElementById("popupText");
+const evidenceStrip = document.getElementById("evidenceStrip");
+const player = document.getElementById("player");
+
+document.getElementById("bootBtn").addEventListener("click",()=>boot.classList.add("hide"));
+
+function showPopup(title,strong,text){
+  popupTitle.textContent = title;
+  popupStrong.textContent = strong;
+  popupText.textContent = text;
+  popup.classList.add("show");
+}
+function hidePopup(){popup.classList.remove("show")}
+document.getElementById("popupClose").addEventListener("click",hidePopup);
+document.getElementById("popupOk").addEventListener("click",hidePopup);
+
+document.querySelectorAll("[data-open]").forEach(btn=>{
+  btn.addEventListener("click",()=>{
+    const key = btn.dataset.open;
+
+    if(key==="videos"){
+      document.getElementById("videosWindow").classList.add("active");
+      return;
+    }
+
+    if(key==="screens"){
+      showPopup(
+        "SCREENSHOT_ARCHIVE",
+        "UNNECESSARY EVIDENCE",
+        "Replace this folder with screenshots that would make absolutely no sense to anyone except the two of you."
+      );
+    }
+
+    if(key==="voice"){
+      showPopup(
+        "VOICE_NOTE_EVIDENCE",
+        "AUDIO LENGTH: SUSPICIOUS",
+        "Recommended content: the voice notes where the explanation somehow became longer than the original problem."
+      );
+    }
+
+    if(key==="dont"){
+      showPopup(
+        "DO_NOT_OPEN",
+        "YOU OPENED IT.",
+        "I named it this because I knew you would click it. Predictable."
+      );
+    }
+
+    if(key==="final"){
+      showPopup(
+        "FINAL_REPORT.txt",
+        "FINAL ANALYSIS",
+        "Loud? yes. Random? constantly. Able to tell one story without seven side stories? apparently not. Would I want you any quieter? absolutely not."
+      );
+    }
+  });
+});
+
+document.getElementById("understoodBtn").addEventListener("click",()=>{
+  showPopup(
+    "SYSTEM RESPONSE",
+    "NOTED",
+    "Warning acknowledged. Subject continued talking anyway."
+  );
+});
+
+document.getElementById("flagBtn").addEventListener("click",()=>{
+  showPopup(
+    "EVIDENCE FLAGGED",
+    "SEVERITY: VERY YAPPY",
+    "This clip has been permanently preserved for future embarrassment."
+  );
+});
+
+document.getElementById("playFake").addEventListener("click",()=>{
+  showPopup(
+    "MEDIA PLAYER",
+    "ADD YOUR VIDEO FILE",
+    "Put a real .mp4 filename into one of the clip src values in CONFIG to make the evidence player work."
+  );
+});
+
+function renderClips(){
+  evidenceStrip.innerHTML = "";
+
+  CONFIG.clips.forEach((clip,index)=>{
+    const card = document.createElement("button");
+    card.className = "clip" + (index===3 ? " active" : "");
+    card.innerHTML = `
+      <div class="clip-thumb">${clip.src ? "VIDEO" : "NO FILE"}</div>
+      <strong>${clip.title}</strong>
+      <span>${clip.note}</span>
+    `;
+
+    card.addEventListener("click",()=>{
+      document.querySelectorAll(".clip").forEach(x=>x.classList.remove("active"));
+      card.classList.add("active");
+
+      if(clip.src){
+        player.innerHTML = `<video src="${clip.src}" controls autoplay playsinline></video>`;
+      }else{
+        player.innerHTML = `
+          <div class="player-placeholder">
+            <strong>${clip.title}</strong>
+            replace with your video
+          </div>
+        `;
+      }
+    });
+
+    evidenceStrip.appendChild(card);
+  });
+}
+renderClips();
+
+function makeDraggable(win){
+  const bar = win.querySelector(".titlebar");
+  if(!bar) return;
+
+  let dragging=false,offsetX=0,offsetY=0;
+
+  bar.addEventListener("pointerdown",e=>{
+    if(e.target.closest("button")) return;
+    dragging=true;
+    win.classList.add("active");
+
+    document.querySelectorAll(".window").forEach(w=>{
+      if(w!==win) w.classList.remove("active");
+    });
+
+    const r=win.getBoundingClientRect();
+    offsetX=e.clientX-r.left;
+    offsetY=e.clientY-r.top;
+    bar.setPointerCapture?.(e.pointerId);
+  });
+
+  bar.addEventListener("pointermove",e=>{
+    if(!dragging) return;
+
+    const maxX=innerWidth-win.offsetWidth;
+    const maxY=innerHeight-win.offsetHeight;
+
+    win.style.left=Math.max(0,Math.min(maxX,e.clientX-offsetX))+"px";
+    win.style.top=Math.max(38,Math.min(maxY,e.clientY-offsetY))+"px";
+    win.style.right="auto";
+    win.style.bottom="auto";
+    win.style.transform="none";
+  });
+
+  bar.addEventListener("pointerup",()=>dragging=false);
+}
+
+document.querySelectorAll(".window").forEach(makeDraggable);
+
+function updateClock(){
+  const d=new Date();
+  document.getElementById("clock").textContent =
+    String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+}
+updateClock();
+setInterval(updateClock,30000);
+
+setTimeout(()=>{
+  showPopup(
+    "LIVE DIAGNOSTIC",
+    "YAPPING DETECTED",
+    "Subject is currently explaining something that could probably have been said in two sentences."
+  );
+},6500);
+</script>
+
+  <script>(async function(){
+const B=window.BDAY;if(!B)return;
+const page=location.pathname.split('/').pop()||'index.html';
+let state=B.read();
+function apply(st){
+  state=st;B.write(st);
+  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
+  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
+  const patches=st.patches?.[page]||[];
+  for(const p of patches){
+    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
+    for(const el of nodes){
+      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
+      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
+      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
+      el.hidden=!!p.hidden;
+      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
+    }
+  }
+  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
+  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
+  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
+    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
+  }
+}
+apply(state);
+try{
+  const remote=await B.fetchRemote();
+  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
+  if(before!==after){
+    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
+    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
+  }
+  apply(remote.state);
+}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
+})();
+</script>
+
+<script src="./page-patch-runtime.js?v=phase1"></script>
+</body>
+</html>
