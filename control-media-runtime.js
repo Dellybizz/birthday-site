@@ -161,7 +161,16 @@
     const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');
     return {name:j.name||file.name,type:j.type||file.type,size:j.size||file.size,url:j.url,path:j.path||''};
   }
+  async function deleteShared(rec){
+    const key=adminKey();if(!key)throw new Error('Unlock the Control Room first.');
+    const path=String(rec?.path||'');if(!path)throw new Error('This media record has no deletable storage path.');
+    const r=await fetch(MEDIA_ENDPOINT,{method:'DELETE',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({path})});
+    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Delete failed');
+    mediaItems=mediaItems.filter(item=>item.path!==path);return j;
+  }
   window.__birthdayUploadShared=uploadShared;
+  window.__birthdayListShared=sharedMedia;
+  window.__birthdayDeleteShared=deleteShared;
   function kind(rec){const t=String(rec?.type||'').toLowerCase(),u=String(rec?.url||'').toLowerCase().split('?')[0];if(t.startsWith('video/')||/\.(mp4|webm|mov|m4v)$/.test(u))return 'video';if(t.startsWith('audio/')||/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(u))return 'audio';return 'image'}
   function label(rec){return rec?.name||rec?.path?.split('/').pop()||'media'}
   function mediaNode(rec,id){
