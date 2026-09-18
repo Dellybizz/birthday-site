@@ -161,12 +161,70 @@
     const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');
     return {name:j.name||file.name,type:j.type||file.type,size:j.size||file.size,url:j.url,path:j.path||''};
   }
-  async function deleteShared(rec){
+  async function deleteShared(rec,force=false){
     const key=adminKey();if(!key)throw new Error('Unlock the Control Room first.');
     const path=String(rec?.path||'');if(!path)throw new Error('This media record has no deletable storage path.');
-    const r=await fetch(MEDIA_ENDPOINT,{method:'DELETE',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({path})});
-    const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Delete failed');
+    const r=await fetch(MEDIA_ENDPOINT,{method:'DELETE',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({path,force:!!force})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok){
+      const err=new Error(j.error||'Delete failed');
+      Object.assign(err,j,{status:r.status});
+      throw err;
+    }
     mediaItems=mediaItems.filter(item=>item.path!==path);return j;
+  }
+  function friendlyMediaLocation(path){
+    const p=String(path||'');
+    let m;
+    if(p==='general.favoritePhoto')return 'Finale → favorite photo';
+    if(p==='general.musicFile')return 'Journey → soundtrack';
+    if((m=p.match(/^pages\.yapping\.clips\[(\d+)\]\.(?:src|mediaUrl)$/)))return 'Yapping Archive → clip '+(Number(m[1])+1);
+    if((m=p.match(/^pages\.heart\.memories\[(\d+)\]\.(?:mediaUrl|src)$/)))return 'Heart → memory '+(Number(m[1])+1);
+    if((m=p.match(/^pages\.pretty(?:\.photos)?\[(\d+)\]/)))return 'Pretty Photos → item '+(Number(m[1])+1);
+    if((m=p.match(/^pages\.memories(?:\.items)?\[(\d+)\]/)))return 'Memories → item '+(Number(m[1])+1);
+    if((m=p.match(/^fairPhotos\.([^.\[]+)\.(hero|photo\d+)$/))){
+      const label=m[2]==='hero'?'hero photo':'photo '+(Number(m[2].replace('photo',''))+1);
+      return 'Fair → '+m[1]+' → '+label;
+    }
+    if((m=p.match(/^patches\["([^"]+)"\]\[(\d+)\]/)))return 'Visual Editor → '+m[1]+' → patch '+(Number(m[2])+1);
+    if((m=p.match(/^patches\.([^.\[]+)\[(\d+)\]/)))return 'Visual Editor → '+m[1]+' → patch '+(Number(m[2])+1);
+    return p.replace(/^\$\.?/,'')||'live site';
+  }
+  function mediaDeleteWarning(rec,details){
+    const live=Array.isArray(details?.liveLocations)?details.liveLocations:[];
+    const history=Array.isArray(details?.historyMatches)?details.historyMatches:[];
+    const lines=[];
+    if(live.length){
+      lines.push('THIS FILE IS CURRENTLY IN USE IN:');
+      live.slice(0,12).forEach(path=>lines.push('• '+friendlyMediaLocation(path)));
+      if(live.length>12)lines.push('• +'+(live.length-12)+' more live reference'+(live.length-12===1?'':'s'));
+      lines.push('');
+      lines.push('Deleting it will make the media disappear or break in those places until you replace it.');
+    }else lines.push('This file is not used by the current live site.');
+    if(history.length){
+      const revisions=history.map(item=>item.revision).filter(Boolean);
+      lines.push('');
+      lines.push('It is also referenced by '+history.length+' saved history revision'+(history.length===1?'':'s')+(revisions.length?' ('+revisions.slice(0,12).join(', ')+(revisions.length>12?', …':'')+')':'')+'.');
+    }
+    lines.push('');
+    lines.push('Delete this file permanently anyway?');
+    return lines.join('\n');
+  }
+  async function deleteMediaWithWarning(rec){
+    try{
+      if(!rec?.referencedLive&&!Number(rec?.historyReferences||0)){
+        if(!confirm('Permanently delete "'+label(rec)+'" from the Media Library?'))return false;
+        await deleteShared(rec,false);return true;
+      }
+      try{
+        await deleteShared(rec,false);
+        return true;
+      }catch(err){
+        if(err?.code!=='MEDIA_REFERENCED')throw err;
+        if(!confirm(mediaDeleteWarning(rec,err)))return false;
+        await deleteShared(rec,true);return true;
+      }
+    }catch(err){throw err}
   }
   window.__birthdayUploadShared=uploadShared;
   window.__birthdayListShared=sharedMedia;
@@ -334,32 +392,32 @@
         const card=document.createElement('div');card.className='media-card';const k=kind(rec);
         const liveUsed=!!rec.referencedLive;
         const historyOnly=!liveUsed&&Number(rec.historyReferences||0)>0;
-        const protectedMedia=liveUsed||historyOnly;
         const usage=liveUsed
           ?'Used by live site'
           :historyOnly
             ?'Not live · kept by history ('+Number(rec.historyReferences||0)+' snapshot'+(Number(rec.historyReferences||0)===1?'':'s')+')'
             :'Unused · safe to delete';
-        const actionLabel=liveUsed?'In use':historyOnly?'History protected':'Delete';
+        const actionLabel=liveUsed?'Delete anyway':historyOnly?'Delete anyway':'Delete';
         const actionTitle=liveUsed
-          ?'This file is used by the current live site. Remove or replace it there and publish first.'
+          ?'Delete this file even though the live site currently uses it. A warning will show the exact places first.'
           :historyOnly
-            ?'This file is not used live, but an older site-history snapshot still references it.'
+            ?'Delete this file even though old history revisions reference it. A warning will appear first.'
             :'Permanently delete this unused media file.';
         const preview=k==='image'?'<img src="'+attr(rec.url)+'" alt="">':k==='video'?'<video src="'+attr(rec.url)+'" muted playsinline preload="metadata"></video>':'<audio controls src="'+attr(rec.url)+'"></audio>';
-        card.innerHTML='<div class="media-thumb">'+preview+'</div><div class="media-meta"><b>'+esc(label(rec))+'</b><small>'+esc(rec.url||'')+'</small><small>'+esc(usage)+'</small><div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap"><button class="btn" data-copy type="button">Copy URL</button><button class="btn danger" data-delete type="button" '+(protectedMedia?'disabled ':'')+'title="'+attr(actionTitle)+'">'+actionLabel+'</button></div></div>';
+        card.innerHTML='<div class="media-thumb">'+preview+'</div><div class="media-meta"><b>'+esc(label(rec))+'</b><small>'+esc(rec.url||'')+'</small><small>'+esc(usage)+'</small><div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap"><button class="btn" data-copy type="button">Copy URL</button><button class="btn danger" data-delete type="button" title="'+attr(actionTitle)+'">'+actionLabel+'</button></div></div>';
         card.querySelector('[data-copy]').onclick=async()=>{try{await navigator.clipboard.writeText(rec.url||'');toast('URL copied')}catch(e){}};
         const del=card.querySelector('[data-delete]');
-        if(del&&!protectedMedia)del.onclick=async()=>{
-          if(!confirm('Permanently delete "'+label(rec)+'" from the Media Library?'))return;
+        if(del)del.onclick=async()=>{
+          const original=del.textContent;
           try{
-            del.disabled=true;del.textContent='Deleting…';
-            await deleteShared(rec);
+            del.disabled=true;del.textContent='Checking…';
+            const deleted=await deleteMediaWithWarning(rec);
+            if(!deleted){del.disabled=false;del.textContent=original;return}
             toast('Media deleted');
             await renderLibrary();
             window.renderYappingManager?.();
           }catch(e){
-            del.disabled=false;del.textContent='Delete';
+            del.disabled=false;del.textContent=original;
             alert(e?.message||String(e));
           }
         };
