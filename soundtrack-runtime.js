@@ -84,9 +84,8 @@
       const btn=e.target?.closest?.(CONTROL);if(!btn)return;
       e.preventDefault();e.stopImmediatePropagation();toggle();
     },true);
-    if(window.BDAY?.fetchRemote){
-      window.BDAY.fetchRemote().then(r=>{if(r?.state?.general)applyGeneral(r.state.general)}).catch(()=>{});
-    }
+    const ready=window.BDAY?.ready||window.BDAY?.load?.();
+    if(ready)Promise.resolve(ready).then(r=>{if(r?.state?.general)applyGeneral(r.state.general)}).catch(()=>{});
   }
   window.BIRTHDAY_SOUNDTRACK={play,pause,toggle,refresh:()=>applyGeneral(config()),get url(){return url}};
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
