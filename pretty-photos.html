@@ -126,6 +126,11 @@
     background:linear-gradient(135deg,#ead7dc,#fff);
   }
 
+
+  [data-media-slot]{overflow:hidden}
+  [data-media-slot] > .bday-added-media{
+    width:100%;height:100%;max-width:none;margin:0;border-radius:inherit;object-fit:cover;
+  }
   .hero-card .placeholder{
     width:100%;height:100%;
     display:grid;place-items:center;
@@ -656,7 +661,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
     <div class="hero-orbit"></div>
 
     <div class="hero-card">
-      <div class="placeholder">replace with favourite portrait</div>
+      <div class="placeholder" data-media-slot="pretty-hero" data-media-label="Favourite portrait">replace with favourite portrait</div>
     </div>
 
     <div class="scribble one" id="scribbleOne">yes, I made a whole page.</div>
@@ -679,9 +684,9 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
   <section class="section reveal">
     <div class="spread">
       <div class="stack">
-        <div class="photo p1"><div class="placeholder">photo 01</div></div>
-        <div class="photo p2"><div class="placeholder">photo 02</div></div>
-        <div class="photo p3"><div class="placeholder">photo 03</div></div>
+        <div class="photo p1"><div class="placeholder" data-media-slot="pretty-01" data-media-label="Pretty photo 01">photo 01</div></div>
+        <div class="photo p2"><div class="placeholder" data-media-slot="pretty-02" data-media-label="Pretty photo 02">photo 02</div></div>
+        <div class="photo p3"><div class="placeholder" data-media-slot="pretty-03" data-media-label="Pretty photo 03">photo 03</div></div>
       </div>
 
       <div class="spread-copy">
@@ -698,16 +703,16 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 
   <section class="floating-strip reveal">
     <div class="floating-strip-track">
-      <div class="strip-card"><div class="placeholder">photo 04</div></div>
-      <div class="strip-card"><div class="placeholder">photo 05</div></div>
-      <div class="strip-card"><div class="placeholder">photo 06</div></div>
-      <div class="strip-card"><div class="placeholder">photo 07</div></div>
-      <div class="strip-card"><div class="placeholder">photo 08</div></div>
-      <div class="strip-card"><div class="placeholder">photo 04</div></div>
-      <div class="strip-card"><div class="placeholder">photo 05</div></div>
-      <div class="strip-card"><div class="placeholder">photo 06</div></div>
-      <div class="strip-card"><div class="placeholder">photo 07</div></div>
-      <div class="strip-card"><div class="placeholder">photo 08</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-04" data-media-label="Pretty photo 04">photo 04</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-05" data-media-label="Pretty photo 05">photo 05</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-06" data-media-label="Pretty photo 06">photo 06</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-07" data-media-label="Pretty photo 07">photo 07</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-08" data-media-label="Pretty photo 08">photo 08</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-04" data-media-label="Pretty photo 04">photo 04</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-05" data-media-label="Pretty photo 05">photo 05</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-06" data-media-label="Pretty photo 06">photo 06</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-07" data-media-label="Pretty photo 07">photo 07</div></div>
+      <div class="strip-card"><div class="placeholder" data-media-slot="pretty-08" data-media-label="Pretty photo 08">photo 08</div></div>
     </div>
   </section>
 
@@ -733,7 +738,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
     </div>
 
     <div class="solo-image">
-      <div class="placeholder">replace with the most “her” photo</div>
+      <div class="placeholder" data-media-slot="pretty-solo" data-media-label="The most her photo">replace with the most “her” photo</div>
     </div>
   </section>
 
@@ -888,6 +893,6 @@ try{
 })();
 </script>
 
-<script src="./page-patch-runtime.js?v=phase4h1"></script>
+<script src="./page-patch-runtime.js?v=phase5"></script>
 </body>
 </html>

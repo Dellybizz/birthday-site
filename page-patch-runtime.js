@@ -45,12 +45,13 @@
     const original=String(selector||'').trim(),stable=stableSelector(original);
     return [...new Set([original,stable].filter(Boolean))];
   }
-  function findTarget(selector){
+  function findTargets(selector){
     for(const candidate of candidateSelectors(selector)){
-      try{const el=document.querySelector(candidate);if(el)return el}catch(e){}
+      try{const nodes=[...document.querySelectorAll(candidate)];if(nodes.length)return nodes}catch(e){}
     }
-    return null;
+    return [];
   }
+  function findTarget(selector){return findTargets(selector)[0]||null}
   function isGeneratedTarget(el){
     return !!el?.matches?.('.bday-added-media,.bday-added-photo,.bday-added-media-group,[data-bday-inserted],[data-bday-group]');
   }
@@ -67,6 +68,7 @@
   }
   function mediaSlot(el){
     if(!el||isGeneratedTarget(el)||isBroad(el))return false;
+    if(el.hasAttribute?.('data-media-slot'))return true;
     if(['IMG','VIDEO','AUDIO','SOURCE','PICTURE'].includes(el.tagName))return true;
     const signature=((el.id||'')+' '+(typeof el.className==='string'?el.className:'')).toLowerCase();
     return /(^|[\s_-])(photo|image|media|polaroid|poster|picture|pic|frame|shot|avatar|placeholder|thumb)([\s_-]|$)/.test(signature);
@@ -90,9 +92,9 @@
     el.src=item.url;el.className='bday-added-media';el.dataset.bdayInserted=item.id||item.url;return el;
   }
   function safeAttr(value){return String(value||'').replace(/["\\]/g,'')}
-  function insertedNode(item){
+  function insertedNode(item,root=document){
     const token=safeAttr(item?.id||item?.url);if(!token)return null;
-    try{return document.querySelector('[data-bday-inserted="'+token+'"]')}catch(e){return null}
+    try{return root.querySelector?.('[data-bday-inserted="'+token+'"]')||null}catch(e){return null}
   }
   function prepareReplaceSlot(anchor){
     if(!anchor||isBroad(anchor)||isGeneratedTarget(anchor))return false;
@@ -127,7 +129,9 @@
   }
   function insertOne(anchor,item,patchKey){
     if(!anchor||!item?.url||isBroad(anchor)||isGeneratedTarget(anchor))return;
-    const existing=insertedNode(item),placement=item.placement||'inside';
+    const placement=item.placement||'inside';
+    const scope=(placement==='replace'||placement==='inside')?anchor:(anchor.parentElement||document);
+    const existing=insertedNode(item,scope);
     if(existing){
       if(existing.getAttribute('src')!==item.url){existing.setAttribute('src',item.url);if('src' in existing)existing.src=item.url;existing.load?.()}
       return;
@@ -221,15 +225,15 @@
     const patches=cachedState?.patches?.[PAGE]||[];
     patches.forEach((patch,index)=>{
       if(!patch?.selector||GENERATED_SELECTOR.test(patch.selector))return;
-      const anchor=findTarget(patch.selector);if(anchor)applyPatch(anchor,patch,index);
+      const anchors=findTargets(patch.selector);anchors.forEach((anchor,targetIndex)=>applyPatch(anchor,patch,index+'-'+targetIndex));
     });
     syncHeartCards();installHeartBridge();
   }
 
   const style=document.createElement('style');
-  style.textContent='.bday-added-media-group{display:grid;gap:14px;margin:16px 0}.bday-added-media{display:block;max-width:min(100%,680px);width:auto;height:auto;margin:0 auto;border-radius:18px;object-fit:cover}.bday-added-media-group>audio,.bday-added-media-group>video{width:min(100%,680px)}.bday-original-slot-content[hidden]{display:none!important}.node .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover}';
+  style.textContent='[data-media-slot] > .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:inherit;object-fit:cover}.bday-added-media-group{display:grid;gap:14px;margin:16px 0}.bday-added-media{display:block;max-width:min(100%,680px);width:auto;height:auto;margin:0 auto;border-radius:18px;object-fit:cover}.bday-added-media-group>audio,.bday-added-media-group>video{width:min(100%,680px)}.bday-original-slot-content[hidden]{display:none!important}.node .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover}';
   document.head.appendChild(style);
-  window.BDAY_PATCH_RUNTIME={ensureEditIds,findTarget,mediaSlot,textEditable,restoreReplaceSlot,applyAll:()=>applyAll(true)};
+  window.BDAY_PATCH_RUNTIME={ensureEditIds,findTarget,findTargets,mediaSlot,textEditable,restoreReplaceSlot,applyAll:()=>applyAll(true)};
   [20,220,800,1800].forEach((delay,index)=>setTimeout(()=>applyAll(index===0),delay));
   const observer=new MutationObserver(records=>{
     for(const record of records){

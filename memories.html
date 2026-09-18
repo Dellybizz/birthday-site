@@ -208,6 +208,10 @@
       font-size:13px;
     }
 
+
+    [data-media-slot] > .bday-added-media{
+      width:100%;height:100%;max-width:none;margin:0;border-radius:inherit;object-fit:cover;
+    }
     .photo img{
       width:100%;
       height:100%;
@@ -706,7 +710,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
           <div class="visual">
             <div class="photo portrait">
               <div class="mini-tag" id="tag1">one of my favourites</div>
-              <div class="photo-placeholder">replace with your actual photo</div>
+              <div class="photo-placeholder" data-media-slot="memories-01" data-media-label="Memory 01 photo">replace with your actual photo</div>
             </div>
             <div class="scribble bottom" id="scribble1">you looked too happy here ♡</div>
           </div>
@@ -776,7 +780,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
           <div class="visual">
             <div class="photo landscape">
               <div class="mini-tag" id="tag2">very random, very us</div>
-              <div class="photo-placeholder">replace with an ordinary-day photo</div>
+              <div class="photo-placeholder" data-media-slot="memories-02" data-media-label="Memory 02 photo">replace with an ordinary-day photo</div>
             </div>
             <div class="scribble top" id="scribble2">nothing special. still special.</div>
           </div>
@@ -834,7 +838,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
           <div class="visual">
             <div class="photo portrait">
               <div class="mini-tag" id="tag3">this one matters</div>
-              <div class="photo-placeholder">replace with one genuinely important photo</div>
+              <div class="photo-placeholder" data-media-slot="memories-03" data-media-label="Memory 03 photo">replace with one genuinely important photo</div>
             </div>
             <div class="scribble bottom" id="scribble3">this one stays.</div>
           </div>
@@ -1109,6 +1113,6 @@ try{
 })();
 </script>
 
-<script src="./page-patch-runtime.js?v=phase4h1"></script>
+<script src="./page-patch-runtime.js?v=phase5"></script>
 </body>
 </html>
