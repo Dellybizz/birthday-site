@@ -1,6 +1,15 @@
 (()=>{
   const VERSION='20260918-p10';
   window.__BDAY_ASSET_VERSION__=VERSION;
+  const editorParams=new URLSearchParams(location.search);
+  const animationEdit=editorParams.get('adminPreview')==='1'&&editorParams.get('animationEdit')==='1';
+  if(animationEdit){
+    document.documentElement.classList.add('birthday-animation-edit');
+    const freeze=document.createElement('style');
+    freeze.id='birthday-animation-edit-freeze';
+    freeze.textContent='*,*::before,*::after{animation-play-state:paused!important}';
+    document.head.appendChild(freeze);
+  }
   const motionQuery=window.matchMedia?.('(prefers-reduced-motion: reduce)');
   function syncMotion(){
     const reduced=!!motionQuery?.matches;
