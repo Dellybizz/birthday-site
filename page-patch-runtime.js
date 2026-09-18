@@ -230,8 +230,18 @@
   style.textContent='.bday-added-media-group{display:grid;gap:14px;margin:16px 0}.bday-added-media{display:block;max-width:min(100%,680px);width:auto;height:auto;margin:0 auto;border-radius:18px;object-fit:cover}.bday-added-media-group>audio,.bday-added-media-group>video{width:min(100%,680px)}.bday-original-slot-content[hidden]{display:none!important}.node .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover}';
   document.head.appendChild(style);
   window.BDAY_PATCH_RUNTIME={ensureEditIds,findTarget,mediaSlot,textEditable,restoreReplaceSlot,applyAll:()=>applyAll(true)};
-  [20,220,800].forEach((delay,index)=>setTimeout(()=>applyAll(index===0),delay));
-  const observer=new MutationObserver(()=>{ensureEditIds(document);applyAll(false)});
+  [20,220,800,1800].forEach((delay,index)=>setTimeout(()=>applyAll(index===0),delay));
+  const observer=new MutationObserver(records=>{
+    for(const record of records){
+      for(const node of record.addedNodes){
+        if(node?.nodeType!==1)continue;
+        if(node.matches?.(EDITABLE_SELECTOR)&&!isGeneratedTarget(node)&&!node.dataset.editId){
+          node.dataset.editId='be-'+hash32(PAGE+'|'+structuralKey(node));
+        }
+        ensureEditIds(node);
+      }
+    }
+  });
   observer.observe(document.documentElement,{subtree:true,childList:true});
   setTimeout(()=>observer.disconnect(),6000);
 })();
