@@ -38,7 +38,14 @@
     const url=route(page)+(preview?previewSuffix():'');
     if(replace)location.replace(url);else location.href=url;
   }
+  function birthdayTime(stateValue=state){
+    const rawValue=stateValue?.general?.birthdayISO||FALLBACK_BIRTHDAY;
+    const parsed=new Date(rawValue);
+    const fallback=new Date(FALLBACK_BIRTHDAY);
+    return Number.isNaN(parsed.getTime())?fallback.getTime():parsed.getTime();
+  }
   function unlocked(){
+    if(Date.now()<birthdayTime())return false;
     try{return localStorage.getItem(UNLOCK_KEY)==='1'}catch(e){return false}
   }
   function nextKey(state,current=key){
@@ -118,6 +125,7 @@
   window.BIRTHDAY_JOURNEY={
     canonical:CANONICAL.slice(),
     birthdayISO:()=>state?.general?.birthdayISO||FALLBACK_BIRTHDAY,
+    birthdayReached:()=>Date.now()>=birthdayTime(),
     unlocked,
     next:()=>{const n=nextKey(state,key);if(n)go(n,false)},
     restart:()=>go('index.html',false),
