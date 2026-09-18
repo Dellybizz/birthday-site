@@ -18,10 +18,14 @@ img,video{max-width:100%}
 button,input,select,textarea{font:inherit}
 @media(max-width:430px){
   button,input,select,textarea,.btn,[role="button"],a.next,.one-more,.end-actions a,.end-actions button{min-height:44px}
-  .lock-card,.photo-lightbox-card,.corner-popup,.popup,.modal,.dialog{max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px)!important}
+  .lock-card,.photo-lightbox-card,.corner-popup,.popup,.modal,.dialog{max-width:calc(100vw - 24px)!important;max-height:calc(100dvh - 24px)!important;overflow:auto}
   .end-actions{width:calc(100vw - 24px);max-width:520px;flex-wrap:wrap;justify-content:center;bottom:max(12px,env(safe-area-inset-bottom))}
   .end-actions>*{flex:1 1 140px;text-align:center}
   .bday-lock-wrap{padding-left:10px;padding-right:10px}
+  .controls button{min-width:44px;min-height:44px}
+  .stall-view{max-width:calc(100vw - 12px)!important}
+  .stall-actions{max-width:calc(100vw - 24px);width:100%}
+  .photo-lightbox-card img{max-height:68dvh;object-fit:contain!important}
 }
 @media(max-width:390px){
   .photo-lightbox-card{width:calc(100vw - 20px)!important}
@@ -81,7 +85,17 @@ button,input,select,textarea{font:inherit}
         CONFIG.name=g.name||CONFIG.name;
         CONFIG.nickname=g.nickname||CONFIG.nickname;
         setText('privateLine','for '+CONFIG.nickname+', obviously.');
-        setText('chatName',CONFIG.name);
+        setText('heroText',CONFIG.heroText);setText('heroPS',CONFIG.heroPS);
+        setText('m1Title',CONFIG.memory1?.title);setText('m1Meta',CONFIG.memory1?.meta);setText('m1Caption',CONFIG.memory1?.caption);setText('m1Note',CONFIG.memory1?.note);setText('tag1',CONFIG.memory1?.tag);setText('scribble1',CONFIG.memory1?.scribble);
+        setText('tinyMemory','“'+(CONFIG.tinyMemory||'')+'”');setText('tinyMemoryNote',CONFIG.tinyMemoryNote);
+        setText('chatTitle',CONFIG.chat?.title);setText('chatCaption',CONFIG.chat?.caption);setText('chatAside',CONFIG.chat?.aside);setText('chatName',CONFIG.name);setText('chatStatus',CONFIG.chat?.status);setText('msg1',CONFIG.chat?.her1);setText('msg2',CONFIG.chat?.me1);setText('msg3',CONFIG.chat?.her2);
+        setText('bridge1',CONFIG.bridge1);setText('bridge1Sub',CONFIG.bridge1Sub);
+        setText('m2Title',CONFIG.memory2?.title);setText('m2Caption',CONFIG.memory2?.caption);setText('m2Note',CONFIG.memory2?.note);setText('tag2',CONFIG.memory2?.tag);setText('scribble2',CONFIG.memory2?.scribble);
+        setText('collageTitle',CONFIG.collageTitle);setText('collageCaption',CONFIG.collageCaption);
+        setText('favoritePersonLine','“'+(CONFIG.favoritePersonLine||'')+'”');setText('favoritePersonSub',CONFIG.favoritePersonSub);
+        setText('m3Title',CONFIG.memory3?.title);setText('m3Caption',CONFIG.memory3?.caption);setText('m3Note',CONFIG.memory3?.note);setText('tag3',CONFIG.memory3?.tag);setText('scribble3',CONFIG.memory3?.scribble);
+        setText('finalMemoryLine','“'+(CONFIG.finalMemoryLine||'')+'”');setText('finalMemorySub',CONFIG.finalMemorySub);setText('finalSecret',CONFIG.finalSecret);
+        setText('endingTitle',CONFIG.endingTitle);setText('endingText',CONFIG.endingText);
       }
     }catch(e){}
   }
@@ -93,7 +107,13 @@ button,input,select,textarea{font:inherit}
       if(typeof CONFIG!=='undefined'){
         Object.assign(CONFIG,state.pages?.pretty||{});
         CONFIG.nickname=g.nickname||CONFIG.nickname;
-        setText('nickname',CONFIG.nickname);
+        setText('nickname',CONFIG.nickname);setText('heroSub',CONFIG.heroSub);setText('scribbleOne',CONFIG.scribbleOne);setText('scribbleTwo',CONFIG.scribbleTwo);setText('spreadText',CONFIG.spreadText);setText('handNote',CONFIG.handNote);
+        const q1=document.getElementById('quoteText');if(q1)q1.innerHTML=String(CONFIG.quoteText||'').replace('weren’t even trying','<span>weren’t even trying</span>');
+        setText('quoteSub',CONFIG.quoteSub);
+        const solo=document.getElementById('soloTitle');if(solo)solo.innerHTML=String(CONFIG.soloTitle||'').replace('. ','.<br>');
+        setText('soloCopy',CONFIG.soloCopy);
+        const q2=document.getElementById('quoteTwo');if(q2){const raw=String(CONFIG.quoteTwo||''),parts=raw.split('you’re very pretty.');q2.innerHTML=parts.length>1?parts[0]+'<span>you’re very pretty.</span>':raw}
+        setText('quoteTwoSub',CONFIG.quoteTwoSub);
       }
     }catch(e){}
   }
