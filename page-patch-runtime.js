@@ -66,6 +66,13 @@
     if(children.length)return false;
     return ['H1','H2','H3','H4','H5','H6','P','SPAN','DIV','SMALL','STRONG','EM','LI','A','BUTTON'].includes(el.tagName)&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
   }
+  function countdownManagedText(el){
+    if(PAGE!=='countdown.html'||!el)return false;
+    const owner=el.id?el:el.closest?.('[id]');
+    const id=owner?.id||'';
+    return ['eyebrow','title','sub','lockLabel','lockNote','lockDialogTitle','lockDialogText'].includes(id);
+  }
+
   function mediaSlot(el){
     if(!el||isGeneratedTarget(el)||isBroad(el))return false;
     if(el.hasAttribute?.('data-media-slot'))return true;
@@ -162,7 +169,7 @@
       if(!anchor.dataset.bdayOriginalSrc)anchor.dataset.bdayOriginalSrc=anchor.getAttribute('src')||'';
       anchor.setAttribute('src',patch.src);if('src' in anchor)anchor.src=patch.src;anchor.load?.();
     }
-    if(patch.text!==undefined&&patch.text!==null&&textEditable(anchor))anchor.textContent=String(patch.text);
+    if(patch.text!==undefined&&patch.text!==null&&textEditable(anchor)&&!countdownManagedText(anchor))anchor.textContent=String(patch.text);
     if(patch.href&&anchor.matches?.('a')&&!anchor.matches?.('[data-journey-next],[data-journey-restart]'))anchor.setAttribute('href',patch.href);
     if(patch.styles&&typeof patch.styles==='object'){
       for(const [name,value] of Object.entries(patch.styles))if(value!==undefined&&value!==null&&value!=='')anchor.style.setProperty(name,String(value));
