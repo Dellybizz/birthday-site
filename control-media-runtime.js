@@ -331,12 +331,31 @@
     try{
       await sharedMedia();box.innerHTML='';
       for(const rec of mediaItems){
-        const c=document.createElement('div');c.className='media-card';const k=kind(rec);
-        c.innerHTML='<div class="media-thumb">'+(k==='image'?'<img src="'+attr(rec.url)+'" alt="">':k==='video'?'<video src="'+attr(rec.url)+'" muted></video>':'<audio controls src="'+attr(rec.url)+'"></audio>')+'</div><div class="media-meta"><b>'+esc(label(rec))+'</b><small>'+esc(rec.url||'')+'</small><div style="margin-top:8px"><button class="btn" data-copy type="button">Copy URL</button></div></div>';
-        c.querySelector('[data-copy]').onclick=async()=>{try{await navigator.clipboard.writeText(rec.url||'');toast('URL copied')}catch(e){}};box.appendChild(c);
+        const card=document.createElement('div');card.className='media-card';const k=kind(rec);
+        const referenced=!!rec.referenced;
+        const usage=rec.referencedLive?'Used by live site':Number(rec.historyReferences||0)>0?'Protected by history':'Unused';
+        const preview=k==='image'?'<img src="'+attr(rec.url)+'" alt="">':k==='video'?'<video src="'+attr(rec.url)+'" muted playsinline preload="metadata"></video>':'<audio controls src="'+attr(rec.url)+'"></audio>';
+        card.innerHTML='<div class="media-thumb">'+preview+'</div><div class="media-meta"><b>'+esc(label(rec))+'</b><small>'+esc(rec.url||'')+'</small><small>'+esc(usage)+'</small><div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap"><button class="btn" data-copy type="button">Copy URL</button><button class="btn danger" data-delete type="button" '+(referenced?'disabled title="Remove this media from the live site/history references before deleting it."':'')+'>'+(referenced?'In use':'Delete')+'</button></div></div>';
+        card.querySelector('[data-copy]').onclick=async()=>{try{await navigator.clipboard.writeText(rec.url||'');toast('URL copied')}catch(e){}};
+        const del=card.querySelector('[data-delete]');
+        if(del&&!referenced)del.onclick=async()=>{
+          if(!confirm('Permanently delete "'+label(rec)+'" from the Media Library?'))return;
+          try{
+            del.disabled=true;del.textContent='Deleting…';
+            await deleteShared(rec);
+            toast('Media deleted');
+            await renderLibrary();
+            window.renderYappingManager?.();
+          }catch(e){
+            del.disabled=false;del.textContent='Delete';
+            alert(e?.message||String(e));
+          }
+        };
+        card.appendChild(document.createTextNode(''));
+        box.appendChild(card);
       }
       if(!mediaItems.length)box.innerHTML='<div class="empty">No media uploaded yet.</div>';
-    }catch(e){box.innerHTML='<div class="empty">Could not load media.</div>'}
+    }catch(e){box.innerHTML='<div class="empty">Could not load media: '+esc(e?.message||String(e))+'</div>'}
   }
   window.renderMedia=renderLibrary;window.listMedia=sharedMedia;
 
