@@ -75,7 +75,8 @@
     let stored=null;try{stored=sessionStorage.getItem(PREF)}catch(e){}
     wanted=stored==='on'||(stored===null&&g?.soundDefault===true);
     updateControls();
-    if(url&&wanted)play();else if(!url)pause();
+    if(url&&wanted)play();
+    else if(!url){audio?.pause?.();audio?.remove?.();audio=null;updateControls()}
   }
   function bind(){
     applyGeneral(config());

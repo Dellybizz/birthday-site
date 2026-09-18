@@ -68,7 +68,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;b
 <script src="./soundtrack-runtime.js?v=phase7"></script>
 </head>
 <body>
-<div class="pulse"></div><div class="chapter">07 / 08 · until your birthday</div><button class="sound" id="soundBtn" data-soundtrack-control data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
+<div class="pulse"></div><div class="chapter">07 / 08 · until your birthday</div><button class="sound" id="soundBtn" data-soundtrack-control hidden data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
 <main class="stage" id="stage"><div class="inner"><div class="eyebrow" id="eyebrow">one last wait</div><h1 class="title" id="title">until the day that's<br><em>actually yours.</em></h1><div class="count" id="count"><div class="unit"><span class="num" id="days">00</span><span class="label">days</span></div><div class="unit"><span class="num" id="hours">00</span><span class="label">hours</span></div><div class="unit"><span class="num" id="minutes">00</span><span class="label">minutes</span></div><div class="unit"><span class="num" id="seconds">00</span><span class="label">seconds</span></div></div><p class="sub" id="sub">No giant decorations. No dramatic speech yet. Just time moving toward one very specific person.</p><div class="preview" id="preview"></div><a class="next" id="next" href="finale.html">the final reel is ready →</a></div></main>
 <script>
 const cfg=window.SITE_CONFIG||{};const stage=document.getElementById('stage'),next=document.getElementById('next'),preview=document.getElementById('preview');let previewMode=false;let target;
