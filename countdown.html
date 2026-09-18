@@ -313,8 +313,16 @@ if(!adminPreview){
   function submit(){
     const v=code.value.replace(/\D/g,'').slice(0,6);code.value=v;
     if(v===PASSWORD){
+      if(adminPreview){
+        const next=new URL('entry.html',location.href);
+        next.searchParams.set('adminPreview','1');
+        if(countdownParams.has('t'))next.searchParams.set('t',countdownParams.get('t'));
+        location.replace(next.href);
+        return;
+      }
       localStorage.setItem('birthdayUnlocked','1');
       localStorage.setItem('birthdayUnlockedAt',new Date().toISOString());
+      localStorage.setItem('birthdayUnlockedFor',String(countdownState.general?.birthdayISO||''));
       location.replace('entry.html');
       return;
     }
