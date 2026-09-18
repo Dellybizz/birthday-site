@@ -107,6 +107,9 @@ function validateState(data: unknown): string[] {
     if (new Set(order).size !== order.length) errors.push('pageOrder contains duplicates.');
     for (const page of order) if (!ALLOWED_PAGES.has(page)) errors.push(`Unknown page in pageOrder: ${String(page)}`);
     for (const page of ALLOWED_PAGES) if (!order.includes(page)) errors.push(`Missing page in pageOrder: ${page}`);
+    if (order[0] !== 'countdown.html') errors.push('Countdown must remain the first journey page.');
+    if (order[1] !== 'index.html') errors.push('Entry must remain the first unlocked chapter.');
+    if (order[order.length - 1] !== 'finale.html') errors.push('Finale must remain the last journey page.');
   }
 
   if (!isRecord(data.pageEnabled)) errors.push('pageEnabled must be an object.');
@@ -114,6 +117,9 @@ function validateState(data: unknown): string[] {
     for (const [page,value] of Object.entries(data.pageEnabled)) {
       if (!ALLOWED_PAGES.has(page)) errors.push(`Unknown pageEnabled page: ${page}`);
       if (typeof value !== 'boolean') errors.push(`pageEnabled.${page} must be boolean.`);
+    }
+    for (const page of ['countdown.html','index.html','finale.html']) {
+      if (data.pageEnabled[page] !== true) errors.push(`${page} is a required journey page and must stay enabled.`);
     }
   }
 

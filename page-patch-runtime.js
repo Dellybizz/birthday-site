@@ -159,7 +159,7 @@
       anchor.setAttribute('src',patch.src);if('src' in anchor)anchor.src=patch.src;anchor.load?.();
     }
     if(patch.text!==undefined&&patch.text!==null&&textEditable(anchor))anchor.textContent=String(patch.text);
-    if(patch.href&&anchor.matches?.('a'))anchor.setAttribute('href',patch.href);
+    if(patch.href&&anchor.matches?.('a')&&!anchor.matches?.('[data-journey-next],[data-journey-restart]'))anchor.setAttribute('href',patch.href);
     if(patch.styles&&typeof patch.styles==='object'){
       for(const [name,value] of Object.entries(patch.styles))if(value!==undefined&&value!==null&&value!=='')anchor.style.setProperty(name,String(value));
     }

@@ -625,8 +625,8 @@ const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
 const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
 const KEY='birthday-site-state-v2';
 const DEFAULTS={
-  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-20T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
-  pageOrder:['index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','countdown.html','finale.html'],
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-18T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  pageOrder:['countdown.html','index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','finale.html'],
   pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
   fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
 };
@@ -671,6 +671,7 @@ const initial=read();syncSiteConfig(initial);
 window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
 })();
 </script>
+<script src="./journey-runtime.js?v=phase4h1"></script>
 </head>
 
 <body>
@@ -870,7 +871,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
         <p id="endingText">
           Next is something much less serious: a completely unnecessary amount of evidence that you are very, very pretty.
         </p>
-        <a class="next" id="nextLink" href="pretty-photos.html">
+        <a class="next" id="nextLink" data-journey-next="1" href="pretty-photos.html">
           next: the pretty girl archive →
         </a>
       </div>
@@ -1093,9 +1094,7 @@ function apply(st){
   // Visual overrides are applied only by page-patch-runtime.js.
   document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
   if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
-  const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
-    const order=st.pageOrder||[];const i=order.indexOf(page);for(let d=1;d<=order.length;d++){const n=order[(i+d)%order.length];if(enabled[n]!==false){location.replace(n);break}}
-  }
+  // Journey gating and disabled-page routing are handled by journey-runtime.js.
 }
 apply(state);
 try{
@@ -1110,6 +1109,6 @@ try{
 })();
 </script>
 
-<script src="./page-patch-runtime.js?v=phase3h1"></script>
+<script src="./page-patch-runtime.js?v=phase4h1"></script>
 </body>
 </html>
