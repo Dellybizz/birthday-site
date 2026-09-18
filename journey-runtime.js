@@ -46,7 +46,11 @@
   }
   function unlocked(){
     if(Date.now()<birthdayTime())return false;
-    try{return localStorage.getItem(UNLOCK_KEY)==='1'}catch(e){return false}
+    try{
+      if(localStorage.getItem(UNLOCK_KEY)!=='1')return false;
+      const current=String(state?.general?.birthdayISO||FALLBACK_BIRTHDAY);
+      return localStorage.getItem('birthdayUnlockedFor')===current;
+    }catch(e){return false}
   }
   function nextKey(state,current=key){
     const order=normalizedOrder(state);
