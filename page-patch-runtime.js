@@ -74,7 +74,7 @@
     return /(^|[\s_-])(photo|image|media|polaroid|poster|picture|pic|frame|shot|avatar|placeholder|thumb)([\s_-]|$)/.test(signature);
   }
   async function readLive(){
-    try{if(window.BDAY?.fetchRemote){const r=await window.BDAY.fetchRemote();if(r?.state)return r.state}}catch(e){}
+    try{if(window.BDAY){const r=await (window.BDAY.ready||window.BDAY.load?.()||window.BDAY.fetchRemote());if(r?.state)return r.state}}catch(e){}
     try{if(window.BDAY?.read)return window.BDAY.read()}catch(e){}
     return window.SITE_CONFIG||{};
   }
