@@ -359,6 +359,35 @@
   }
   window.renderMedia=renderLibrary;window.listMedia=sharedMedia;
 
+  function countdownTextBinding(el){
+    if(pageName()!=='countdown.html'||!el)return null;
+    const owner=el.id?el:el.closest?.('[id]');
+    const id=owner?.id||'';
+    if(id==='lockDialogTitle')return {path:['pages','countdown','access','title']};
+    if(id==='lockDialogText')return {path:['pages','countdown','access','text']};
+    let key='';
+    if(id==='eyebrow')key='eyebrow';
+    else if(id==='sub')key='sub';
+    else if(id==='lockLabel')key='lockLabel';
+    else if(id==='lockNote')key='lockNote';
+    else if(id==='title'&&el.tagName==='EM')key='titleEmphasis';
+    if(!key)return null;
+    let mode=document.getElementById('countdownPreviewState')?.value||'auto';
+    if(!['before','after'].includes(mode))mode=currentWin()?.COUNTDOWN_PAGE?.isAfter?.()?'after':'before';
+    return {path:['pages','countdown',mode,key],mode,key};
+  }
+  function readStatePath(path){
+    return path.reduce((value,key)=>value?.[key],state);
+  }
+  function writeStatePath(path,value){
+    let target=state;
+    for(const key of path.slice(0,-1))target=target[key]??={};
+    target[path[path.length-1]]=value;
+  }
+  function syncCountdownDraft(){
+    try{currentWin()?.COUNTDOWN_PAGE?.applyState?.(state)}catch(e){}
+  }
+
   function fieldStyle(el,p){
     const s=el.ownerDocument.defaultView.getComputedStyle(el);return {
       color:p.styles?.color??s.color,bg:p.styles?.['background-color']??s.backgroundColor,
@@ -375,12 +404,16 @@
   }
   async function applyInspector(){
     const el=previewElement();if(!el||!selected?.selector)return;
-    pushHistory();const p=patchFor(selected.selector),t=document.getElementById('iText');
-    if(t&&textEditable(el))p.text=t.value;else delete p.text;
+    pushHistory();const p=patchFor(selected.selector),t=document.getElementById('iText'),countdownBinding=countdownTextBinding(el);
+    if(t&&textEditable(el)){
+      if(countdownBinding){writeStatePath(countdownBinding.path,t.value);delete p.text}
+      else p.text=t.value;
+    }else delete p.text;
     const hidden=document.getElementById('iHidden');if(hidden)p.hidden=hidden.checked;
     p.styles={color:document.getElementById('iColor')?.value||'','background-color':document.getElementById('iBg')?.value||'','font-size':document.getElementById('iSize')?.value||'',opacity:document.getElementById('iOpacity')?.value||'','border-radius':document.getElementById('iRadius')?.value||'',transform:document.getElementById('iTransform')?.value||''};
     const href=document.getElementById('iHref');if(href&&el.matches('a'))p.href=href.value;else delete p.href;
-    dirty();livePreview();const result=await publishNoReload();if(result)toast('Element updated');
+    prunePatch(p);dirty();if(countdownBinding)syncCountdownDraft();else livePreview();
+    const result=await publishNoReload();if(result)toast(countdownBinding?'Countdown text updated':'Element updated');
   }
   async function removeOverride(){
     if(!selected?.selector)return;pushHistory();const s=stableSelector(selected.selector);
@@ -397,8 +430,9 @@
   function renderInspector(el,selector,mediaToken=''){
     selected={selector,tag:el.tagName.toLowerCase(),mediaToken,element:el};
     document.getElementById('selectorBox').textContent=selector;
-    const p=findPatch(selector)||{selector,styles:{}},style=fieldStyle(el,p),canText=textEditable(el),isLink=el.matches('a');
-    fields.innerHTML=(canText?'<div class="field"><label>Text</label><textarea id="iText">'+esc(p.text??el.textContent.trim())+'</textarea></div>':'<div class="ve-note">Container text editing is disabled to protect child elements. Select the actual text element instead.</div>')+
+    const p=findPatch(selector)||{selector,styles:{}},style=fieldStyle(el,p),canText=textEditable(el),isLink=el.matches('a'),countdownBinding=countdownTextBinding(el);
+    const inspectorText=countdownBinding?(readStatePath(countdownBinding.path)??el.textContent.trim()):(p.text??el.textContent.trim());
+    fields.innerHTML=(canText?'<div class="field"><label>Text</label><textarea id="iText">'+esc(inspectorText)+'</textarea></div>':'<div class="ve-note">Container text editing is disabled to protect child elements. Select the actual text element instead.</div>')+
       (isLink?'<div class="field"><label>Link href</label><input id="iHref" value="'+attr(p.href??el.getAttribute('href')??'')+'"></div>':'')+
       '<div class="toggle"><div><b>Hide element</b></div><label class="switch"><input id="iHidden" type="checkbox" '+(p.hidden?'checked':'')+'><i></i></label></div>'+
       '<div class="row"><div class="field"><label>Text color</label><input id="iColor" value="'+attr(style.color)+'"></div><div class="field"><label>Background</label><input id="iBg" value="'+attr(style.bg)+'"></div></div>'+
