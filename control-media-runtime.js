@@ -177,7 +177,10 @@
     const p=String(path||'');
     let m;
     if(p==='general.favoritePhoto')return 'Finale → favorite photo';
-    if(p==='general.musicFile')return 'Journey → soundtrack';
+    if(p==='general.musicFile')return 'Soundtrack → legacy shared song';
+    if((m=p.match(/^general\.soundtrack\.defaultTracks\[(\d+)\]\.url$/)))return 'Soundtrack → default playlist → track '+(Number(m[1])+1);
+    if((m=p.match(/^general\.soundtrack\.pageTracks\["([^"]+)"\]\[(\d+)\]\.url$/)))return 'Soundtrack → '+m[1]+' → track '+(Number(m[2])+1);
+    if((m=p.match(/^general\.soundtrack\.pageTracks\.([^.\[]+)\[(\d+)\]\.url$/)))return 'Soundtrack → '+m[1]+' → track '+(Number(m[2])+1);
     if((m=p.match(/^pages\.yapping\.clips\[(\d+)\]\.(?:src|mediaUrl)$/)))return 'Yapping Archive → clip '+(Number(m[1])+1);
     if((m=p.match(/^pages\.heart\.memories\[(\d+)\]\.(?:mediaUrl|src)$/)))return 'Heart → memory '+(Number(m[1])+1);
     if((m=p.match(/^pages\.pretty(?:\.photos)?\[(\d+)\]/)))return 'Pretty Photos → item '+(Number(m[1])+1);
@@ -864,6 +867,7 @@
   async function renderSoundtrackManager(refreshMedia=false){
     const root=document.getElementById('soundtrackManager');if(!root)return;
     const model=ensureSoundtrackModel();
+    const soundDefaultToggle=root.querySelector('#soundDefaultOn');if(soundDefaultToggle)soundDefaultToggle.checked=!!state.general.soundDefault;
     if(refreshMedia||!mediaItems.length){try{await sharedMedia()}catch(e){}}
     const defaultList=root.querySelector('#soundDefaultTracks');
     renderTrackList(model.defaultTracks,defaultList,'default');
