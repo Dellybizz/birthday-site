@@ -77,7 +77,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;b
 .stage{height:100%;display:grid;place-items:center;padding:28px}.inner{width:min(94vw,1180px);text-align:center}.eyebrow{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8b847d;margin-bottom:24px}.title{margin:0;font-family:Georgia,serif;font-size:clamp(38px,5.8vw,78px);font-weight:400;line-height:.95;letter-spacing:-.05em}.title em{font-style:italic}.count{margin:44px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.unit{padding:30px 12px;position:relative}.unit:not(:last-child){border-right:1px solid var(--line)}.num{display:block;font-family:Georgia,serif;font-size:clamp(50px,10vw,135px);line-height:.8;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.label{display:block;margin-top:18px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#777069}.sub{margin:28px auto 0;max-width:620px;font-size:13px;line-height:1.75;color:#746d66}.preview{margin-top:12px;font:9px "Courier New",monospace;color:#9a928a;letter-spacing:.08em;text-transform:uppercase}.next{display:inline-flex;margin-top:28px;background:#151413;color:#f4f1eb;text-decoration:none;padding:12px 16px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:0;pointer-events:none;transition:.5s ease}.next.show{opacity:1;pointer-events:auto}.arrived .title{font-size:clamp(52px,8vw,108px)}.arrived .count{display:none}.arrived .sub{font-family:Georgia,serif;font-size:clamp(22px,3vw,36px);color:#403b36}.pulse{position:fixed;left:50%;top:50%;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.08);transform:translate(-50%,-50%);pointer-events:none;animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{width:74vh;height:74vh;border-color:rgba(0,0,0,.025)}}
 @media(max-width:640px){.stage{padding:22px}.count{grid-template-columns:repeat(2,1fr)}.unit:nth-child(2){border-right:0}.unit:nth-child(-n+2){border-bottom:1px solid var(--line)}.unit{padding:26px 8px}.num{font-size:clamp(58px,19vw,90px)}}
 </style>
-<script src="./phase10-runtime.js?v=20260918-p10"></script>
+<script src="./phase10-runtime.js?v=20260919-countdown2"></script>
 <script src="./journey-runtime.js?v=20260918-p10"></script>
 <script src="./soundtrack-runtime.js?v=20260918-p10"></script>
 </head>
@@ -85,12 +85,113 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;b
 <div class="pulse"></div><div class="chapter">07 / 08 · until your birthday</div><button class="sound" id="soundBtn" data-soundtrack-control hidden data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
 <main class="stage" id="stage"><div class="inner"><div class="eyebrow" id="eyebrow">one last wait</div><h1 class="title" id="title">until the day that's<br><em>actually yours.</em></h1><div class="count" id="count"><div class="unit"><span class="num" id="days">00</span><span class="label">days</span></div><div class="unit"><span class="num" id="hours">00</span><span class="label">hours</span></div><div class="unit"><span class="num" id="minutes">00</span><span class="label">minutes</span></div><div class="unit"><span class="num" id="seconds">00</span><span class="label">seconds</span></div></div><p class="sub" id="sub">No giant decorations. No dramatic speech yet. Just time moving toward one very specific person.</p><div class="preview" id="preview"></div><a class="next" id="next" href="finale.html">the final reel is ready →</a></div></main>
 <script>
-const cfg=window.SITE_CONFIG||{};const stage=document.getElementById('stage'),next=document.getElementById('next'),preview=document.getElementById('preview');let previewMode=false;let target;
-if(cfg.birthdayISO){const parsed=new Date(cfg.birthdayISO);if(!isNaN(parsed))target=parsed}
-if(!target){previewMode=true;target=new Date(Date.now()+(Number(cfg.previewCountdownHours)||24)*3600000);preview.textContent='preview mode · set birthdayISO in config.js';next.classList.add('show')}
-function pad(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
-function tick(){let diff=target-Date.now();if(diff<=0&&!previewMode){stage.classList.add('arrived');document.getElementById('eyebrow').textContent='it is officially time';document.getElementById('title').innerHTML='happy birthday,<br><em>'+(cfg.nickname||'NICKNAME')+'.</em>';document.getElementById('sub').textContent='The waiting part is over. There is one last thing I made for you.';preview.textContent='';next.classList.add('show');return}diff=Math.max(0,diff);const d=diff/86400000,h=(diff%86400000)/3600000,m=(diff%3600000)/60000,s=(diff%60000)/1000;document.getElementById('days').textContent=pad(d);document.getElementById('hours').textContent=pad(h);document.getElementById('minutes').textContent=pad(m);document.getElementById('seconds').textContent=pad(s);setTimeout(tick,Math.max(250,Math.min(1000,Math.ceil(diff%1000)||1000)))}tick();
-let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.preload='metadata';audio.style.display='none';document.body.appendChild(audio);document.getElementById('soundBtn').onclick=async()=>{if(audio.paused){try{await audio.play();sessionStorage.setItem('birthdayMusic','on');document.getElementById('soundBtn').textContent='sound on'}catch(e){document.getElementById('soundBtn').textContent='choose soundtrack'}}else{audio.pause();sessionStorage.setItem('birthdayMusic','off');document.getElementById('soundBtn').textContent='sound'}};
+const COUNTDOWN_DEFAULTS={
+  before:{
+    eyebrow:'one last wait',
+    titleLine:"until the day that's",
+    titleEmphasis:'actually yours.',
+    sub:'No giant decorations. No dramatic speech yet. Just time moving toward one very specific person.',
+    lockLabel:'locked until her birthday',
+    lockNote:'The timer is the key. When it reaches zero, the lock can finally be opened.'
+  },
+  after:{
+    eyebrow:'it is officially time',
+    titleLine:'happy birthday,',
+    titleEmphasis:'{nickname}.',
+    sub:'The waiting part is over. There is one last thing I made for you.',
+    lockLabel:'unlock',
+    lockNote:'The wait is over. One tiny password check and the rest is yours.'
+  },
+  access:{
+    title:'come on! you know the password',
+    text:'Six digits. You definitely know this one.'
+  }
+};
+const stage=document.getElementById('stage');
+const count=document.getElementById('count');
+const preview=document.getElementById('preview');
+const title=document.getElementById('title');
+const eyebrow=document.getElementById('eyebrow');
+const sub=document.getElementById('sub');
+const numberEls={
+  days:document.getElementById('days'),
+  hours:document.getElementById('hours'),
+  minutes:document.getElementById('minutes'),
+  seconds:document.getElementById('seconds')
+};
+const countdownParams=new URLSearchParams(location.search);
+const adminPreview=countdownParams.get('adminPreview')==='1';
+const requestedView=adminPreview&&['before','after'].includes(countdownParams.get('countdownView'))?countdownParams.get('countdownView'):'auto';
+let countdownState={general:{...(window.SITE_CONFIG||{})},pages:window.SITE_CONFIG?.pages||{}};
+let countdownTarget=new Date('2026-09-20T00:00:00+05:30');
+let countdownTimer=0;
+
+function mergeCountdownGroup(name){
+  return {...COUNTDOWN_DEFAULTS[name],...(countdownState.pages?.countdown?.[name]||{})};
+}
+function countdownInterpolate(value){
+  const nickname=countdownState.general?.nickname||'NICKNAME';
+  return String(value??'').replace(/\{nickname\}/g,nickname);
+}
+function countdownIsAfter(){
+  if(requestedView==='before')return false;
+  if(requestedView==='after')return true;
+  return Date.now()>=countdownTarget.getTime();
+}
+function countdownViewSettings(){
+  return mergeCountdownGroup(countdownIsAfter()?'after':'before');
+}
+function countdownAccessSettings(){return mergeCountdownGroup('access')}
+function renderCountdownTitle(line,emphasis){
+  const em=document.createElement('em');
+  em.textContent=countdownInterpolate(emphasis);
+  title.replaceChildren(document.createTextNode(countdownInterpolate(line)),document.createElement('br'),em);
+}
+function renderCountdownCopy(){
+  const after=countdownIsAfter(),view=countdownViewSettings();
+  stage.classList.toggle('arrived',after);
+  eyebrow.textContent=countdownInterpolate(view.eyebrow);
+  renderCountdownTitle(view.titleLine,view.titleEmphasis);
+  sub.textContent=countdownInterpolate(view.sub);
+  preview.textContent='';
+  try{window.dispatchEvent(new CustomEvent('birthday:countdown-render',{detail:{after,view}}))}catch(e){}
+}
+function padCountdown(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
+function scheduleCountdown(){
+  clearTimeout(countdownTimer);
+  renderCountdownCopy();
+  let diff=countdownTarget.getTime()-Date.now();
+  if(countdownIsAfter()){
+    for(const el of Object.values(numberEls))el.textContent='00';
+    return;
+  }
+  diff=Math.max(0,diff);
+  numberEls.days.textContent=padCountdown(diff/86400000);
+  numberEls.hours.textContent=padCountdown((diff%86400000)/3600000);
+  numberEls.minutes.textContent=padCountdown((diff%3600000)/60000);
+  numberEls.seconds.textContent=padCountdown((diff%60000)/1000);
+  if(requestedView==='before'&&diff<=0)return;
+  countdownTimer=setTimeout(scheduleCountdown,Math.max(250,Math.min(1000,Math.ceil(diff%1000)||1000)));
+}
+function applyCountdownState(next){
+  if(next&&typeof next==='object'){
+    countdownState={
+      general:{...(next.general||countdownState.general||{})},
+      pages:{...(next.pages||countdownState.pages||{})}
+    };
+  }
+  const parsed=new Date(countdownState.general?.birthdayISO||'2026-09-20T00:00:00+05:30');
+  countdownTarget=Number.isNaN(parsed.getTime())?new Date('2026-09-20T00:00:00+05:30'):parsed;
+  scheduleCountdown();
+}
+window.COUNTDOWN_PAGE={
+  applyState:applyCountdownState,
+  isAfter:countdownIsAfter,
+  getViewSettings:countdownViewSettings,
+  getAccessSettings:countdownAccessSettings,
+  requestedView
+};
+applyCountdownState({general:{...(window.SITE_CONFIG||{})},pages:window.SITE_CONFIG?.pages||{}});
 </script>
 
 
@@ -116,46 +217,67 @@ let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.pre
 @media(max-width:640px){.bday-lock{width:80px;height:80px}.lock-card{padding:23px}.lock-card h2{font-size:28px}.lock-code{font-size:27px}}
 </style>
 <script>
-(async()=>{
+(()=>{
   const PASSWORD='200905';
-  const preview=new URLSearchParams(location.search).get('adminPreview')==='1';
-  let cfg=window.SITE_CONFIG||{};
-  try{if(window.BDAY){const ready=window.BDAY.ready||window.BDAY.load?.();if(ready){const r=await ready;cfg={...cfg,...(r.state?.general||{})}}}}catch(e){}
-  const fallback='2026-09-18T00:00:00+05:30';
-  const parsed=new Date(cfg.birthdayISO||fallback);
-  const target=isNaN(parsed)?new Date(fallback):parsed;
-  const sub=document.getElementById('sub');
-  const chapter=document.querySelector('.chapter');
   const inner=document.querySelector('.inner');
+  const chapter=document.querySelector('.chapter');
   if(chapter)chapter.textContent='birthday lock · first screen';
-  const oldPreview=document.getElementById('preview');if(oldPreview)oldPreview.textContent='';
-  const oldNext=document.getElementById('next');if(oldNext)oldNext.remove();
-  const wrap=document.createElement('div');wrap.className='bday-lock-wrap';
-  wrap.innerHTML='<button class="bday-lock" id="birthdayLock" type="button" aria-label="Birthday lock" disabled><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="21" width="28" height="20" rx="6"></rect><path d="M16 21v-7a8 8 0 0 1 16 0v7"></path><circle cx="24" cy="31" r="2.2"></circle></svg></button><div class="bday-lock-label" id="lockLabel">locked until her birthday</div><div class="bday-lock-note" id="lockNote">The timer is the key. When it reaches zero, the lock can finally be opened.</div>';
+  document.getElementById('next')?.remove();
+
+  const wrap=document.createElement('div');
+  wrap.className='bday-lock-wrap';
+  wrap.innerHTML='<button class="bday-lock" id="birthdayLock" type="button" aria-label="Birthday lock" disabled><svg viewBox="0 0 48 48" aria-hidden="true"><rect x="10" y="21" width="28" height="20" rx="6"></rect><path d="M16 21v-7a8 8 0 0 1 16 0v7"></path><circle cx="24" cy="31" r="2.2"></circle></svg></button><div class="bday-lock-label" id="lockLabel"></div><div class="bday-lock-note" id="lockNote"></div>';
   inner?.appendChild(wrap);
-  const modal=document.createElement('div');modal.className='lock-modal';modal.id='lockModal';
-  modal.innerHTML='<div class="lock-card"><small>birthday access</small><h2>come on! you know the password</h2><p>Six digits. You definitely know this one.</p><input class="lock-code" id="lockCode" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••••" aria-label="Six digit password"><div class="lock-actions"><button type="button" id="lockCancel">not yet</button><button class="go" type="button" id="lockGo">unlock</button></div><p class="lock-error" id="lockError"></p></div>';
+
+  const modal=document.createElement('div');
+  modal.className='lock-modal';
+  modal.id='lockModal';
+  modal.innerHTML='<div class="lock-card"><small>birthday access</small><h2 id="lockDialogTitle"></h2><p id="lockDialogText"></p><input class="lock-code" id="lockCode" inputmode="numeric" autocomplete="off" maxlength="6" placeholder="••••••" aria-label="Six digit password"><div class="lock-actions"><button type="button" id="lockCancel">not yet</button><button class="go" type="button" id="lockGo">unlock</button></div><p class="lock-error" id="lockError"></p></div>';
   document.body.appendChild(modal);
-  const button=document.getElementById('birthdayLock'),label=document.getElementById('lockLabel'),note=document.getElementById('lockNote'),code=document.getElementById('lockCode'),error=document.getElementById('lockError');
-  function ready(){return preview||Date.now()>=target.getTime()}
-  function sync(){
-    const isReady=ready();button.disabled=!isReady;button.classList.toggle('ready',isReady);
-    label.textContent=isReady?'unlock':'locked until her birthday';
-    note.textContent=isReady?'The wait is over. One tiny password check and the rest is yours.':'The timer is the key. When it reaches zero, the lock can finally be opened.';
-    if(isReady&&sub)sub.textContent='The countdown is over. The lock is ready.';
+
+  const button=document.getElementById('birthdayLock');
+  const label=document.getElementById('lockLabel');
+  const note=document.getElementById('lockNote');
+  const code=document.getElementById('lockCode');
+  const error=document.getElementById('lockError');
+  const dialogTitle=document.getElementById('lockDialogTitle');
+  const dialogText=document.getElementById('lockDialogText');
+
+  function syncLock(){
+    const page=window.COUNTDOWN_PAGE;
+    const after=!!page?.isAfter?.();
+    const view=page?.getViewSettings?.()||COUNTDOWN_DEFAULTS[after?'after':'before'];
+    const access=page?.getAccessSettings?.()||COUNTDOWN_DEFAULTS.access;
+    button.disabled=!after;
+    button.classList.toggle('ready',after);
+    label.textContent=view.lockLabel||COUNTDOWN_DEFAULTS[after?'after':'before'].lockLabel;
+    note.textContent=view.lockNote||COUNTDOWN_DEFAULTS[after?'after':'before'].lockNote;
+    dialogTitle.textContent=access.title||COUNTDOWN_DEFAULTS.access.title;
+    dialogText.textContent=access.text||COUNTDOWN_DEFAULTS.access.text;
   }
-  function scheduleUnlockSync(){const wait=target.getTime()-Date.now();if(wait<=0){sync();return}setTimeout(()=>{sync();scheduleUnlockSync()},Math.min(wait+100,2147483000))}sync();if(!ready())scheduleUnlockSync();
-  button.addEventListener('click',()=>{if(!ready())return;modal.classList.add('open');code.value='';error.textContent='';setTimeout(()=>code.focus(),50)});
+  window.COUNTDOWN_LOCK={sync:syncLock};
+  window.addEventListener('birthday:countdown-render',syncLock);
+  syncLock();
+
+  button.addEventListener('click',()=>{
+    if(!window.COUNTDOWN_PAGE?.isAfter?.())return;
+    modal.classList.add('open');code.value='';error.textContent='';setTimeout(()=>code.focus(),50);
+  });
   document.getElementById('lockCancel').addEventListener('click',()=>modal.classList.remove('open'));
   modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
   function submit(){
-    const v=code.value.replace(/\\D/g,'').slice(0,6);code.value=v;
-    if(v===PASSWORD){localStorage.setItem('birthdayUnlocked','1');localStorage.setItem('birthdayUnlockedAt',new Date().toISOString());location.replace('entry.html');return}
+    const v=code.value.replace(/\D/g,'').slice(0,6);code.value=v;
+    if(v===PASSWORD){
+      localStorage.setItem('birthdayUnlocked','1');
+      localStorage.setItem('birthdayUnlockedAt',new Date().toISOString());
+      location.replace('entry.html');
+      return;
+    }
     error.textContent='come on! you know the password';
     code.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'translateX(0)'}],{duration:260});
     code.select();
   }
-  code.addEventListener('input',()=>{code.value=code.value.replace(/\\D/g,'').slice(0,6);error.textContent=''});
+  code.addEventListener('input',()=>{code.value=code.value.replace(/\D/g,'').slice(0,6);error.textContent=''});
   code.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
   document.getElementById('lockGo').addEventListener('click',submit);
 })();
