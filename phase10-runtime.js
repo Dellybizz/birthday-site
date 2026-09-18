@@ -1,7 +1,20 @@
 (()=>{
   const VERSION='20260918-p10';
   window.__BDAY_ASSET_VERSION__=VERSION;
-  const editorParams=new URLSearchParams(location.search);
+  const previewParams=new URLSearchParams(location.search);
+  const isAdminPreview=previewParams.get('adminPreview')==='1';
+  document.documentElement.classList.add('birthday-state-loading');
+  const stateBootStyle=document.createElement('style');
+  stateBootStyle.id='birthday-state-loading-style';
+  stateBootStyle.textContent='html.birthday-state-loading body{visibility:hidden!important}';
+  document.head.appendChild(stateBootStyle);
+  let stateRevealed=false;
+  function revealState(){
+    if(stateRevealed)return;
+    stateRevealed=true;
+    document.documentElement.classList.remove('birthday-state-loading');
+  }
+  const editorParams=previewParams;
   const animationEdit=editorParams.get('adminPreview')==='1'&&editorParams.get('animationEdit')==='1';
   if(animationEdit){
     document.documentElement.classList.add('birthday-animation-edit');
@@ -137,8 +150,9 @@ button,input,select,textarea{font:inherit}
   function applyYapping(state){
     if(!location.pathname.endsWith('/yapping.html'))return;
     const clips=state.pages?.yapping?.clips;
-    if(!Array.isArray(clips)||!window.YAPPING_ARCHIVE?.updateClip)return;
-    clips.slice(0,5).forEach((record,index)=>window.YAPPING_ARCHIVE.updateClip(index,record));
+    if(!Array.isArray(clips)||!window.YAPPING_ARCHIVE)return;
+    if(window.YAPPING_ARCHIVE.setClips)window.YAPPING_ARCHIVE.setClips(clips);
+    else if(window.YAPPING_ARCHIVE.updateClip)clips.forEach((record,index)=>window.YAPPING_ARCHIVE.updateClip(index,record));
   }
 
   function applyFair(state){
@@ -212,11 +226,33 @@ button,input,select,textarea{font:inherit}
     else queueMicrotask(fn);
   }
 
+  function applyAndReveal(next){
+    whenDom(()=>{applyState(next||{});revealState()});
+  }
+  window.BIRTHDAY_RUNTIME={
+    applyState(next){applyAndReveal(next)},
+    reveal:revealState
+  };
+
   const B=window.BDAY;
   if(B){
-    whenDom(()=>applyState(B.read?.()||{}));
+    const cached=B.read?.()||{};
     const ready=B.ready||B.load?.();
-    if(ready)Promise.resolve(ready).then(result=>whenDom(()=>applyState(result?.state||B.read?.()||{}))).catch(()=>{});
-  }
-  window.addEventListener('birthday:state',event=>whenDom(()=>applyState(event.detail?.state||{})));
+    if(isAdminPreview){
+      // Control Room injects its current draft after iframe load.
+      setTimeout(()=>{if(!stateRevealed)applyAndReveal(cached)},1800);
+    }else if(ready){
+      let settled=false;
+      Promise.resolve(ready).then(result=>{
+        settled=true;
+        applyAndReveal(result?.state||B.read?.()||cached);
+      }).catch(()=>{
+        settled=true;
+        applyAndReveal(cached);
+      });
+      setTimeout(()=>{if(!settled&&!stateRevealed)applyAndReveal(cached)},3500);
+    }else applyAndReveal(cached);
+  }else revealState();
+
+  window.addEventListener('birthday:state',event=>applyAndReveal(event.detail?.state||{}));
 })();
