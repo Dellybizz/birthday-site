@@ -79,9 +79,10 @@
   function textEditable(el){
     if(!el||isBroad(el)||el.matches?.('.bday-added-media,.bday-added-photo,[data-bday-inserted]'))return false;
     if(['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA','SELECT','PICTURE','SVG'].includes(el.tagName))return false;
-    if(['H1','H2','H3','H4','H5','H6','P','SPAN','SMALL','STRONG','EM','LI','A','BUTTON','TEXT','TSPAN'].includes(el.tagName))return true;
+    if(['TEXT','TSPAN'].includes(el.tagName))return true;
     const children=[...el.children].filter(x=>x.tagName!=='BR');
-    return children.length===0&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
+    if(children.length)return false;
+    return ['H1','H2','H3','H4','H5','H6','P','SPAN','DIV','SMALL','STRONG','EM','LI','A','BUTTON'].includes(el.tagName)&&[...el.childNodes].some(n=>n.nodeType===3&&n.textContent.trim());
   }
   function mediaSlot(el){
     if(!el||isBroad(el)||el.matches?.('.bday-added-media,.bday-added-photo,.bday-added-media-group,[data-bday-inserted],[data-bday-group]'))return false;
