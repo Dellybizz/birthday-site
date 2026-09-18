@@ -179,7 +179,7 @@ function validateState(data: unknown): string[] {
     }
     const yapping = data.pages.yapping;
     if (yapping !== undefined) {
-      if (!isRecord(yapping) || !Array.isArray(yapping.clips) || yapping.clips.length !== 5) errors.push('pages.yapping.clips must contain exactly 5 clips.');
+      if (!isRecord(yapping) || !Array.isArray(yapping.clips) || yapping.clips.length > 50) errors.push('pages.yapping.clips must contain between 0 and 50 clips.');
       else yapping.clips.forEach((item:any,index:number)=>{
         const at=`pages.yapping.clips[${index}]`;
         if(!isRecord(item)){errors.push(`${at} must be an object.`);return}
