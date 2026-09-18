@@ -66,20 +66,41 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 </head>
 <body>
 <div class="app">
-<aside class="side"><div class="brand"><small>private control room</small><h1>Birthday Site</h1></div><nav class="nav" id="nav"><button data-view="general" class="active">General</button><button data-view="pages">Pages & flow</button><button data-view="fair">Fair shops</button><button data-view="visual">Visual editor</button><button data-view="media">Media library</button><button data-view="advanced">Advanced</button></nav><div class="status"><b><span class="dot" style="background:#7fe0a3"></span>Live publishing</b><p>Publish pushes changes to the shared live site for every device.</p></div></aside>
+<aside class="side"><div class="brand"><small>private control room</small><h1>Birthday Site</h1></div><nav class="nav" id="nav"><button data-view="general" class="active">General</button><button data-view="journey">Journey</button><button data-view="pages">Pages</button><button data-view="visual">Visual editor</button><button data-view="media">Media library</button><button data-view="fair">Fair</button><button data-view="finale">Finale</button><button data-view="security">Security</button><button data-view="advanced">Advanced</button></nav><div class="status"><b><span class="dot" style="background:#7fe0a3"></span>Live publishing</b><p>Publish pushes changes to the shared live site for every device.</p></div></aside>
 <main class="main"><header class="top"><strong id="topTitle">General</strong><span class="pill" id="saveState">saved</span><div class="spacer"></div><a class="btn" href="index.html" target="_blank">Open site ↗</a><button class="btn primary" id="saveAll">Publish changes</button></header><div class="content">
-<section class="view active" id="view-general"><div class="pagehead"><div><h2>General settings</h2><p>Identity, birthday timing, audio, global motion and CSS used throughout the experience.</p></div></div><div class="grid">
+<section class="view active" id="view-general"><div class="pagehead"><div><h2>General</h2><p>Personal details and the shared soundtrack used across the birthday experience.</p></div></div><div class="grid">
 <div class="card"><h3>Identity</h3><div class="row"><div class="field"><label>Her name</label><input data-bind="general.name"></div><div class="field"><label>Nickname</label><input data-bind="general.nickname"></div></div><div class="field"><label>Entry inside joke</label><textarea data-bind="general.insideJoke"></textarea></div><div class="field"><label>Entry personal line</label><textarea data-bind="general.introLine"></textarea></div></div>
-<div class="card"><h3>Birthday & finale</h3><div class="field"><label>Birthday date/time (ISO)</label><input data-bind="general.birthdayISO" placeholder="2026-09-18T00:00:00+05:30"></div><div class="row"><div class="field"><label>Preview hours</label><input type="number" data-bind="general.previewCountdownHours"></div><div class="field"><label>Final favorite photo URL</label><input data-bind="general.favoritePhoto"><label class="btn upload" style="margin-top:7px;text-align:center">Upload favorite photo<input id="favoritePhotoUpload" type="file" accept="image/*"></label></div></div></div>
-<div class="card"><h3>Sound</h3><div class="field"><label>Shared soundtrack URL</label><input data-bind="general.musicFile"><label class="btn upload" style="margin-top:7px;text-align:center">Upload soundtrack<input id="soundtrackUpload" type="file" accept="audio/*"></label><div class="help">One soundtrack source is used by Countdown, Entry, Memories, Pretty Photos and Finale.</div></div><div class="toggle"><div><b>Sound on by default</b><div class="help">Browser autoplay rules still apply.</div></div><label class="switch"><input type="checkbox" data-bind-check="general.soundDefault"><i></i></label></div></div>
-<div class="card"><h3>Motion</h3><div class="field"><label>Motion intensity <span id="motionVal"></span></label><input id="motionRange" type="range" min="0" max="1.5" step="0.05" data-bind="general.motionScale"></div><div class="help">0 disables most optional runtime motion; 1 is normal; 1.5 is more expressive.</div></div>
-<div class="card full"><h3>Global custom CSS</h3><div class="field"><textarea data-bind="general.globalCss" style="min-height:180px" placeholder="/* Applies to every page */"></textarea></div></div>
+<div class="card"><h3>Soundtrack</h3><div class="field"><label>Shared soundtrack URL</label><input data-bind="general.musicFile"><label class="btn upload" style="margin-top:7px;text-align:center">Upload soundtrack<input id="soundtrackUpload" type="file" accept="audio/*"></label><div class="help">One shared source is used by the soundtrack controls throughout the journey.</div></div><div class="toggle"><div><b>Sound on by default</b><div class="help">Browser autoplay rules can still require the visitor's first interaction.</div></div><label class="switch"><input type="checkbox" data-bind-check="general.soundDefault"><i></i></label></div></div>
 </div></section>
-<section class="view" id="view-pages"><div class="pagehead"><div><h2>Pages & journey</h2><p>Turn chapters on or off and change the order. Next buttons automatically skip disabled chapters.</p></div></div><div class="card full"><div id="pageList" class="pages"></div></div></section>
-<section class="view" id="view-fair"><div class="pagehead"><div><h2>Fair shops</h2><p>Dedicated controls for every mystery shop: title, price, copy, labels, theme and its seven photos.</p></div></div><div class="card full"><div class="shop-tabs" id="shopTabs"></div><div id="shopEditor"></div></div></section>
+<section class="view" id="view-journey"><div class="pagehead"><div><h2>Journey</h2><p>Control the birthday gate and the canonical start of the experience.</p></div></div><div class="grid">
+<div class="card"><h3>Birthday gate</h3><div class="field"><label>Birthday date/time (IST)</label><input data-bind="general.birthdayISO" placeholder="2026-09-18T00:00:00+05:30"></div><div class="help">Visitors remain on Countdown until this time. Admin Preview bypasses the gate.</div></div>
+<div class="card"><h3>Canonical flow</h3><div class="help" style="font-size:12px;line-height:1.8;color:#b7bbc4">Countdown → Entry → Memories → Pretty Photos → Heart → Yapping → Fair → Finale</div><div class="help" style="margin-top:10px">Optional middle pages can be disabled or reordered from Pages. Countdown, Entry and Finale remain fixed journey points.</div></div>
+</div></section>
+<section class="view" id="view-pages"><div class="pagehead"><div><h2>Pages</h2><p>Enable, disable or reorder the optional chapters. Navigation skips disabled chapters automatically.</p></div></div><div class="card full"><div id="pageList" class="pages"></div></div></section>
+<section class="view" id="view-fair"><div class="pagehead"><div><h2>Fair</h2><p>Edit the eight Fair stalls: canonical text, pricing labels, theme and photos.</p></div></div><div class="card full"><div class="shop-tabs" id="shopTabs"></div><div id="shopEditor"></div></div></section>
 <section class="view" id="view-visual"><div class="pagehead"><div><h2>Visual editor</h2><p>Choose any page, click almost any visible element, then change its text, image, link, visibility or CSS. This is the catch-all editor for details not covered elsewhere.</p></div></div><div class="visual-layout"><div class="inspector"><div class="selected" id="selectorBox">Click something in the preview.</div><div id="inspectorFields"><div class="empty">Select an element to edit it.</div></div></div><div class="preview-shell"><div class="previewbar"><select id="previewPage"></select><button class="btn" id="reloadPreview">Reload</button><div class="spacer"></div><span class="help">click an element to inspect</span></div><div class="preview"><iframe id="previewFrame"></iframe></div></div></div></section>
-<section class="view" id="view-media"><div class="pagehead"><div><h2>Media library</h2><p>Upload photos, video and audio for this browser draft. Each file gets a <code>media:id</code> reference you can use anywhere in the panel.</p></div><label class="btn primary upload">Upload files<input id="mediaUpload" type="file" multiple accept="image/*,video/*,audio/*"></label></div><div class="warn" style="margin-bottom:14px">Local media is stored in IndexedDB, so it survives refreshes on this browser but is not yet synced to other devices.</div><div id="mediaGrid" class="media-grid"></div></section>
-<section class="view" id="view-advanced"><div class="pagehead"><div><h2>Advanced controls</h2><p>Raw state, per-page CSS, export/import, reset and direct access to everything the control room stores.</p></div></div><div class="grid"><div class="card full"><h3>Page custom CSS</h3><div class="row"><div class="field"><label>Page</label><select id="cssPage"></select></div><div class="field"><label>Actions</label><button class="btn" id="loadCss">Load page CSS</button></div></div><div class="field"><textarea id="pageCss" style="min-height:180px"></textarea></div><button class="btn" id="saveCss">Save page CSS</button></div><div class="card full"><h3>Raw site state</h3><div class="field"><textarea id="rawState" class="raw"></textarea></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="applyRaw">Apply JSON</button><button class="btn" id="exportState">Export JSON</button><label class="btn upload">Import JSON<input id="importState" type="file" accept="application/json"></label><button class="btn danger" id="resetState">Reset all controls</button></div></div></div></section>
+<section class="view" id="view-media"><div class="pagehead"><div><h2>Media library</h2><p>Upload photos, video and audio to the shared birthday-site media bucket. Uploaded files are available to this Control Room on other devices after login.</p></div><label class="btn primary upload">Upload files<input id="mediaUpload" type="file" multiple accept="image/*,video/*,audio/*"></label></div><div id="mediaGrid" class="media-grid"></div></section>
+<section class="view" id="view-finale"><div class="pagehead"><div><h2>Finale</h2><p>Manage the dedicated Finale media used by the final reel.</p></div></div><div class="grid"><div class="card"><h3>Favorite photo</h3><div class="field"><label>Final favorite photo URL</label><input data-bind="general.favoritePhoto"><label class="btn upload" style="margin-top:7px;text-align:center">Upload favorite photo<input id="favoritePhotoUpload" type="file" accept="image/*"></label></div><div class="help">This is the photo used by Finale. Other Finale text and styling can be adjusted in the Visual editor.</div></div></div></section>
+<section class="view" id="view-security">
+  <div class="pagehead"><div><h2>Security</h2><p>Change the private key used to unlock this Control Room, publish changes, and upload media.</p></div></div>
+  <div class="security-wrap">
+    <div class="security-card">
+      <h3>Admin key</h3>
+      <div class="security-grid">
+        <div class="field"><label>New admin key</label><input id="newAdminKey" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
+        <div class="field"><label>Confirm new key</label><input id="confirmAdminKey" type="password" autocomplete="new-password" placeholder="Type it again"></div>
+      </div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" type="button" id="changeAdminKey">Change admin key</button><button class="btn" type="button" id="toggleAdminKeys">Show keys</button></div>
+      <div class="security-message" id="adminKeyMessage"></div>
+      <div class="security-note">Changing the key takes effect immediately. The old key will stop working for publishing and media uploads on every device.</div>
+    </div>
+  </div>
+</section>
+<section class="view" id="view-advanced"><div class="pagehead"><div><h2>Advanced</h2><p>CSS overrides and recovery tools. Normal editing should happen in the dedicated sections or Visual editor.</p></div></div><div class="grid">
+<div class="card full"><h3>Global custom CSS</h3><div class="field"><textarea data-bind="general.globalCss" style="min-height:180px" placeholder="/* Applies to every page */"></textarea></div><div class="help">Use only when the normal editor controls cannot express the change safely.</div></div>
+<div class="card full"><h3>Page custom CSS</h3><div class="row"><div class="field"><label>Page</label><select id="cssPage"></select></div><div class="field"><label>Actions</label><button class="btn" id="loadCss">Load page CSS</button></div></div><div class="field"><textarea id="pageCss" style="min-height:180px"></textarea></div><button class="btn" id="saveCss">Save page CSS</button></div>
+<div class="card full"><h3>Raw site state · recovery only</h3><div class="warn" style="margin-bottom:12px">Imported or pasted JSON is validated locally and staged as an unsaved draft. It will not reach the live site until you explicitly click Publish changes.</div><div class="field"><textarea id="rawState" class="raw"></textarea></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn" id="applyRaw">Validate & stage JSON</button><button class="btn" id="exportState">Export JSON</button><label class="btn upload">Import JSON<input id="importState" type="file" accept="application/json"></label><button class="btn danger" id="resetState">Stage safe defaults</button></div></div>
+</div></section>
 </div></main></div><div class="toast" id="toast"></div><div id="adminGate" style="position:fixed;inset:0;z-index:9999;background:rgba(6,7,10,.94);display:grid;place-items:center;padding:20px"><div style="width:min(420px,100%);background:#15171c;border:1px solid #2a2e37;border-radius:18px;padding:22px"><small style="color:#969ba6;text-transform:uppercase;letter-spacing:.14em">private access</small><h2 style="font-family:Georgia,serif;font-weight:400;font-size:30px;margin:6px 0 8px">Control Room</h2><p style="color:#969ba6;font-size:12px">Enter the admin key to edit and publish the live birthday site.</p><input id="adminKeyInput" type="password" placeholder="Admin key" style="width:100%;border:1px solid #2a2e37;background:#101217;color:#fff;padding:11px;border-radius:9px;margin:8px 0 10px"><button class="btn primary" id="adminUnlock" style="width:100%">Unlock</button><p id="adminError" style="color:#ff9b9b;font-size:11px;min-height:16px;margin:9px 0 0"></p></div></div>
 <script>
 const B=window.BDAY;let state=B.read();const pages=[['index.html','01 · Entry'],['memories.html','02 · Memories'],['pretty-photos.html','03 · Pretty archive'],['heart.html','04 · Heart'],['yapping.html','05 · Yapping archive'],['fair.html','06 · What’s for sale'],['countdown.html','07 · Countdown'],['finale.html','08 · Final reel']];const shopIds=['smile','presence','laugh','care','yapping','excitement','comfort','you'];const shopDefaults={"smile":{"theme":"smile","title":"Your Smile","kicker":"pink stall · best seller","badge":"pretty goods","price":"PRICE: WORTHLESS*","text":"*Worthless only because there is apparently no useful currency for it. Management tried several numbers and gave up.","note":"vendor note: suspiciously capable of improving the atmosphere."},"presence":{"theme":"presence","title":"Your Presence","kicker":"luxury stall · extremely limited","badge":"premium stock","price":"PRICE: $100 QUADRILLION","text":"Ridiculous pricing, yes. Still somehow underpriced. Ordinary places feel noticeably better when this item is present.","note":"vendor note: quietly upgrades the whole place."},"laugh":{"theme":"laugh","title":"Your Laugh","kicker":"bright stall · restricted goods","badge":"repeat demand","price":"PRICE: BLACK MARKET ONLY","text":"Highly addictive, especially the version where you're trying not to laugh and failing.","note":"vendor note: repeat demand remains suspiciously high."},"care":{"theme":"care","title":"The Way You Care","kicker":"floral stall · handle carefully","badge":"rare stock","price":"PRICE: EXTREMELY RARE","text":"Detects small mood changes, weird silences, and details most people miss.","note":"vendor note: limited supply; handle carefully."},"yapping":{"theme":"yapping","title":"Your Yapping","kicker":"busy stall · unlimited sample counter","badge":"never ends","price":"PRICE: FREE SAMPLE","text":"Seven minutes, four side stories, and a very real chance we never reach the original point.","note":"vendor note: free sample may become a full-length episode."},"excitement":{"theme":"excitement","title":"Your Excitement","kicker":"pastel stall · limited edition","badge":"sparkly stock","price":"PRICE: COLLECTOR'S ITEM","text":"Turns tiny plans and random ideas into something genuinely exciting.","note":"vendor note: ordinary things may become events."},"comfort":{"theme":"comfort","title":"Your Comfort","kicker":"cozy stall · private stock","badge":"quiet favorite","price":"PRICE: NOT AVAILABLE RETAIL","text":"Becomes familiar quietly, then somehow turns into something you don't want to be without.","note":"vendor note: private stock only."},"you":{"theme":"you","title":"You","kicker":"final stall · display only","badge":"not for sale","price":"PRICE: NOT FOR SALE","text":"The smile, laugh, care, chaos and comfort only make sense together because they're yours.","note":"final inventory decision: complete collection unavailable for purchase."}};let activeShop='smile',selected=null;
@@ -104,7 +125,95 @@ function currentPatch(selector){const p=document.getElementById('previewPage').v
 function saveInspectorPatch(){if(!selected)return;const page=document.getElementById('previewPage').value;state.patches[page]??=[];let p=state.patches[page].find(x=>x.selector===selected.selector);if(!p){p={selector:selected.selector,styles:{}};state.patches[page].push(p)}p.text=document.getElementById('iText').value;p.hidden=document.getElementById('iHidden').checked;p.styles={color:document.getElementById('iColor').value,'background-color':document.getElementById('iBg').value,'font-size':document.getElementById('iSize').value,opacity:document.getElementById('iOpacity').value,'border-radius':document.getElementById('iRadius').value,transform:document.getElementById('iTransform').value};const s=document.getElementById('iSrc'),h=document.getElementById('iHref');if(s)p.src=s.value;if(h)p.href=h.value;dirty();save()}function removeInspectorPatch(){if(!selected)return;const page=document.getElementById('previewPage').value;state.patches[page]=(state.patches[page]||[]).filter(x=>x.selector!==selected.selector);dirty();save()}
 let uploadedMedia=[];async function addMedia(file){if(!ADMIN_KEY){showGate();throw new Error('Unlock first')}toast('Uploading '+file.name+'…');const rec=await B.upload(file,ADMIN_KEY,'birthday-site');uploadedMedia.unshift({name:file.name,type:file.type,size:file.size,url:rec.url,createdAt:Date.now()});renderMedia();toast('Media uploaded');return rec.url}async function listMedia(){return uploadedMedia}async function deleteMedia(){toast('Media deletion is not enabled yet; remove its URL from the site instead.')}async function renderMedia(){const box=document.getElementById('mediaGrid'),items=await listMedia();box.innerHTML='';if(!items.length){box.innerHTML='<div class="empty">Upload a photo, video or audio file. New uploads appear here for this session and remain stored in the live media bucket.</div>';return}items.forEach(rec=>{const u=rec.url,c=document.createElement('div');c.className='media-card';let preview=rec.type.startsWith('image/')?`<img src="${u}">`:rec.type.startsWith('video/')?`<video src="${u}" muted></video>`:rec.type.startsWith('audio/')?`<audio controls src="${u}"></audio>`:'file';c.innerHTML=`<div class="media-thumb">${preview}</div><div class="media-meta"><b>${html(rec.name)}</b><small>${html(u)}</small><div style="display:flex;gap:6px;margin-top:8px"><button class="btn" data-copy>Copy URL</button></div></div>`;c.querySelector('[data-copy]').onclick=()=>navigator.clipboard.writeText(u).then(()=>toast('URL copied'));box.appendChild(c)})}
 function renderRaw(){document.getElementById('rawState').value=JSON.stringify(state,null,2)}function download(name,text,type='application/json'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
-document.getElementById('nav').onclick=e=>{const b=e.target.closest('button[data-view]');if(!b)return;document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));document.getElementById('view-'+b.dataset.view).classList.add('active');document.getElementById('topTitle').textContent=b.textContent;if(b.dataset.view==='visual'&&!document.getElementById('previewFrame').src)reloadPreview();if(b.dataset.view==='media')renderMedia();if(b.dataset.view==='advanced')renderRaw()};document.getElementById('saveAll').onclick=save;document.getElementById('previewPage').onchange=reloadPreview;document.getElementById('reloadPreview').onclick=reloadPreview;document.getElementById('mediaUpload').onchange=async e=>{for(const f of e.target.files)await addMedia(f);e.target.value=''};document.getElementById('loadCss').onclick=()=>document.getElementById('pageCss').value=state.pageCss[document.getElementById('cssPage').value]||'';document.getElementById('saveCss').onclick=()=>{state.pageCss[document.getElementById('cssPage').value]=document.getElementById('pageCss').value;dirty();save()};document.getElementById('applyRaw').onclick=()=>{try{state=JSON.parse(document.getElementById('rawState').value);dirty();save();renderAll()}catch(e){alert('Invalid JSON: '+e.message)}};document.getElementById('exportState').onclick=()=>download('birthday-site-settings.json',JSON.stringify(state,null,2));document.getElementById('importState').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader;r.onload=()=>{try{state=JSON.parse(r.result);dirty();save();renderAll()}catch(err){alert('Invalid JSON')}};r.readAsText(f)};document.getElementById('resetState').onclick=()=>{if(confirm('Reset every control and visual override?')){state=JSON.parse(JSON.stringify(B.defaults));dirty();renderAll()}};function renderAll(){renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw()}renderAll();bindFrame();document.getElementById('adminUnlock').onclick=unlock;document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminGate').style.display='none';B.fetchRemote().then(r=>{state=r.state;liveRevision=r.revision;renderAll();document.getElementById('saveState').textContent=Number.isSafeInteger(liveRevision)?'live · r'+liveRevision:'revision unavailable'}).catch(()=>{liveRevision=null})}else{ADMIN_KEY='';sessionStorage.removeItem('birthday-admin-key');showGate()}})}
+const ALLOWED_STATE_PAGES=new Set(pages.map(x=>x[0]));
+const GENERATED_SELECTOR_RE=/(?:\\.bday-added-media|\\.bday-added-photo|\\[data-bday-inserted|\\[data-bday-group|:nth-of-type\\()/i;
+const BROAD_SELECTOR_RE=/^(?:html|body|main|section|article)(?:$|[.#[:>\\s])/i;
+function plainObject(v){return !!v&&typeof v==='object'&&!Array.isArray(v)}
+function cloneState(v){return JSON.parse(JSON.stringify(v))}
+function mergeRecovery(base,extra){
+  if(Array.isArray(base))return Array.isArray(extra)?cloneState(extra):cloneState(base);
+  if(plainObject(base)){const out=cloneState(base);if(plainObject(extra))for(const k of Object.keys(extra))out[k]=(k in out)?mergeRecovery(out[k],extra[k]):cloneState(extra[k]);return out}
+  return extra===undefined?base:extra;
+}
+function modernDefaults(){
+  const next=cloneState(B.defaults);
+  next.general={...next.general,birthdayISO:'2026-09-18T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''};
+  next.pageOrder=['countdown.html','index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','finale.html'];
+  next.pageEnabled={'countdown.html':true,'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'finale.html':true};
+  next.fairItems=cloneState(shopDefaults);next.fairPhotos={};next.patches={};next.pageCss={};next.pages={};
+  return next;
+}
+function validateRecoveryState(value){
+  const errors=[];if(!plainObject(value))return ['Root value must be a JSON object.'];
+  if(value.general!==undefined&&!plainObject(value.general))errors.push('general must be an object.');
+  const g=plainObject(value.general)?value.general:{};
+  for(const key of ['name','nickname','insideJoke','introLine','birthdayISO','favoritePhoto','musicFile','globalCss'])if(g[key]!==undefined&&typeof g[key]!=='string')errors.push('general.'+key+' must be text.');
+  if(g.birthdayISO!==undefined&&!Number.isFinite(new Date(g.birthdayISO).getTime()))errors.push('general.birthdayISO must be a valid date/time.');
+  if(g.soundDefault!==undefined&&typeof g.soundDefault!=='boolean')errors.push('general.soundDefault must be true or false.');
+  if(g.previewCountdownHours!==undefined&&(!Number.isFinite(Number(g.previewCountdownHours))||Number(g.previewCountdownHours)<1||Number(g.previewCountdownHours)>168))errors.push('general.previewCountdownHours must be between 1 and 168.');
+  if(g.motionScale!==undefined&&(!Number.isFinite(Number(g.motionScale))||Number(g.motionScale)<0||Number(g.motionScale)>1.5))errors.push('general.motionScale must be between 0 and 1.5.');
+  if(value.pageOrder!==undefined){
+    if(!Array.isArray(value.pageOrder))errors.push('pageOrder must be an array.');
+    else{
+      const invalid=value.pageOrder.filter(p=>!ALLOWED_STATE_PAGES.has(p));if(invalid.length)errors.push('pageOrder contains unknown pages: '+invalid.join(', '));
+      if(new Set(value.pageOrder).size!==value.pageOrder.length)errors.push('pageOrder cannot contain duplicates.');
+      if(value.pageOrder.length!==ALLOWED_STATE_PAGES.size||[...ALLOWED_STATE_PAGES].some(p=>!value.pageOrder.includes(p)))errors.push('pageOrder must contain every journey page exactly once.');
+      if(value.pageOrder[0]!=='countdown.html'||value.pageOrder[1]!=='index.html'||value.pageOrder.at(-1)!=='finale.html')errors.push('Countdown, Entry and Finale must remain fixed journey points.');
+    }
+  }
+  if(value.pageEnabled!==undefined){
+    if(!plainObject(value.pageEnabled))errors.push('pageEnabled must be an object.');
+    else for(const [p,v] of Object.entries(value.pageEnabled)){if(!ALLOWED_STATE_PAGES.has(p))errors.push('pageEnabled contains unknown page '+p+'.');if(typeof v!=='boolean')errors.push('pageEnabled.'+p+' must be true or false.')}
+  }
+  if(value.fairItems!==undefined){
+    if(!plainObject(value.fairItems))errors.push('fairItems must be an object.');
+    else for(const [id,item] of Object.entries(value.fairItems)){if(!shopIds.includes(id))errors.push('fairItems contains unknown stall '+id+'.');if(!plainObject(item))errors.push('fairItems.'+id+' must be an object.');else for(const [k,v] of Object.entries(item))if(!['theme','title','kicker','badge','price','text','note'].includes(k)||typeof v!=='string')errors.push('fairItems.'+id+'.'+k+' is invalid.')}
+  }
+  if(value.fairPhotos!==undefined&&!plainObject(value.fairPhotos))errors.push('fairPhotos must be an object.');
+  if(plainObject(value.fairPhotos))for(const [id,photos] of Object.entries(value.fairPhotos)){if(!shopIds.includes(id))errors.push('fairPhotos contains unknown stall '+id+'.');if(!plainObject(photos))errors.push('fairPhotos.'+id+' must be an object.');else for(const [k,v] of Object.entries(photos))if(typeof v!=='string')errors.push('fairPhotos.'+id+'.'+k+' must be text.')}
+  if(value.pageCss!==undefined){
+    if(!plainObject(value.pageCss))errors.push('pageCss must be an object.');
+    else for(const [p,v] of Object.entries(value.pageCss)){if(!ALLOWED_STATE_PAGES.has(p))errors.push('pageCss contains unknown page '+p+'.');if(typeof v!=='string')errors.push('pageCss.'+p+' must be text.')}
+  }
+  if(value.pages!==undefined&&!plainObject(value.pages))errors.push('pages must be an object.');
+  if(value.patches!==undefined){
+    if(!plainObject(value.patches))errors.push('patches must be an object.');
+    else for(const [page,list] of Object.entries(value.patches)){
+      if(!ALLOWED_STATE_PAGES.has(page))errors.push('patches contains unknown page '+page+'.');
+      if(!Array.isArray(list)){errors.push('patches.'+page+' must be an array.');continue}
+      list.forEach((patch,i)=>{
+        if(!plainObject(patch)){errors.push('patches.'+page+'['+i+'] must be an object.');return}
+        const selector=String(patch.selector||'').trim();
+        if(!selector)errors.push('patches.'+page+'['+i+'] needs a selector.');
+        else if(GENERATED_SELECTOR_RE.test(selector)||BROAD_SELECTOR_RE.test(selector))errors.push('patches.'+page+'['+i+'] uses an unsafe selector.');
+        if(patch.styles!==undefined&&!plainObject(patch.styles))errors.push('patches.'+page+'['+i+'].styles must be an object.');
+        for(const key of ['insertImages','insertMedia'])if(patch[key]!==undefined){if(!Array.isArray(patch[key]))errors.push('patches.'+page+'['+i+'].'+key+' must be an array.');else patch[key].forEach((m,j)=>{if(!plainObject(m)||typeof m.url!=='string'||!m.url.trim())errors.push('patches.'+page+'['+i+'].'+key+'['+j+'] needs a media URL.');});}
+      });
+    }
+  }
+  return [...new Set(errors)].slice(0,24);
+}
+function stageRecovery(parsed,label){
+  const errors=validateRecoveryState(parsed);if(errors.length)throw new Error('Recovery JSON was rejected:\n\n'+errors.map(x=>'• '+x).join('\n'));
+  state=mergeRecovery(modernDefaults(),parsed);dirty();renderAll();toast(label+' staged — publish when ready');
+}
+document.getElementById('nav').onclick=e=>{const b=e.target.closest('button[data-view]');if(!b)return;document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));b.classList.add('active');document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));const view=document.getElementById('view-'+b.dataset.view);if(view)view.classList.add('active');document.getElementById('topTitle').textContent=b.textContent;if(b.dataset.view==='visual'&&!document.getElementById('previewFrame').src)reloadPreview();if(b.dataset.view==='media')renderMedia();if(b.dataset.view==='advanced')renderRaw()};
+document.getElementById('saveAll').onclick=save;
+document.getElementById('previewPage').onchange=reloadPreview;
+document.getElementById('reloadPreview').onclick=reloadPreview;
+document.getElementById('mediaUpload').onchange=async e=>{for(const f of e.target.files)await addMedia(f);e.target.value=''};
+document.getElementById('loadCss').onclick=()=>document.getElementById('pageCss').value=state.pageCss[document.getElementById('cssPage').value]||'';
+document.getElementById('saveCss').onclick=()=>{state.pageCss[document.getElementById('cssPage').value]=document.getElementById('pageCss').value;dirty();save()};
+document.getElementById('applyRaw').onclick=()=>{try{stageRecovery(JSON.parse(document.getElementById('rawState').value),'Raw JSON')}catch(e){alert(e.message||String(e))}};
+document.getElementById('exportState').onclick=()=>download('birthday-site-settings.json',JSON.stringify(state,null,2));
+document.getElementById('importState').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{stageRecovery(JSON.parse(r.result),'Imported JSON')}catch(err){alert(err.message||'Invalid JSON')}finally{e.target.value=''}};r.readAsText(f)};
+document.getElementById('resetState').onclick=()=>{if(confirm('Stage the safe current defaults? Nothing goes live until you publish.')){state=modernDefaults();dirty();renderAll();toast('Safe defaults staged — publish when ready')}};
+function renderAll(){renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw()}
+renderAll();bindFrame();
+document.getElementById('adminUnlock').onclick=unlock;
+document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
+if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminGate').style.display='none';B.fetchRemote().then(r=>{state=r.state;liveRevision=r.revision;renderAll();document.getElementById('saveState').textContent=Number.isSafeInteger(liveRevision)?'live · r'+liveRevision:'revision unavailable'}).catch(()=>{liveRevision=null})}else{ADMIN_KEY='';sessionStorage.removeItem('birthday-admin-key');showGate()}})}
+
 </script>
 
 <style>
@@ -121,7 +230,7 @@ document.getElementById('nav').onclick=e=>{const b=e.target.closest('button[data
     easy.innerHTML='<div><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#8d929d;margin-bottom:6px">Birthday date</label><input type="date" id="easyBirthdayDate"></div><div><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#8d929d;margin-bottom:6px">Time</label><input type="time" id="easyBirthdayTime" step="60"></div>';
     field.appendChild(easy);
     const d=easy.querySelector('#easyBirthdayDate'),t=easy.querySelector('#easyBirthdayTime');
-    function load(){const iso=state?.general?.birthdayISO||'2026-09-18T00:00:00+05:30';const m=iso.match(/^(d{4}-d{2}-d{2})T(d{2}:d{2})/);if(m){d.value=m[1];t.value=m[2]}}
+    function load(){const iso=state?.general?.birthdayISO||'2026-09-18T00:00:00+05:30';const m=iso.match(/^(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2})/);if(m){d.value=m[1];t.value=m[2]}}
     function commit(){if(!d.value)return;const time=t.value||'00:00';state.general.birthdayISO=d.value+'T'+time+':00+05:30';dateSource.value=state.general.birthdayISO;dirty()}
     d.addEventListener('input',commit);t.addEventListener('input',commit);load();
     const originalRenderAll=renderAll;renderAll=function(){originalRenderAll();load()};
@@ -168,27 +277,9 @@ document.getElementById('nav').onclick=e=>{const b=e.target.closest('button[data
 <style>
 .security-wrap{max-width:760px}.security-card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}.security-card h3{font-size:12px;text-transform:uppercase;letter-spacing:.1em;margin:0 0 15px;color:#d5d8de}.security-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}.security-message{min-height:18px;margin-top:10px;font-size:11px;color:var(--muted)}.security-message.good{color:#7fe0a3}.security-message.bad{color:#ff9b9b}.security-note{margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:11px;background:#111318;color:var(--muted);font-size:11px}@media(max-width:700px){.security-grid{grid-template-columns:1fr}}
 </style>
-<section class="view" id="view-security">
-  <div class="pagehead"><div><h2>Security</h2><p>Change the private key used to unlock this Control Room, publish changes, and upload media.</p></div></div>
-  <div class="security-wrap">
-    <div class="security-card">
-      <h3>Admin key</h3>
-      <div class="security-grid">
-        <div class="field"><label>New admin key</label><input id="newAdminKey" type="password" autocomplete="new-password" placeholder="At least 8 characters"></div>
-        <div class="field"><label>Confirm new key</label><input id="confirmAdminKey" type="password" autocomplete="new-password" placeholder="Type it again"></div>
-      </div>
-      <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center"><button class="btn primary" type="button" id="changeAdminKey">Change admin key</button><button class="btn" type="button" id="toggleAdminKeys">Show keys</button></div>
-      <div class="security-message" id="adminKeyMessage"></div>
-      <div class="security-note">Changing the key takes effect immediately. The old key will stop working for publishing and media uploads on every device.</div>
-    </div>
-  </div>
-</section>
+
 <script>
 (()=>{
-  const nav=document.getElementById('nav');
-  if(nav&&!nav.querySelector('[data-view="security"]')){
-    const b=document.createElement('button');b.dataset.view='security';b.textContent='Security';nav.appendChild(b);
-  }
   const next=document.getElementById('newAdminKey'),confirm=document.getElementById('confirmAdminKey'),msg=document.getElementById('adminKeyMessage'),button=document.getElementById('changeAdminKey'),toggle=document.getElementById('toggleAdminKeys');
   if(!next||!confirm||!button)return;
   function message(text,type){msg.textContent=text;msg.className='security-message'+(type?' '+type:'')}
@@ -220,4 +311,4 @@ document.getElementById('nav').onclick=e=>{const b=e.target.closest('button[data
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=phase7"></script></body></html>
+</script><script src="./control-media-runtime.js?v=phase8"></script></body></html>
