@@ -1,6 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script id="birthday-freshness-guard">
+(()=>{
+  const root=document.documentElement;
+  root.classList.add('birthday-freshness-check');
+  const style=document.createElement('style');
+  style.textContent='html.birthday-freshness-check body{visibility:hidden!important}';
+  document.head.appendChild(style);
+  let done=false;
+  const reveal=()=>{if(done)return;done=true;root.classList.remove('birthday-freshness-check')};
+  const params=new URLSearchParams(location.search);
+  if(params.get('adminPreview')==='1'&&params.has('t')){reveal();return}
+  const probe=new URL(location.href);
+  probe.searchParams.set('_freshcheck',Date.now().toString());
+  fetch(probe,{method:'HEAD',cache:'no-store'}).then(response=>{
+    const remote=Date.parse(response.headers.get('last-modified')||'');
+    const local=Date.parse(document.lastModified||'');
+    if(Number.isFinite(remote)&&Number.isFinite(local)&&remote>local+500){
+      const next=new URL(location.href);
+      next.searchParams.delete('_freshcheck');
+      next.searchParams.set('_build',String(remote));
+      location.replace(next.href);
+      return;
+    }
+    reveal();
+  }).catch(reveal);
+  setTimeout(reveal,2200);
+})();
+</script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <meta name="theme-color" content="#fff7f7" />
@@ -513,7 +541,7 @@ const initial=read();syncSiteConfig(initial);
 window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};window.BDAY.ready=load();
 })();
 </script>
-<script src="./phase10-runtime.js?v=20260919-animation1"></script>
+<script src="./phase10-runtime.js?v=20260919-freshness1"></script>
 <script src="./journey-runtime.js?v=20260918-p10"></script>
 <script src="./soundtrack-runtime.js?v=20260919-soundtrack3"></script>
 </head>
