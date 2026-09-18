@@ -1084,23 +1084,13 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
   </script>
   <script>(async function(){
 const B=window.BDAY;if(!B)return;
-const page=location.pathname.split('/').pop()||'index.html';
+const rawPage=location.pathname.split('/').pop()||'index.html';const page=rawPage==='entry.html'?'index.html':rawPage;
 let state=B.read();
 function apply(st){
   state=st;B.write(st);
   const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
   if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
-  const patches=st.patches?.[page]||[];
-  for(const p of patches){
-    let nodes=[];try{nodes=[...document.querySelectorAll(p.selector)]}catch{}
-    for(const el of nodes){
-      if('text' in p && !['IMG','VIDEO','AUDIO','SOURCE','INPUT','TEXTAREA'].includes(el.tagName)) el.textContent=p.text;
-      if(p.src && ['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)) el.setAttribute('src',p.src);
-      if(p.href && el.tagName==='A') el.setAttribute('href',p.href);
-      el.hidden=!!p.hidden;
-      if(p.styles) for(const [k,v] of Object.entries(p.styles)) if(v!==''&&v!=null) el.style.setProperty(k,String(v));
-    }
-  }
+  // Visual overrides are applied only by page-patch-runtime.js.
   document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
   if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
   const enabled=st.pageEnabled||{}; if(enabled[page]===false && !new URLSearchParams(location.search).has('adminPreview')){
@@ -1120,6 +1110,6 @@ try{
 })();
 </script>
 
-<script src="./page-patch-runtime.js?v=phase1"></script>
+<script src="./page-patch-runtime.js?v=phase3"></script>
 </body>
 </html>
