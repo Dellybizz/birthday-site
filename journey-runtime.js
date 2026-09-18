@@ -106,14 +106,14 @@
   },true);
 
   function syncRemote(){
-    if(!window.BDAY?.fetchRemote)return;
-    window.BDAY.fetchRemote().then(r=>{
+    const ready=window.BDAY?.ready||window.BDAY?.load?.();
+    if(!ready)return;
+    Promise.resolve(ready).then(r=>{
       if(!r?.state)return;state=r.state;
       if(!guard(state))markNavigation(state);
     }).catch(()=>{});
   }
   syncRemote();
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',syncRemote,{once:true});
 
   window.BIRTHDAY_JOURNEY={
     canonical:CANONICAL.slice(),
