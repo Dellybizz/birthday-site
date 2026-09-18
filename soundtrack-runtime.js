@@ -30,14 +30,15 @@
     return {url,name:String(track.name||('Track '+(index+1))).trim()||('Track '+(index+1))};
   }
   function playlistFor(g){
-    const model=g?.soundtrack&&typeof g.soundtrack==='object'?g.soundtrack:{};
+    const hasModel=!!g?.soundtrack&&typeof g.soundtrack==='object'&&!Array.isArray(g.soundtrack);
+    const model=hasModel?g.soundtrack:{};
     const overrides=model.pageTracks&&typeof model.pageTracks==='object'?model.pageTracks:{};
     const key=pageKey();
     const source=Object.prototype.hasOwnProperty.call(overrides,key)
       ? (Array.isArray(overrides[key])?overrides[key]:[])
       : (Array.isArray(model.defaultTracks)?model.defaultTracks:[]);
     let list=source.map(normalizeTrack).filter(Boolean);
-    if(!list.length&&!Object.prototype.hasOwnProperty.call(overrides,key)){
+    if(!hasModel){
       const legacy=validUrl(g?.musicFile);
       if(legacy)list=[{url:legacy,name:'Shared soundtrack'}];
     }
