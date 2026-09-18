@@ -132,7 +132,31 @@ function validateState(data: unknown): string[] {
   }
 
   if (!isRecord(data.pages)) errors.push('pages must be an object.');
-  else if (new TextEncoder().encode(JSON.stringify(data.pages)).byteLength > 300000) errors.push('pages data is too large.');
+  else {
+    if (new TextEncoder().encode(JSON.stringify(data.pages)).byteLength > 300000) errors.push('pages data is too large.');
+    const heart = data.pages.heart;
+    if (heart !== undefined) {
+      if (!isRecord(heart) || !Array.isArray(heart.memories) || heart.memories.length !== 20) errors.push('pages.heart.memories must contain exactly 20 memories.');
+      else heart.memories.forEach((item:any,index:number)=>{
+        const at=`pages.heart.memories[${index}]`;
+        if(!isRecord(item)){errors.push(`${at} must be an object.`);return}
+        if(!str(item.title,500)||!str(item.note,5000))errors.push(`${at} title/note is invalid.`);
+        if(item.mediaUrl!==undefined&&!str(item.mediaUrl,4096))errors.push(`${at}.mediaUrl must be a string.`);
+        if(item.mediaType!==undefined&&!['image','video','audio'].includes(item.mediaType))errors.push(`${at}.mediaType is invalid.`);
+      });
+    }
+    const yapping = data.pages.yapping;
+    if (yapping !== undefined) {
+      if (!isRecord(yapping) || !Array.isArray(yapping.clips) || yapping.clips.length !== 5) errors.push('pages.yapping.clips must contain exactly 5 clips.');
+      else yapping.clips.forEach((item:any,index:number)=>{
+        const at=`pages.yapping.clips[${index}]`;
+        if(!isRecord(item)){errors.push(`${at} must be an object.`);return}
+        if(!str(item.title,500)||!str(item.note,5000))errors.push(`${at} title/note is invalid.`);
+        if(item.src!==undefined&&!str(item.src,4096))errors.push(`${at}.src must be a string.`);
+        if(item.mediaType!==undefined&&!['video','audio'].includes(item.mediaType))errors.push(`${at}.mediaType is invalid.`);
+      });
+    }
+  }
 
   if (!isRecord(data.fairItems)) errors.push('fairItems must be an object.');
   else {

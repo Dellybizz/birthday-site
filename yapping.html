@@ -176,6 +176,8 @@ body::before{
 }
 @media(max-width:650px){
   body{overflow:hidden}
+  .titlebar{cursor:default}
+  .clip-thumb video{width:100%;height:100%;object-fit:cover;display:block}
   .sidebar{top:48px;left:8px;display:flex;width:calc(100% - 16px);gap:8px;overflow-x:auto}
   .file-icon{flex:0 0 74px}
   .icon-shape{width:50px;height:40px;font-size:18px}
@@ -396,19 +398,22 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 </div>
 
 <script>
+const DEFAULT_CLIPS = [
+  {title:"session 001",note:"topic lost at 00:43",src:"",mediaType:"video"},
+  {title:"session 002",note:"side quest detected",src:"",mediaType:"video"},
+  {title:"session 003",note:"actually funny",src:"",mediaType:"video"},
+  {title:"session 004",note:"still talking",src:"",mediaType:"video"},
+  {title:"session 005",note:"no conclusion",src:"",mediaType:"video"}
+];
+const savedYapping=window.SITE_CONFIG?.pages?.yapping||{};
+const savedClips=Array.isArray(savedYapping.clips)?savedYapping.clips:[];
 const CONFIG = {
-  nickname: "NICKNAME",
-  clips: [
-    {title:"session 001", note:"topic lost at 00:43", src:null},
-    {title:"session 002", note:"side quest detected", src:null},
-    {title:"session 003", note:"actually funny", src:null},
-    {title:"session 004", note:"still talking", src:null},
-    {title:"session 005", note:"no conclusion", src:null}
-  ]
+  nickname: window.SITE_CONFIG?.nickname||"NICKNAME",
+  clips: DEFAULT_CLIPS.map((base,index)=>{
+    const saved=savedClips[index]&&typeof savedClips[index]==="object"?savedClips[index]:{};
+    return {...base,...saved,src:typeof saved.src==="string"?saved.src:"",mediaType:["video","audio"].includes(saved.mediaType)?saved.mediaType:base.mediaType};
+  })
 };
-/* BIRTHDAY_CONTROL_CONFIG_PATCH */
-Object.assign(CONFIG,(window.SITE_CONFIG?.pages?.yapping)||{});
-CONFIG.nickname=window.SITE_CONFIG?.nickname||CONFIG.nickname;
 
 
 const boot = document.getElementById("boot");
@@ -490,50 +495,58 @@ document.getElementById("flagBtn").addEventListener("click",()=>{
   );
 });
 
-document.getElementById("playFake").addEventListener("click",()=>{
-  showPopup(
-    "MEDIA PLAYER",
-    "ADD YOUR VIDEO FILE",
-    "Put a real .mp4 filename into one of the clip src values in CONFIG to make the evidence player work."
-  );
-});
-
+let activeClipIndex=3;
+function clipKind(clip){return clip?.mediaType==="audio"?"audio":"video"}
+function renderClipPlayer(index,autoplay=false){
+  activeClipIndex=Math.max(0,Math.min(CONFIG.clips.length-1,index));
+  const clip=CONFIG.clips[activeClipIndex],kind=clipKind(clip);
+  document.querySelectorAll(".clip").forEach((x,i)=>x.classList.toggle("active",i===activeClipIndex));
+  if(clip?.src){
+    if(kind==="audio"){
+      player.innerHTML=`<div class="player-placeholder"><strong>${clip.title}</strong><audio src="${clip.src}" controls ${autoplay?"autoplay":""} preload="metadata" style="width:100%;margin-top:14px"></audio></div>`;
+    }else{
+      player.innerHTML=`<video src="${clip.src}" controls ${autoplay?"autoplay":""} playsinline></video>`;
+    }
+  }else{
+    player.innerHTML=`<div class="player-placeholder"><strong>${clip?.title||"evidence"}</strong>replace with your ${kind}</div>`;
+  }
+}
 function renderClips(){
-  evidenceStrip.innerHTML = "";
-
+  evidenceStrip.innerHTML="";
   CONFIG.clips.forEach((clip,index)=>{
-    const card = document.createElement("button");
-    card.className = "clip" + (index===3 ? " active" : "");
-    card.innerHTML = `
-      <div class="clip-thumb">${clip.src ? "VIDEO" : "NO FILE"}</div>
-      <strong>${clip.title}</strong>
-      <span>${clip.note}</span>
-    `;
-
-    card.addEventListener("click",()=>{
-      document.querySelectorAll(".clip").forEach(x=>x.classList.remove("active"));
-      card.classList.add("active");
-
-      if(clip.src){
-        player.innerHTML = `<video src="${clip.src}" controls autoplay playsinline></video>`;
-      }else{
-        player.innerHTML = `
-          <div class="player-placeholder">
-            <strong>${clip.title}</strong>
-            replace with your video
-          </div>
-        `;
-      }
-    });
-
+    const card=document.createElement("button");
+    card.className="clip"+(index===activeClipIndex?" active":"");
+    card.dataset.mediaSlot=`yapping-${String(index+1).padStart(2,"0")}`;
+    card.dataset.mediaLabel=`Yapping clip ${String(index+1).padStart(2,"0")}`;
+    card.dataset.modelPage="yapping";
+    card.dataset.modelIndex=String(index);
+    const kind=clipKind(clip);
+    const thumb=clip.src
+      ? (kind==="video"?`<video src="${clip.src}" muted playsinline preload="metadata"></video>`:"♫ AUDIO")
+      : "NO FILE";
+    card.innerHTML=`<div class="clip-thumb">${thumb}</div><strong>${clip.title}</strong><span>${clip.note}</span>`;
+    card.addEventListener("click",()=>renderClipPlayer(index,true));
     evidenceStrip.appendChild(card);
   });
 }
+function updateYappingClip(index,next){
+  if(!CONFIG.clips[index]||!next||typeof next!=="object")return;
+  CONFIG.clips[index]={...CONFIG.clips[index],...next};
+  renderClips();
+  if(activeClipIndex===index)renderClipPlayer(index,false);
+}
+document.getElementById("playFake").addEventListener("click",()=>{
+  const clip=CONFIG.clips[activeClipIndex];
+  if(clip?.src)renderClipPlayer(activeClipIndex,true);
+  else showPopup("MEDIA PLAYER","NO EVIDENCE FILE","Choose or upload a video/audio file for this clip in the Control Room.");
+});
 renderClips();
+renderClipPlayer(activeClipIndex,false);
+window.YAPPING_ARCHIVE={clips:CONFIG.clips,updateClip:updateYappingClip,renderClips,play:index=>renderClipPlayer(index,true)};
 
 function makeDraggable(win){
   const bar = win.querySelector(".titlebar");
-  if(!bar) return;
+  if(!bar || matchMedia("(max-width:650px)").matches) return;
 
   let dragging=false,offsetX=0,offsetY=0;
 
@@ -613,6 +626,6 @@ try{
 })();
 </script>
 
-<script src="./page-patch-runtime.js?v=phase4h1"></script>
+<script src="./page-patch-runtime.js?v=phase6"></script>
 </body>
 </html>

@@ -12,6 +12,42 @@
   function pageName(){return document.getElementById('previewPage')?.value||'index.html'}
   function stableSelector(s){return String(s||'').replace(TRANSIENT,'').trim()}
   function pagePatches(page=pageName()){state.patches??={};state.patches[page]??=[];return state.patches[page]}
+  function pageDataKey(page=pageName()){return page==='heart.html'?'heart':page==='yapping.html'?'yapping':null}
+  function modelBinding(el=previewElement()){
+    const node=el?.closest?.('[data-model-page][data-model-index]');if(!node)return null;
+    const page=node.dataset.modelPage,index=Number(node.dataset.modelIndex);
+    if(!Number.isInteger(index)||index<0||!['heart','yapping'].includes(page))return null;
+    return {node,page,index};
+  }
+  function modelRecord(binding){
+    if(!binding)return null;
+    if(binding.page==='heart')return state.pages?.heart?.memories?.[binding.index]||null;
+    if(binding.page==='yapping')return state.pages?.yapping?.clips?.[binding.index]||null;
+    return null;
+  }
+  function ensureModelData(binding){
+    state.pages??={};
+    if(binding.page==='heart'){
+      state.pages.heart??={memories:[]};state.pages.heart.memories??=[];
+      const defaults=[
+        ["memory 01","one of my favourites.","image"],["memory 02","saved immediately.","image"],["memory 03","tiny video memory.","video"],["memory 04","this one stays.","image"],["memory 05","quiet favourite.","image"],
+        ["memory 06","the funny one.","video"],["memory 07","I still remember this.","image"],["memory 08","very random, very us.","image"],["memory 09","peak nonsense.","video"],["memory 10","you probably forgot this.","image"],
+        ["memory 11","small but important.","image"],["memory 12","one of those clips.","video"],["memory 13","top tier.","image"],["memory 14","never deleting this.","image"],["memory 15","yes, this one.","video"],
+        ["memory 16","case closed.","image"],["memory 17","another favourite.","image"],["memory 18","one more clip.","video"],["memory 19","bonus memory.","image"],["memory 20","you thought I was done?","image"]
+      ];
+      while(state.pages.heart.memories.length<20){const i=state.pages.heart.memories.length,d=defaults[i];state.pages.heart.memories.push({title:d[0],note:d[1],mediaType:d[2],mediaUrl:""})}
+      return state.pages.heart.memories[binding.index];
+    }
+    state.pages.yapping??={clips:[]};state.pages.yapping.clips??=[];
+    const defaults=[["session 001","topic lost at 00:43"],["session 002","side quest detected"],["session 003","actually funny"],["session 004","still talking"],["session 005","no conclusion"]];
+    while(state.pages.yapping.clips.length<5){const i=state.pages.yapping.clips.length,d=defaults[i];state.pages.yapping.clips.push({title:d[0],note:d[1],src:"",mediaType:"video"})}
+    return state.pages.yapping.clips[binding.index];
+  }
+  function updateModelPreview(binding,record){
+    const win=currentWin();if(!binding||!win)return;
+    if(binding.page==='heart')win.HEART_MEMORY_APP?.updateMemory?.(binding.index,record);
+    if(binding.page==='yapping')win.YAPPING_ARCHIVE?.updateClip?.(binding.index,record);
+  }
   function findPatch(selector){const s=stableSelector(selector);return pagePatches().find(p=>stableSelector(p?.selector)===s)||null}
   function patchFor(selector){const s=stableSelector(selector);let p=findPatch(s);if(!p){p={selector:s,styles:{}};pagePatches().push(p)}else p.selector=s;p.styles??={};return p}
   function patchMeaningful(p){
@@ -95,7 +131,7 @@
     return /(^|[\s_-])(photo|image|media|polaroid|poster|picture|pic|frame|shot|avatar|placeholder|thumb)([\s_-]|$)/.test(signature);
   }
   function directMedia(el=previewElement()){return !!el&&['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)}
-  function editSnapshot(){return {page:pageName(),selector:selected?.selector||'',patches:clone(pagePatches())}}
+  function editSnapshot(){const key=pageDataKey();return {page:pageName(),selector:selected?.selector||'',patches:clone(pagePatches()),pageDataKey:key,pageData:key?clone(state.pages?.[key]||{}):null}}
   function updateHistoryButtons(){const u=document.getElementById('veUndo'),r=document.getElementById('veRedo');if(u)u.disabled=!undoStack.length||historyBusy;if(r)r.disabled=!redoStack.length||historyBusy}
   function pushHistory(){if(historyBusy)return;undoStack.push(editSnapshot());if(undoStack.length>HISTORY_LIMIT)undoStack.shift();redoStack=[];updateHistoryButtons()}
   async function publishNoReload(){const result=await save({reload:false});if(!result)throw new Error('Publish did not complete.');return result}
@@ -103,7 +139,7 @@
     if(!entry||historyBusy)return;historyBusy=true;updateHistoryButtons();
     const current=editSnapshot();targetStack.push(current);if(targetStack.length>HISTORY_LIMIT)targetStack.shift();
     try{
-      state.patches[entry.page]=clone(entry.patches);dirty();
+      state.patches[entry.page]=clone(entry.patches);if(entry.pageDataKey){state.pages??={};state.pages[entry.pageDataKey]=clone(entry.pageData||{});}dirty();
       const select=document.getElementById('previewPage');if(select&&[...select.options].some(o=>o.value===entry.page))select.value=entry.page;
       await publishNoReload();reloadPreview();
       setTimeout(()=>{try{const el=lookup(entry.selector);if(el)window.selectElement(el)}catch(e){}},450);
@@ -222,13 +258,24 @@
     placement='replace';
     mediaPanel.querySelectorAll('#vePlace button').forEach(b=>{b.disabled=directMedia(el);b.classList.toggle('active',b.dataset.p===placement)});
     const slotName=el.getAttribute?.('data-media-label')||el.getAttribute?.('data-media-slot')||'';mediaPanel.querySelector('#veMediaNote').textContent=(slotName?slotName+' · ':'')+(directMedia(el)?'Replacing this media changes only its source.':'This is an explicit media slot. Replace is reversible and never deletes the slot DOM.');
-    const p=findPatch(selected?.selector||''),owner=ownerForSelection();
-    removeMediaBtn.disabled=!(owner||(directMedia(el)&&p?.src));
+    const binding=modelBinding(el),record=modelRecord(binding),p=findPatch(selected?.selector||''),owner=ownerForSelection();
+    const modelHasMedia=binding?(binding.page==='heart'?!!record?.mediaUrl:!!record?.src):false;
+    removeMediaBtn.disabled=!(modelHasMedia||owner||(directMedia(el)&&p?.src));
   }
   async function applySelected(rec){
     const el=previewElement();if(!el||!mediaSlot(el))throw new Error('Select an explicit media slot first.');
     if(!rec?.url)throw new Error('Pick media first.');
     pushHistory();
+    const binding=modelBinding(el);
+    if(binding){
+      const record=ensureModelData(binding),mediaKind=kind(rec);
+      if(binding.page==='yapping'&&!['video','audio'].includes(mediaKind))throw new Error('Yapping clips support video or audio files.');
+      if(binding.page==='heart'){record.mediaUrl=rec.url;record.mediaType=mediaKind}
+      else{record.src=rec.url;record.mediaType=mediaKind}
+      state.patches[pageName()]=pagePatches().filter(p=>stableSelector(p?.selector)!==stableSelector(selected.selector));
+      dirty();updateModelPreview(binding,clone(record));status.textContent='Publishing…';
+      try{await publishNoReload();status.textContent='Media updated.';updateMediaPanel();return}catch(e){status.textContent=e?.message||String(e);throw e}
+    }
     const owner=ownerForSelection();let itemId='',itemPlacement=placement;
     if(owner){
       owner.patch[owner.listKey][owner.index]={...owner.item,url:rec.url,type:rec.type||'',name:label(rec)};
@@ -250,6 +297,15 @@
   }
   async function removeSelectedMedia(){
     const el=previewElement();if(!el)return;
+    const binding=modelBinding(el);
+    if(binding){
+      const record=ensureModelData(binding),hasMedia=binding.page==='heart'?!!record.mediaUrl:!!record.src;
+      if(!hasMedia){status.textContent='No media is attached to this slot.';return}
+      pushHistory();
+      if(binding.page==='heart')record.mediaUrl='';else record.src='';
+      dirty();updateModelPreview(binding,clone(record));status.textContent='Publishing removal…';
+      try{await publishNoReload();status.textContent='Media removed.';updateMediaPanel();return}catch(e){status.textContent=e?.message||String(e);throw e}
+    }
     const p=findPatch(selected?.selector||''),owner=ownerForSelection();
     if(!owner&&!(directMedia(el)&&p?.src)){status.textContent='No editor media is attached to this selection.';return}
     pushHistory();removeMediaPreview(owner);
@@ -335,6 +391,7 @@
   window.currentPatch=selector=>findPatch(selector)||{selector,styles:{}};
   window.selectElement=function(clicked){
     if(!clicked)return;
+    const modelNode=clicked.closest?.('[data-model-page][data-model-index]');if(modelNode)clicked=modelNode;
     let token=clicked.dataset?.bdayInserted||'',el=clicked,selector='';
     if(token){
       const owner=generatedOwnerByToken(token);if(owner){selector=owner.patch.selector;el=lookup(selector)||clicked}

@@ -171,52 +171,6 @@
     if(inserted.length&&mediaSlot(anchor))inserted.forEach((item,index)=>insertOne(anchor,item,patchIndex+'-'+index));
   }
 
-  function heartMediaType(el){
-    if(!el)return 'image';const tag=String(el.tagName||'').toLowerCase();
-    if(tag==='video')return 'video';if(tag==='audio')return 'audio';return 'image';
-  }
-  function syncHeartCard(index,card){
-    if(PAGE!=='heart.html'||!card)return;
-    try{
-      if(typeof MEMORIES==='undefined'||!Array.isArray(MEMORIES)||!MEMORIES[index])return;
-      const media=card.querySelector('video[src],img[src],audio[src]');if(!media)return;
-      const src=media.currentSrc||media.getAttribute('src')||media.src||'';if(!src)return;
-      MEMORIES[index].src=src;MEMORIES[index].type=heartMediaType(media);
-      card.dataset.heartMediaSrc=src;card.dataset.heartMediaType=MEMORIES[index].type;
-    }catch(e){}
-  }
-  function syncHeartCards(){
-    if(PAGE!=='heart.html')return;
-    try{[...document.querySelectorAll('#nodeLayer .node')].forEach((card,index)=>syncHeartCard(index,card))}catch(e){}
-  }
-  function installHeartBridge(){
-    if(PAGE!=='heart.html'||window.__heartCardMediaBridge)return;
-    window.__heartCardMediaBridge=true;
-    document.addEventListener('click',e=>{
-      const card=e.target?.closest?.('#nodeLayer .node');if(!card)return;
-      const cards=[...document.querySelectorAll('#nodeLayer .node')],index=cards.indexOf(card);if(index>=0)syncHeartCard(index,card);
-    },true);
-    try{
-      if(typeof openPopup==='function'){
-        const nativeOpen=openPopup;
-        openPopup=function(index){
-          const cards=[...document.querySelectorAll('#nodeLayer .node')];if(!cards.length)return nativeOpen(index);
-          const normalized=((index%cards.length)+cards.length)%cards.length;
-          if(cards[normalized])syncHeartCard(normalized,cards[normalized]);
-          try{
-            const item=(typeof MEMORIES!=='undefined'&&MEMORIES[normalized])?MEMORIES[normalized]:null;
-            if(item?.type==='audio'&&item?.src){
-              popupIndex=normalized;popupMedia.innerHTML='';
-              const audio=document.createElement('audio');audio.src=item.src;audio.controls=true;audio.autoplay=true;audio.preload='metadata';popupMedia.appendChild(audio);
-              popupTitle.textContent=item.title;popupNote.textContent=item.note;popupType.textContent='audio · '+String(normalized+1).padStart(2,'0')+'/'+MEMORIES.length;
-              popup.classList.add('show');stage.classList.add('popup-open');return;
-            }
-          }catch(e){}
-          return nativeOpen(index);
-        };
-      }
-    }catch(e){}
-  }
 
   let cachedState=null;
   async function applyAll(forceRead=false){
@@ -227,7 +181,6 @@
       if(!patch?.selector||GENERATED_SELECTOR.test(patch.selector))return;
       const anchors=findTargets(patch.selector);anchors.forEach((anchor,targetIndex)=>applyPatch(anchor,patch,index+'-'+targetIndex));
     });
-    syncHeartCards();installHeartBridge();
   }
 
   const style=document.createElement('style');

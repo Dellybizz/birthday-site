@@ -808,28 +808,33 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 </div>
 
 <script>
-const MEMORIES = [
-  {type:"image",src:null,title:"memory 01",note:"one of my favourites."},
-  {type:"image",src:null,title:"memory 02",note:"saved immediately."},
-  {type:"video",src:null,title:"memory 03",note:"tiny video memory."},
-  {type:"image",src:null,title:"memory 04",note:"this one stays."},
-  {type:"image",src:null,title:"memory 05",note:"quiet favourite."},
-  {type:"video",src:null,title:"memory 06",note:"the funny one."},
-  {type:"image",src:null,title:"memory 07",note:"I still remember this."},
-  {type:"image",src:null,title:"memory 08",note:"very random, very us."},
-  {type:"video",src:null,title:"memory 09",note:"peak nonsense."},
-  {type:"image",src:null,title:"memory 10",note:"you probably forgot this."},
-  {type:"image",src:null,title:"memory 11",note:"small but important."},
-  {type:"video",src:null,title:"memory 12",note:"one of those clips."},
-  {type:"image",src:null,title:"memory 13",note:"top tier."},
-  {type:"image",src:null,title:"memory 14",note:"never deleting this."},
-  {type:"video",src:null,title:"memory 15",note:"yes, this one."},
-  {type:"image",src:null,title:"memory 16",note:"case closed."},
-  {type:"image",src:null,title:"memory 17",note:"another favourite."},
-  {type:"video",src:null,title:"memory 18",note:"one more clip."},
-  {type:"image",src:null,title:"memory 19",note:"bonus memory."},
-  {type:"image",src:null,title:"memory 20",note:"you thought I was done?"}
+const DEFAULT_MEMORIES = [
+  {mediaType:"image",mediaUrl:"",title:"memory 01",note:"one of my favourites."},
+  {mediaType:"image",mediaUrl:"",title:"memory 02",note:"saved immediately."},
+  {mediaType:"video",mediaUrl:"",title:"memory 03",note:"tiny video memory."},
+  {mediaType:"image",mediaUrl:"",title:"memory 04",note:"this one stays."},
+  {mediaType:"image",mediaUrl:"",title:"memory 05",note:"quiet favourite."},
+  {mediaType:"video",mediaUrl:"",title:"memory 06",note:"the funny one."},
+  {mediaType:"image",mediaUrl:"",title:"memory 07",note:"I still remember this."},
+  {mediaType:"image",mediaUrl:"",title:"memory 08",note:"very random, very us."},
+  {mediaType:"video",mediaUrl:"",title:"memory 09",note:"peak nonsense."},
+  {mediaType:"image",mediaUrl:"",title:"memory 10",note:"you probably forgot this."},
+  {mediaType:"image",mediaUrl:"",title:"memory 11",note:"small but important."},
+  {mediaType:"video",mediaUrl:"",title:"memory 12",note:"one of those clips."},
+  {mediaType:"image",mediaUrl:"",title:"memory 13",note:"top tier."},
+  {mediaType:"image",mediaUrl:"",title:"memory 14",note:"never deleting this."},
+  {mediaType:"video",mediaUrl:"",title:"memory 15",note:"yes, this one."},
+  {mediaType:"image",mediaUrl:"",title:"memory 16",note:"case closed."},
+  {mediaType:"image",mediaUrl:"",title:"memory 17",note:"another favourite."},
+  {mediaType:"video",mediaUrl:"",title:"memory 18",note:"one more clip."},
+  {mediaType:"image",mediaUrl:"",title:"memory 19",note:"bonus memory."},
+  {mediaType:"image",mediaUrl:"",title:"memory 20",note:"you thought I was done?"}
 ];
+const savedMemories=Array.isArray(window.SITE_CONFIG?.pages?.heart?.memories)?window.SITE_CONFIG.pages.heart.memories:[];
+const MEMORIES=DEFAULT_MEMORIES.map((base,index)=>{
+  const saved=savedMemories[index]&&typeof savedMemories[index]==="object"?savedMemories[index]:{};
+  return {...base,...saved,mediaType:["image","video","audio"].includes(saved.mediaType)?saved.mediaType:base.mediaType,mediaUrl:typeof saved.mediaUrl==="string"?saved.mediaUrl:""};
+});
 
 const stage = document.getElementById("stage");
 const nodeLayer = document.getElementById("nodeLayer");
@@ -935,6 +940,31 @@ function buildHeartPoints(count){
   return points;
 }
 
+function heartMediaKind(item){
+  return ["image","video","audio"].includes(item?.mediaType)?item.mediaType:"image";
+}
+function renderHeartNode(index,existing){
+  const item=MEMORIES[index];if(!item)return;
+  const el=existing||nodes[index]?.el;if(!el)return;
+  const kind=heartMediaKind(item),url=item.mediaUrl||"";
+  el.setAttribute("aria-label", `${item.title}: ${item.note}`);
+  if(kind==="video"&&url){
+    el.innerHTML=`<video src="${url}" muted playsinline preload="metadata"></video><div class="badge">video</div><div class="label">${item.title}</div>`;
+  }else if(kind==="image"&&url){
+    el.innerHTML=`<img src="${url}" alt=""><div class="badge">photo</div><div class="label">${item.title}</div>`;
+  }else if(kind==="audio"&&url){
+    el.innerHTML=`<div class="placeholder">♫ ${item.title}</div><div class="badge">audio</div><div class="label">${item.title}</div>`;
+  }else{
+    el.innerHTML=`<div class="placeholder">${item.title}</div><div class="badge">${kind}</div><div class="label">${item.title}</div>`;
+  }
+}
+function updateHeartMemory(index,next){
+  if(!MEMORIES[index]||!next||typeof next!=="object")return;
+  MEMORIES[index]={...MEMORIES[index],...next};
+  renderHeartNode(index);
+  if(popup.classList.contains("show")&&popupIndex===index)openPopup(index);
+}
+
 function buildMesh(){
   const points = buildHeartPoints(MEMORIES.length);
 
@@ -942,27 +972,11 @@ function buildMesh(){
     const el = document.createElement("button");
     el.type = "button";
     el.className = "node";
-    el.setAttribute("aria-label", `${item.title}: ${item.note}`);
-
-    if(item.type === "video" && item.src){
-      el.innerHTML = `
-        <video src="${item.src}" muted playsinline preload="metadata"></video>
-        <div class="badge">video</div>
-        <div class="label">${item.title}</div>
-      `;
-    } else if(item.type === "image" && item.src){
-      el.innerHTML = `
-        <img src="${item.src}" alt="">
-        <div class="badge">photo</div>
-        <div class="label">${item.title}</div>
-      `;
-    } else {
-      el.innerHTML = `
-        <div class="placeholder">${item.title}</div>
-        <div class="badge">${item.type}</div>
-        <div class="label">${item.title}</div>
-      `;
-    }
+    el.dataset.mediaSlot = `heart-${String(index+1).padStart(2,"0")}`;
+    el.dataset.mediaLabel = `Heart memory ${String(index+1).padStart(2,"0")}`;
+    el.dataset.modelPage = "heart";
+    el.dataset.modelIndex = String(index);
+    renderHeartNode(index,el);
 
     el.addEventListener("click", e => {
       e.stopPropagation();
@@ -1083,40 +1097,32 @@ function setPov(next){
 function openPopup(index){
   popupIndex = ((index % MEMORIES.length) + MEMORIES.length) % MEMORIES.length;
   const item = MEMORIES[popupIndex];
+  const kind=heartMediaKind(item),url=item.mediaUrl||"";
 
   popupMedia.innerHTML = "";
 
-  if(item.type==="video" && item.src){
-    const video = document.createElement("video");
-    video.src = item.src;
-    video.controls = true;
-    video.autoplay = true;
-    video.loop = true;
-    video.playsInline = true;
+  if(kind==="video"&&url){
+    const video=document.createElement("video");
+    video.src=url;video.controls=true;video.autoplay=true;video.loop=true;video.playsInline=true;
     popupMedia.appendChild(video);
-  } else if(item.type==="image" && item.src){
-    const img = document.createElement("img");
-    img.src = item.src;
-    img.alt = "";
-    popupMedia.appendChild(img);
-  } else {
-    const ph = document.createElement("div");
-    ph.className = "placeholder";
-    ph.textContent = item.title;
-    popupMedia.appendChild(ph);
+  }else if(kind==="image"&&url){
+    const img=document.createElement("img");img.src=url;img.alt="";popupMedia.appendChild(img);
+  }else if(kind==="audio"&&url){
+    const audio=document.createElement("audio");audio.src=url;audio.controls=true;audio.autoplay=true;audio.preload="metadata";popupMedia.appendChild(audio);
+  }else{
+    const ph=document.createElement("div");ph.className="placeholder";ph.textContent=item.title;popupMedia.appendChild(ph);
   }
 
-  popupTitle.textContent = item.title;
-  popupNote.textContent = item.note;
-  popupType.textContent = `${item.type} · ${String(popupIndex+1).padStart(2,"0")}/${MEMORIES.length}`;
+  popupTitle.textContent=item.title;
+  popupNote.textContent=item.note;
+  popupType.textContent=`${kind} · ${String(popupIndex+1).padStart(2,"0")}/${MEMORIES.length}`;
 
   popup.classList.add("show");
   stage.classList.add("popup-open");
 }
 
 function closePopup(){
-  const video = popupMedia.querySelector("video");
-  if(video) video.pause();
+  popupMedia.querySelectorAll("video,audio").forEach(media=>media.pause?.());
   popup.classList.remove("show");
   stage.classList.remove("popup-open");
 }
@@ -1297,6 +1303,7 @@ heartbeatBtn.addEventListener("click", async () => {
   }
 });
 
+window.HEART_MEMORY_APP={memories:MEMORIES,updateMemory:updateHeartMemory,renderMemory:renderHeartNode};
 buildParticles();
 buildMesh();
 buildPairs();
@@ -1330,6 +1337,6 @@ try{
 })();
 </script>
 
-<script src="./page-patch-runtime.js?v=phase4h1"></script>
+<script src="./page-patch-runtime.js?v=phase6"></script>
 </body>
 </html>
