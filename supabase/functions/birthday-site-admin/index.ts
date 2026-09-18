@@ -34,7 +34,7 @@ const FAIR_IDS = new Set(['smile','presence','laugh','care','yapping','excitemen
 const TOP_LEVEL_KEYS = new Set(['general','pageOrder','pageEnabled','fairItems','fairPhotos','patches','pageCss','pages']);
 const GENERAL_KEYS = new Set([
   'name','nickname','insideJoke','introLine','birthdayISO','previewCountdownHours',
-  'favoritePhoto','musicFile','soundDefault','motionScale','globalCss'
+  'favoritePhoto','musicFile','soundDefault','motionScale','globalCss','soundtrack'
 ]);
 const GENERATED_SELECTOR = /(bday-added-media|bday-added-photo|data-bday-inserted|data-bday-group)/i;
 
@@ -130,6 +130,30 @@ function validateState(data: unknown): string[] {
     if (g.previewCountdownHours !== undefined && (typeof g.previewCountdownHours !== 'number' || !Number.isFinite(g.previewCountdownHours) || g.previewCountdownHours < 0 || g.previewCountdownHours > 8760)) errors.push('general.previewCountdownHours is invalid.');
     if (g.motionScale !== undefined && (typeof g.motionScale !== 'number' || !Number.isFinite(g.motionScale) || g.motionScale < 0 || g.motionScale > 5)) errors.push('general.motionScale is invalid.');
     if (g.soundDefault !== undefined && typeof g.soundDefault !== 'boolean') errors.push('general.soundDefault must be boolean.');
+    if (g.soundtrack !== undefined) {
+      const s = g.soundtrack;
+      if (!isRecord(s)) errors.push('general.soundtrack must be an object.');
+      else {
+        const validateTracks = (value: unknown, at: string) => {
+          if (!Array.isArray(value) || value.length > 50) { errors.push(`${at} must be an array with at most 50 tracks.`); return; }
+          value.forEach((track:any,index:number)=>{
+            const where=`${at}[${index}]`;
+            if (!isRecord(track)) { errors.push(`${where} must be an object.`); return; }
+            if (!str(track.url,4096) || !track.url.trim()) errors.push(`${where}.url is invalid.`);
+            if (track.name !== undefined && !str(track.name,500)) errors.push(`${where}.name is invalid.`);
+          });
+        };
+        validateTracks(s.defaultTracks ?? [], 'general.soundtrack.defaultTracks');
+        if (s.shuffle !== undefined && typeof s.shuffle !== 'boolean') errors.push('general.soundtrack.shuffle must be boolean.');
+        if (s.pageTracks !== undefined) {
+          if (!isRecord(s.pageTracks)) errors.push('general.soundtrack.pageTracks must be an object.');
+          else for (const [page,tracks] of Object.entries(s.pageTracks)) {
+            if (!ALLOWED_PAGES.has(page)) errors.push(`Unknown soundtrack page: ${page}`);
+            validateTracks(tracks,`general.soundtrack.pageTracks.${page}`);
+          }
+        }
+      }
+    }
   }
 
   if (!Array.isArray(data.pageOrder)) errors.push('pageOrder must be an array.');
