@@ -176,6 +176,7 @@ button,input,select,textarea{font:inherit}
 
   function applyCountdown(state){
     if(!location.pathname.endsWith('/countdown.html'))return;
+    if(new URLSearchParams(location.search).get('adminPreview')==='1')return;
     try{
       if(window.COUNTDOWN_PAGE?.applyState){
         window.COUNTDOWN_PAGE.applyState(state);
