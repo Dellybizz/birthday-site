@@ -120,7 +120,7 @@ let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.pre
   const PASSWORD='200905';
   const preview=new URLSearchParams(location.search).get('adminPreview')==='1';
   let cfg=window.SITE_CONFIG||{};
-  try{if(window.BDAY){const ready=window.BDAY.ready||window.BDAY.load?.();if(ready){const r=await ready;cfg={...cfg,...(r.state?.general||{})}}}catch(e){}
+  try{if(window.BDAY){const ready=window.BDAY.ready||window.BDAY.load?.();if(ready){const r=await ready;cfg={...cfg,...(r.state?.general||{})}}}}catch(e){}
   const fallback='2026-09-18T00:00:00+05:30';
   const parsed=new Date(cfg.birthdayISO||fallback);
   const target=isNaN(parsed)?new Date(fallback):parsed;
@@ -149,13 +149,13 @@ let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.pre
   document.getElementById('lockCancel').addEventListener('click',()=>modal.classList.remove('open'));
   modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
   function submit(){
-    const v=code.value.replace(/D/g,'').slice(0,6);code.value=v;
+    const v=code.value.replace(/\\D/g,'').slice(0,6);code.value=v;
     if(v===PASSWORD){localStorage.setItem('birthdayUnlocked','1');localStorage.setItem('birthdayUnlockedAt',new Date().toISOString());location.replace('entry.html');return}
     error.textContent='come on! you know the password';
     code.animate([{transform:'translateX(0)'},{transform:'translateX(-7px)'},{transform:'translateX(7px)'},{transform:'translateX(0)'}],{duration:260});
     code.select();
   }
-  code.addEventListener('input',()=>{code.value=code.value.replace(/D/g,'').slice(0,6);error.textContent=''});
+  code.addEventListener('input',()=>{code.value=code.value.replace(/\\D/g,'').slice(0,6);error.textContent=''});
   code.addEventListener('keydown',e=>{if(e.key==='Enter')submit()});
   document.getElementById('lockGo').addEventListener('click',submit);
 })();
