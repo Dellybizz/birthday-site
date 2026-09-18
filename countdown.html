@@ -231,6 +231,7 @@ const requestedView=adminPreview&&['before','after'].includes(countdownParams.ge
 let countdownState={general:{...(window.SITE_CONFIG||{})},pages:window.SITE_CONFIG?.pages||{}};
 let countdownTarget=new Date('2026-09-20T00:00:00+05:30');
 let countdownTimer=0;
+let previewMomentMs=null;
 
 function mergeCountdownGroup(name){
   return {...COUNTDOWN_DEFAULTS[name],...(countdownState.pages?.countdown?.[name]||{})};
@@ -300,7 +301,7 @@ function startBirthdayCelebration(){
 }
 function scheduleCountdown(){
   clearTimeout(countdownTimer);
-  let diff=countdownTarget.getTime()-Date.now();
+  let diff=adminPreview&&previewMomentMs!==null?previewMomentMs:countdownTarget.getTime()-Date.now();
   if(countdownIsAfter()){
     diff=0;
     setCountdownPhase(diff);
@@ -339,9 +340,8 @@ window.COUNTDOWN_PAGE={
     if(!adminPreview)return;
     const fake={five:299000,minute:59000,ten:9000,zero:0}[name];
     if(fake===undefined)return;
-    if(name==='zero'){document.body.classList.add('countdown-arrived');startBirthdayCelebration();return}
-    setCountdownPhase(fake);
-    if(finalSecondNumber&&fake<=10000)finalSecondNumber.textContent=String(Math.ceil(fake/1000));
+    previewMomentMs=fake;
+    scheduleCountdown();
   },
   requestedView
 };
