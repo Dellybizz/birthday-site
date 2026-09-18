@@ -127,6 +127,204 @@ function validateFile(file: File, bytes: Uint8Array) {
   return '';
 }
 
+function collectReferencePaths(value: unknown, needles: string[], path = '', out: string[] = [], limit = 60) {
+  if (out.length >= limit) return out;
+  if (typeof value === 'string') {
+    if (needles.some((needle) => needle && value.includes(needle))) out.push(path || '
+  const { url, service } = env();
+  const r = await fetch(`${url}/rest/v1/rpc/birthday_media_reference_status`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${service}`,
+      apikey: service,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({ p_url: urlValue, p_path: path }),
+  });
+  const result = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(result?.message || result?.error || `Reference scan failed: ${r.status}`);
+  return result || { referenced: false, live: false, history_count: 0 };
+}
+
+Deno.serve(async (req: Request) => {
+  if (!originAllowed(req)) return json(req, { error: 'Origin not allowed' }, 403);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
+
+  try {
+    const auth = await authorize(req);
+    if (auth?.rate_limited) {
+      const retry = Math.max(1, Number(auth.retry_after || 900));
+      return json(req, { error: 'Too many failed admin-key attempts. Try again later.', code: 'RATE_LIMITED', retryAfter: retry }, 429, { 'Retry-After': String(retry) });
+    }
+    if (!auth?.allowed) return json(req, { error: 'Unauthorized' }, 401);
+
+    const { url, service } = env();
+
+    if (req.method === 'GET') {
+      const incoming = new URL(req.url);
+      const folder = safeName(incoming.searchParams.get('folder') || 'birthday-site');
+      const list = await fetch(`${url}/storage/v1/object/list/birthday-media`, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${service}`,
+          apikey: service,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prefix: folder,
+          limit: 1000,
+          offset: 0,
+          sortBy: { column: 'created_at', order: 'desc' },
+        }),
+      });
+      const items = await list.json().catch(() => []);
+      if (!list.ok) throw new Error(items?.message || `Could not list media: ${list.status}`);
+
+      const mapped = [];
+      for (const item of (Array.isArray(items) ? items : []).filter((x: any) => x?.name)) {
+        const path = `${folder}/${item.name}`;
+        const publicUrl = `${url}/storage/v1/object/public/birthday-media/${path.split('/').map(encodeURIComponent).join('/')}`;
+        const refs = await referenceStatus(publicUrl, path);
+        mapped.push({
+          name: item.name,
+          path,
+          url: publicUrl,
+          type: item.metadata?.mimetype || item.metadata?.['mimetype'] || '',
+          size: Number(item.metadata?.size || 0),
+          createdAt: item.created_at || item.updated_at || null,
+          referenced: !!refs?.referenced,
+          referencedLive: !!refs?.live,
+          historyReferences: Number(refs?.history_count || 0),
+          orphaned: !refs?.referenced,
+        });
+      }
+      return json(req, { ok: true, items: mapped });
+    }
+
+    if (req.method === 'DELETE') {
+      const body = await req.json().catch(() => ({}));
+      const path = String(body?.path || '');
+      const force = body?.force === true;
+      if (!path.startsWith('birthday-site/') || path.includes('..')) return json(req, { error: 'Invalid media path.' }, 400);
+
+      const publicUrl = `${url}/storage/v1/object/public/birthday-media/${path.split('/').map(encodeURIComponent).join('/')}`;
+      const refs = await referenceStatus(publicUrl, path);
+      let details = { liveRevision: null as number | null, liveLocations: [] as string[], historyMatches: [] as Array<{ revision: number; locations: string[] }> };
+      if (refs?.referenced) details = await referenceDetails(publicUrl, path);
+
+      if (refs?.referenced && !force) {
+        return json(req, {
+          error: 'This upload is referenced. Confirm forced deletion to remove it anyway.',
+          code: 'MEDIA_REFERENCED',
+          referencedLive: !!refs.live,
+          historyReferences: Number(refs.history_count || 0),
+          ...details,
+        }, 409);
+      }
+
+      const del = await fetch(`${url}/storage/v1/object/birthday-media/${path.split('/').map(encodeURIComponent).join('/')}`, {
+        method: 'DELETE',
+        headers: {
+          Authorization: `Bearer ${service}`,
+          apikey: service,
+        },
+      });
+      const detail = await del.text();
+      if (!del.ok) throw new Error(detail || `Delete failed: ${del.status}`);
+      return json(req, {
+        ok: true,
+        deleted: path,
+        forced: force && !!refs?.referenced,
+        referencedLive: !!refs?.live,
+        historyReferences: Number(refs?.history_count || 0),
+        ...details,
+      });
+    }
+
+    if (req.method !== 'POST') return json(req, { error: 'Method not allowed' }, 405);
+
+    const form = await req.formData();
+    const file = form.get('file');
+    if (!(file instanceof File)) return json(req, { error: 'Missing file' }, 400);
+    if (file.size <= 0) return json(req, { error: 'The selected file is empty' }, 400);
+    if (file.size > 100 * 1024 * 1024) return json(req, { error: 'File too large. Maximum size is 100 MB.' }, 413);
+
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    const validationError = validateFile(file, bytes);
+    if (validationError) return json(req, { error: validationError, code: 'INVALID_MEDIA' }, 415);
+
+    const folder = safeName(String(form.get('folder') || 'birthday-site'));
+    const name = `${Date.now()}-${crypto.randomUUID().slice(0, 8)}-${safeName(file.name)}`;
+    const path = `${folder}/${name}`;
+    const upload = await fetch(`${url}/storage/v1/object/birthday-media/${path.split('/').map(encodeURIComponent).join('/')}`, {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${service}`,
+        apikey: service,
+        'Content-Type': file.type,
+        'x-upsert': 'false',
+      },
+      body: bytes,
+    });
+    const responseText = await upload.text();
+    if (!upload.ok) {
+      let detail = responseText;
+      try { detail = JSON.parse(responseText)?.message || responseText; } catch {}
+      throw new Error(detail || `Upload failed: ${upload.status}`);
+    }
+
+    const publicUrl = `${url}/storage/v1/object/public/birthday-media/${path.split('/').map(encodeURIComponent).join('/')}`;
+    return json(req, { ok: true, path, url: publicUrl, type: file.type, size: file.size, name: file.name, orphaned: true });
+  } catch (err) {
+    return json(req, { error: String((err as Error)?.message || err) }, 500);
+  }
+});
+);
+    return out;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      if (out.length < limit) collectReferencePaths(item, needles, path ? `${path}[${index}]` : `[${index}]`, out, limit);
+    });
+    return out;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      if (out.length >= limit) break;
+      const safeKey = /^[A-Za-z_$][\w$]*$/.test(key) ? (path ? `.${key}` : key) : `[${JSON.stringify(key)}]`;
+      collectReferencePaths(item, needles, path + safeKey, out, limit);
+    }
+  }
+  return out;
+}
+
+async function referenceDetails(urlValue: string, path: string) {
+  const { url, service } = env();
+  const headers = { Authorization: `Bearer ${service}`, apikey: service };
+  const [liveResponse, historyResponse] = await Promise.all([
+    fetch(`${url}/rest/v1/site_state?id=eq.live&select=revision,data`, { headers, cache: 'no-store' }),
+    fetch(`${url}/rest/v1/site_state_history?state_id=eq.live&select=revision,data&order=revision.desc&limit=200`, { headers, cache: 'no-store' }),
+  ]);
+  if (!liveResponse.ok) throw new Error(`Could not inspect live media references: ${liveResponse.status}`);
+  if (!historyResponse.ok) throw new Error(`Could not inspect media history references: ${historyResponse.status}`);
+
+  const liveRows = await liveResponse.json().catch(() => []);
+  const historyRows = await historyResponse.json().catch(() => []);
+  const needles = [urlValue, path].filter(Boolean);
+  const live = liveRows?.[0] || null;
+  const liveLocations = live ? [...new Set(collectReferencePaths(live.data, needles))] : [];
+  const historyMatches = [];
+  for (const row of Array.isArray(historyRows) ? historyRows : []) {
+    const locations = [...new Set(collectReferencePaths(row?.data, needles))];
+    if (locations.length) historyMatches.push({ revision: Number(row?.revision || 0), locations });
+  }
+  return {
+    liveRevision: Number(live?.revision || 0) || null,
+    liveLocations,
+    historyMatches,
+  };
+}
+
 async function referenceStatus(urlValue: string, path: string) {
   const { url, service } = env();
   const r = await fetch(`${url}/rest/v1/rpc/birthday_media_reference_status`, {
