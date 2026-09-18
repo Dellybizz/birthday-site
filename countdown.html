@@ -106,14 +106,87 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;b
 .chapter{position:fixed;left:18px;top:16px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#756f68}.sound{position:fixed;right:18px;top:12px;border:0;background:transparent;color:#777069;font-size:9px;letter-spacing:.13em;text-transform:uppercase;cursor:pointer}
 .stage{height:100%;display:grid;place-items:center;padding:28px}.inner{width:min(94vw,1180px);text-align:center}.eyebrow{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8b847d;margin-bottom:24px}.title{margin:0;font-family:Georgia,serif;font-size:clamp(38px,5.8vw,78px);font-weight:400;line-height:.95;letter-spacing:-.05em}.title em{font-style:italic}.count{margin:44px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.unit{padding:30px 12px;position:relative}.unit:not(:last-child){border-right:1px solid var(--line)}.num{display:block;font-family:Georgia,serif;font-size:clamp(50px,10vw,135px);line-height:.8;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.label{display:block;margin-top:18px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#777069}.sub{margin:28px auto 0;max-width:620px;font-size:13px;line-height:1.75;color:#746d66}.preview{margin-top:12px;font:9px "Courier New",monospace;color:#9a928a;letter-spacing:.08em;text-transform:uppercase}.next{display:inline-flex;margin-top:28px;background:#151413;color:#f4f1eb;text-decoration:none;padding:12px 16px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:0;pointer-events:none;transition:.5s ease}.next.show{opacity:1;pointer-events:auto}.arrived .title{font-size:clamp(52px,8vw,108px)}.arrived .count{display:none}.arrived .sub{font-family:Georgia,serif;font-size:clamp(22px,3vw,36px);color:#403b36}.pulse{position:fixed;left:50%;top:50%;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.08);transform:translate(-50%,-50%);pointer-events:none;animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{width:74vh;height:74vh;border-color:rgba(0,0,0,.025)}}
 @media(max-width:640px){.stage{padding:22px}.count{grid-template-columns:repeat(2,1fr)}.unit:nth-child(2){border-right:0}.unit:nth-child(-n+2){border-bottom:1px solid var(--line)}.unit{padding:26px 8px}.num{font-size:clamp(58px,19vw,90px)}}
+
+/* final-five-minute cinematic countdown */
+body{transition:background 2.2s cubic-bezier(.2,.75,.2,1),color 1.5s ease}
+.countdown-aurora{position:fixed;inset:-20%;pointer-events:none;opacity:0;transition:opacity 2.2s ease;z-index:0;background:
+ radial-gradient(circle at 28% 30%,rgba(236,176,192,.42),transparent 25%),
+ radial-gradient(circle at 72% 62%,rgba(248,214,172,.34),transparent 28%),
+ radial-gradient(circle at 50% 42%,rgba(255,255,255,.92),transparent 32%);
+ filter:blur(26px);animation:auroraDrift 9s ease-in-out infinite alternate}
+.countdown-grain{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity 2s ease;background-image:
+ radial-gradient(circle,rgba(70,40,50,.13) 0 1px,transparent 1.2px);
+ background-size:23px 23px;mask-image:linear-gradient(to bottom,transparent,black 22%,black 78%,transparent)}
+.final-whisper{height:19px;margin:18px auto 0;font:10px/1.4 Arial,sans-serif;letter-spacing:.18em;text-transform:uppercase;color:#9b7d85;opacity:0;transform:translateY(8px);transition:.8s ease}
+.final-second{position:fixed;inset:0;z-index:20;display:grid;place-items:center;pointer-events:none;opacity:0;visibility:hidden;transition:opacity .5s ease,visibility .5s ease}
+.final-second-inner{text-align:center;transform:scale(.96);transition:transform .5s ease}
+.final-second-number{font:400 clamp(120px,32vw,420px)/.72 Georgia,serif;letter-spacing:-.085em;color:#22191c;text-shadow:0 28px 90px rgba(173,95,119,.16);font-variant-numeric:tabular-nums}
+.final-second-label{margin-top:38px;font:9px/1.3 Arial,sans-serif;letter-spacing:.35em;text-transform:uppercase;color:#9a7c84}
+.birthday-bloom{position:fixed;inset:0;z-index:9;pointer-events:none;opacity:0;transition:opacity 1.6s ease}
+.birthday-bloom::before,.birthday-bloom::after{content:"";position:absolute;border-radius:50%;filter:blur(2px);opacity:.65}
+.birthday-bloom::before{width:min(84vw,900px);height:min(84vw,900px);left:50%;top:50%;transform:translate(-50%,-50%);border:1px solid rgba(187,105,129,.17);box-shadow:
+ 0 0 0 70px rgba(218,160,176,.055),
+ 0 0 0 150px rgba(239,199,174,.04),
+ 0 0 120px 80px rgba(236,183,198,.12)}
+.birthday-bloom::after{inset:8%;border:1px solid rgba(255,255,255,.8)}
+.birthday-petal{position:fixed;z-index:10;width:7px;height:12px;border-radius:80% 10% 80% 10%;background:rgba(203,121,146,.42);pointer-events:none;opacity:0;transform:translate3d(0,-12vh,0) rotate(25deg)}
+body.countdown-near{background:#f5edef}
+body.countdown-near .countdown-aurora{opacity:1}
+body.countdown-near .countdown-grain{opacity:.28}
+body.countdown-near .pulse{opacity:.34;animation-duration:5.8s}
+body.countdown-near .count{border-color:rgba(160,117,126,.34);box-shadow:0 32px 110px rgba(139,72,93,.055);transition:box-shadow 2s ease,border-color 2s ease}
+body.countdown-near .final-whisper{opacity:1;transform:none}
+body.countdown-minute .inner{transition:transform 1.4s cubic-bezier(.2,.75,.2,1)}
+body.countdown-minute .unit{transition:opacity .8s ease,transform .8s ease,border-color .8s ease}
+body.countdown-minute .unit:nth-child(1),body.countdown-minute .unit:nth-child(2){opacity:.18;transform:scale(.92)}
+body.countdown-minute .num{color:#3c252c}
+body.countdown-ten .stage>.inner{opacity:.08;transform:scale(.93);filter:blur(8px);transition:opacity .65s ease,transform .65s ease,filter .65s ease}
+body.countdown-ten .final-second{opacity:1;visibility:visible}
+body.countdown-ten .final-second-inner{transform:scale(1)}
+body.countdown-ten .countdown-aurora{opacity:1;filter:blur(10px)}
+body.countdown-ten .sound,body.countdown-ten .chapter{opacity:.15;transition:opacity .5s ease}
+body.countdown-arrived{background:
+ radial-gradient(circle at 50% 32%,rgba(255,255,255,.98),rgba(249,230,234,.84) 34%,rgba(241,218,207,.72) 62%,#eee5df 100%);overflow:hidden}
+body.countdown-arrived .final-second{opacity:0;visibility:hidden}
+body.countdown-arrived .birthday-bloom{opacity:1}
+body.countdown-arrived .countdown-aurora{opacity:.9;animation-duration:14s}
+body.countdown-arrived .countdown-grain{opacity:.22}
+body.countdown-arrived .pulse{opacity:0}
+body.countdown-arrived .stage{z-index:12}
+body.countdown-arrived .stage>.inner{opacity:1;filter:none;transform:none;animation:birthdayReveal 1.6s cubic-bezier(.16,.8,.18,1) both}
+body.countdown-arrived .eyebrow{color:#a06f7d;animation:revealUp 1.1s .25s both}
+body.countdown-arrived .title{color:#2a1c20;text-shadow:0 16px 65px rgba(152,75,98,.10);animation:revealUp 1.25s .36s both}
+body.countdown-arrived .sub{color:#785d65;max-width:690px;animation:revealUp 1.15s .52s both}
+body.countdown-arrived .bday-lock-wrap{animation:revealUp 1.2s .7s both}
+body.countdown-arrived .bday-lock.ready{background:#2b1d21;border-color:#2b1d21;box-shadow:0 24px 75px rgba(104,45,65,.22)}
+body.countdown-arrived .chapter{color:#9b7e85}
+@keyframes auroraDrift{from{transform:translate3d(-1.5%,-1%,0) scale(1)}to{transform:translate3d(1.5%,1%,0) scale(1.06)}}
+@keyframes birthdayReveal{from{opacity:0;transform:translateY(24px) scale(.97);filter:blur(12px)}to{opacity:1;transform:none;filter:none}}
+@keyframes revealUp{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes petalFall{0%{opacity:0;transform:translate3d(0,-12vh,0) rotate(0)}10%{opacity:.7}100%{opacity:0;transform:translate3d(var(--drift,30px),112vh,0) rotate(540deg)}}
+@media(max-width:640px){
+ .final-second-number{font-size:clamp(120px,52vw,245px)}
+ .final-second-label{margin-top:24px}
+ body.countdown-minute .unit:nth-child(1),body.countdown-minute .unit:nth-child(2){display:none}
+ body.countdown-minute .count{grid-template-columns:repeat(2,1fr)}
+ body.countdown-minute .unit:nth-child(3){border-bottom:0}
+ body.countdown-minute .unit:nth-child(3){border-right:1px solid var(--line)}
+}
+@media(prefers-reduced-motion:reduce){
+ .countdown-aurora,.pulse{animation:none!important}
+ .birthday-petal{display:none!important}
+ body.countdown-arrived .stage>.inner,body.countdown-arrived .eyebrow,body.countdown-arrived .title,body.countdown-arrived .sub,body.countdown-arrived .bday-lock-wrap{animation:none!important}
+}
 </style>
 <script src="./phase10-runtime.js?v=20260919-freshness1"></script>
 <script src="./journey-runtime.js?v=20260919-gate2"></script>
 <script src="./soundtrack-runtime.js?v=20260919-soundtrack3"></script>
 </head>
 <body>
+<div class="countdown-aurora" aria-hidden="true"></div><div class="countdown-grain" aria-hidden="true"></div><div class="birthday-bloom" aria-hidden="true"></div>
+<div class="final-second" id="finalSecond" aria-hidden="true"><div class="final-second-inner"><div class="final-second-number" id="finalSecondNumber">10</div><div class="final-second-label">this is it</div></div></div>
 <div class="pulse"></div><div class="chapter">07 / 08 · until your birthday</div><button class="sound" id="soundBtn" data-soundtrack-control hidden data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
-<main class="stage" id="stage"><div class="inner"><div class="eyebrow" id="eyebrow">one last wait</div><h1 class="title" id="title">until the day that's<br><em>actually yours.</em></h1><div class="count" id="count"><div class="unit"><span class="num" id="days">00</span><span class="label">days</span></div><div class="unit"><span class="num" id="hours">00</span><span class="label">hours</span></div><div class="unit"><span class="num" id="minutes">00</span><span class="label">minutes</span></div><div class="unit"><span class="num" id="seconds">00</span><span class="label">seconds</span></div></div><p class="sub" id="sub">No giant decorations. No dramatic speech yet. Just time moving toward one very specific person.</p><div class="preview" id="preview"></div><a class="next" id="next" href="finale.html">the final reel is ready →</a></div></main>
+<main class="stage" id="stage"><div class="inner"><div class="eyebrow" id="eyebrow">one last wait</div><h1 class="title" id="title">until the day that's<br><em>actually yours.</em></h1><div class="count" id="count"><div class="unit"><span class="num" id="days">00</span><span class="label">days</span></div><div class="unit"><span class="num" id="hours">00</span><span class="label">hours</span></div><div class="unit"><span class="num" id="minutes">00</span><span class="label">minutes</span></div><div class="unit"><span class="num" id="seconds">00</span><span class="label">seconds</span></div></div><p class="sub" id="sub">No giant decorations. No dramatic speech yet. Just time moving toward one very specific person.</p><div class="preview" id="preview"></div><div class="final-whisper" id="finalWhisper" aria-live="polite"></div><a class="next" id="next" href="finale.html">the final reel is ready →</a></div></main>
 <script>
 const COUNTDOWN_DEFAULTS={
   before:{
@@ -149,6 +222,9 @@ const numberEls={
   minutes:document.getElementById('minutes'),
   seconds:document.getElementById('seconds')
 };
+const finalWhisper=document.getElementById('finalWhisper');
+const finalSecondNumber=document.getElementById('finalSecondNumber');
+let celebrationStarted=false;
 const countdownParams=new URLSearchParams(location.search);
 const adminPreview=countdownParams.get('adminPreview')==='1';
 const requestedView=adminPreview&&['before','after'].includes(countdownParams.get('countdownView'))?countdownParams.get('countdownView'):'auto';
@@ -187,21 +263,60 @@ function renderCountdownCopy(){
   try{window.dispatchEvent(new CustomEvent('birthday:countdown-render',{detail:{after,view}}))}catch(e){}
 }
 function padCountdown(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
+function setCountdownPhase(diff){
+  const near=diff>0&&diff<=300000;
+  const minute=diff>0&&diff<=60000;
+  const ten=diff>0&&diff<=10000;
+  const arrived=countdownIsAfter();
+  document.body.classList.toggle('countdown-near',near&&!arrived);
+  document.body.classList.toggle('countdown-minute',minute&&!arrived);
+  document.body.classList.toggle('countdown-ten',ten&&!arrived);
+  document.body.classList.toggle('countdown-arrived',arrived);
+  if(finalWhisper){
+    if(arrived)finalWhisper.textContent='';
+    else if(ten)finalWhisper.textContent='ten tiny seconds';
+    else if(minute)finalWhisper.textContent='less than a minute';
+    else if(near)finalWhisper.textContent='we are almost there';
+    else finalWhisper.textContent='';
+  }
+  if(finalSecondNumber&&ten&&!arrived)finalSecondNumber.textContent=String(Math.max(1,Math.ceil(diff/1000)));
+  if(arrived&&!celebrationStarted)startBirthdayCelebration();
+}
+function startBirthdayCelebration(){
+  celebrationStarted=true;
+  if(matchMedia?.('(prefers-reduced-motion: reduce)')?.matches)return;
+  const count=26;
+  for(let i=0;i<count;i++){
+    const petal=document.createElement('i');
+    petal.className='birthday-petal';
+    petal.style.left=(3+Math.random()*94)+'vw';
+    petal.style.top=(-10-Math.random()*26)+'vh';
+    petal.style.setProperty('--drift',(-70+Math.random()*140)+'px');
+    petal.style.animation='petalFall '+(5.8+Math.random()*4.8)+'s '+(Math.random()*3.2)+'s cubic-bezier(.2,.55,.35,1) forwards';
+    petal.style.transform='scale('+(0.65+Math.random()*.9)+')';
+    document.body.appendChild(petal);
+    setTimeout(()=>petal.remove(),13000);
+  }
+}
 function scheduleCountdown(){
   clearTimeout(countdownTimer);
-  renderCountdownCopy();
   let diff=countdownTarget.getTime()-Date.now();
   if(countdownIsAfter()){
+    diff=0;
+    setCountdownPhase(diff);
+    renderCountdownCopy();
     for(const el of Object.values(numberEls))el.textContent='00';
     return;
   }
   diff=Math.max(0,diff);
+  setCountdownPhase(diff);
+  renderCountdownCopy();
   numberEls.days.textContent=padCountdown(diff/86400000);
   numberEls.hours.textContent=padCountdown((diff%86400000)/3600000);
   numberEls.minutes.textContent=padCountdown((diff%3600000)/60000);
   numberEls.seconds.textContent=padCountdown((diff%60000)/1000);
   if(requestedView==='before'&&diff<=0)return;
-  countdownTimer=setTimeout(scheduleCountdown,Math.max(250,Math.min(1000,Math.ceil(diff%1000)||1000)));
+  countdownTimer=setTimeout(scheduleCountdown,Math.max(120,Math.min(1000,Math.ceil(diff%1000)||1000)));
 }
 function applyCountdownState(next){
   if(next&&typeof next==='object'){
@@ -220,6 +335,14 @@ window.COUNTDOWN_PAGE={
   isAfter:countdownIsAfter,
   getViewSettings:countdownViewSettings,
   getAccessSettings:countdownAccessSettings,
+  previewPhase(name){
+    if(!adminPreview)return;
+    const fake={five:299000,minute:59000,ten:9000,zero:0}[name];
+    if(fake===undefined)return;
+    if(name==='zero'){document.body.classList.add('countdown-arrived');startBirthdayCelebration();return}
+    setCountdownPhase(fake);
+    if(finalSecondNumber&&fake<=10000)finalSecondNumber.textContent=String(Math.ceil(fake/1000));
+  },
   requestedView
 };
 if(!adminPreview){
