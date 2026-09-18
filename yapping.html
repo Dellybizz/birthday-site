@@ -336,7 +336,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
 
   <div class="window main-window active" id="videosWindow">
     <div class="titlebar">
-      <strong>YAPPING_VIDEOS / session_004</strong>
+      <strong id="videoWindowTitle">YAPPING_VIDEOS / archive</strong>
       <div class="win-actions">
         <button class="win-btn">_</button>
         <button class="win-btn">□</button>
@@ -421,12 +421,17 @@ const DEFAULT_CLIPS = [
 ];
 const savedYapping=window.SITE_CONFIG?.pages?.yapping||{};
 const savedClips=Array.isArray(savedYapping.clips)?savedYapping.clips:[];
+function defaultClip(index){
+  return DEFAULT_CLIPS[index]||{title:"session "+String(index+1).padStart(3,"0"),note:"archived yapping evidence",src:"",mediaType:"video"};
+}
+function normalizeClip(value,index){
+  const base=defaultClip(index),saved=value&&typeof value==="object"?value:{};
+  return {...base,...saved,title:typeof saved.title==="string"?saved.title:base.title,note:typeof saved.note==="string"?saved.note:base.note,src:typeof saved.src==="string"?saved.src:"",mediaType:["video","audio"].includes(saved.mediaType)?saved.mediaType:base.mediaType};
+}
+const initialClips=savedClips.length?savedClips:DEFAULT_CLIPS;
 const CONFIG = {
   nickname: window.SITE_CONFIG?.nickname||"NICKNAME",
-  clips: DEFAULT_CLIPS.map((base,index)=>{
-    const saved=savedClips[index]&&typeof savedClips[index]==="object"?savedClips[index]:{};
-    return {...base,...saved,src:typeof saved.src==="string"?saved.src:"",mediaType:["video","audio"].includes(saved.mediaType)?saved.mediaType:base.mediaType};
-  })
+  clips: initialClips.map(normalizeClip)
 };
 
 
@@ -509,11 +514,18 @@ document.getElementById("flagBtn").addEventListener("click",()=>{
   );
 });
 
-let activeClipIndex=3;
+let activeClipIndex=Math.min(3,Math.max(0,CONFIG.clips.length-1));
 function clipKind(clip){return clip?.mediaType==="audio"?"audio":"video"}
 function renderClipPlayer(index,autoplay=false){
+  if(!CONFIG.clips.length){
+    activeClipIndex=0;
+    document.getElementById("videoWindowTitle").textContent="YAPPING_VIDEOS / empty archive";
+    player.innerHTML='<div class="player-placeholder"><strong>NO YAPPING VIDEOS YET</strong>Add videos from the Control Room.</div>';
+    return;
+  }
   activeClipIndex=Math.max(0,Math.min(CONFIG.clips.length-1,index));
   const clip=CONFIG.clips[activeClipIndex],kind=clipKind(clip);
+  document.getElementById("videoWindowTitle").textContent="YAPPING_VIDEOS / "+(clip?.title||("session "+String(activeClipIndex+1).padStart(3,"0")));
   document.querySelectorAll(".clip").forEach((x,i)=>x.classList.toggle("active",i===activeClipIndex));
   if(clip?.src){
     if(kind==="audio"){
@@ -544,10 +556,19 @@ function renderClips(){
   });
 }
 function updateYappingClip(index,next){
-  if(!CONFIG.clips[index]||!next||typeof next!=="object")return;
-  CONFIG.clips[index]={...CONFIG.clips[index],...next};
+  if(!Number.isInteger(index)||index<0||!next||typeof next!=="object")return;
+  while(CONFIG.clips.length<=index)CONFIG.clips.push(normalizeClip({},CONFIG.clips.length));
+  CONFIG.clips[index]=normalizeClip({...CONFIG.clips[index],...next},index);
   renderClips();
   if(activeClipIndex===index)renderClipPlayer(index,false);
+}
+function setYappingClips(next){
+  if(!Array.isArray(next))return;
+  const normalized=next.slice(0,50).map(normalizeClip);
+  CONFIG.clips.splice(0,CONFIG.clips.length,...normalized);
+  if(activeClipIndex>=CONFIG.clips.length)activeClipIndex=Math.max(0,CONFIG.clips.length-1);
+  renderClips();
+  renderClipPlayer(activeClipIndex,false);
 }
 document.getElementById("playFake").addEventListener("click",()=>{
   const clip=CONFIG.clips[activeClipIndex];
@@ -556,7 +577,11 @@ document.getElementById("playFake").addEventListener("click",()=>{
 });
 renderClips();
 renderClipPlayer(activeClipIndex,false);
-window.YAPPING_ARCHIVE={clips:CONFIG.clips,updateClip:updateYappingClip,renderClips,play:index=>renderClipPlayer(index,true)};
+window.YAPPING_ARCHIVE={clips:CONFIG.clips,updateClip:updateYappingClip,setClips:setYappingClips,renderClips,play:index=>renderClipPlayer(index,true)};
+window.addEventListener("birthday:state",event=>{
+  const clips=event.detail?.state?.pages?.yapping?.clips;
+  if(Array.isArray(clips))setYappingClips(clips);
+});
 
 function makeDraggable(win){
   const bar = win.querySelector(".titlebar");
