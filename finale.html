@@ -265,6 +265,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 })();
 </script>
 <script src="./journey-runtime.js?v=phase4h1"></script>
+<script src="./soundtrack-runtime.js?v=phase7"></script>
 </head>
 <body>
 
@@ -275,7 +276,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 <div class="projector-edge"></div>
 <div class="pause-mark">let it play</div>
 
-<button class="tiny-control" id="soundBtn">sound</button>
+<button class="tiny-control" id="soundBtn" data-soundtrack-control data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
 
 <div class="stage">
 
@@ -321,7 +322,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
     <div class="scene-inner">
       <div class="production">SCENE 03 · FAVOURITE PART</div>
       <div class="photo-wrap">
-        <div class="photo-frame" id="photoFrame">
+        <div class="photo-frame" id="photoFrame" data-media-slot="finale-favorite" data-media-label="Final favorite photo">
           <div class="photo-placeholder">replace with your favourite photo of her</div>
         </div>
         <div class="photo-caption">not necessarily the prettiest one. just the one that feels most like her.</div>
@@ -407,9 +408,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
   <a href="entry.html" data-journey-restart="1" style="border:1px solid #464039;background:rgba(8,7,6,.58);color:#80786e;padding:9px 11px;font-family:'Courier New',monospace;font-size:8px;letter-spacing:.11em;text-transform:uppercase;text-decoration:none">start from chapter one</a>
 </div>
 
-<audio id="projectorAudio" loop preload="metadata">
-  <source src="projector.mp3" type="audio/mpeg">
-</audio>
+<audio id="projectorAudio" loop preload="metadata" data-legacy-soundtrack aria-hidden="true"></audio>
 
 <script>
 const CONFIG = {
@@ -456,7 +455,7 @@ async function toggleSound(){
       await audio.play();
       soundBtn.textContent = "sound on";
     }catch{
-      soundBtn.textContent = "add projector.mp3";
+      soundBtn.textContent = "choose soundtrack";
     }
   }else{
     audio.pause();

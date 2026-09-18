@@ -161,6 +161,7 @@
     const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');
     return {name:j.name||file.name,type:j.type||file.type,size:j.size||file.size,url:j.url,path:j.path||''};
   }
+  window.__birthdayUploadShared=uploadShared;
   function kind(rec){const t=String(rec?.type||'').toLowerCase(),u=String(rec?.url||'').toLowerCase().split('?')[0];if(t.startsWith('video/')||/\.(mp4|webm|mov|m4v)$/.test(u))return 'video';if(t.startsWith('audio/')||/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(u))return 'audio';return 'image'}
   function label(rec){return rec?.name||rec?.path?.split('/').pop()||'media'}
   function mediaNode(rec,id){
@@ -450,5 +451,18 @@
   mountHistory();
   document.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(!mod)return;const tag=document.activeElement?.tagName?.toLowerCase();if(['input','textarea','select'].includes(tag))return;if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo().catch(()=>{}):undo().catch(()=>{})}else if(e.key.toLowerCase()==='y'){e.preventDefault();redo().catch(()=>{})}});
   document.getElementById('previewPage')?.addEventListener('change',()=>{selected=null;updateMediaPanel()});
+  function bindGeneralUpload(id,field,kind){
+    const input=document.getElementById(id);if(!input)return;
+    input.onchange=async()=>{const file=input.files?.[0];if(!file)return;try{
+      if(kind==='audio'&&!String(file.type||'').startsWith('audio/'))throw new Error('Choose an audio file.');
+      if(kind==='image'&&!String(file.type||'').startsWith('image/'))throw new Error('Choose an image file.');
+      const rec=await uploadShared(file);state.general[field]=rec.url;dirty();
+      const bound=document.querySelector('[data-bind="general.'+field+'"]');if(bound)bound.value=rec.url;
+      toast((field==='musicFile'?'Soundtrack':'Favorite photo')+' ready — publish to save');
+      await renderLibrary();
+    }catch(e){alert(e?.message||String(e))}finally{input.value=''}};
+  }
+  bindGeneralUpload('soundtrackUpload','musicFile','audio');
+  bindGeneralUpload('favoritePhotoUpload','favoritePhoto','image');
   renderLibrary();
 })();

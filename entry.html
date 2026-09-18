@@ -501,6 +501,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 })();
 </script>
 <script src="./journey-runtime.js?v=phase4h1"></script>
+<script src="./soundtrack-runtime.js?v=phase7"></script>
 </head>
 
 <body>
@@ -572,18 +573,16 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
   </main>
 
   <footer class="footer">
-    <button class="music" id="musicBtn">
-      <span id="musicIcon">♫</span>
-      <span id="musicText">play the soundtrack</span>
+    <button class="music" id="musicBtn" data-soundtrack-control data-sound-off-label="play the soundtrack" data-sound-on-label="soundtrack playing">
+      <span id="musicIcon" data-soundtrack-icon>♫</span>
+      <span id="musicText" data-soundtrack-label>play the soundtrack</span>
     </button>
     <div class="chapter">chapter 01 / 08</div>
   </footer>
 
   <div class="toast" id="toast"></div>
 
-  <audio id="bgMusic" loop preload="metadata">
-    <source src="song.mp3" type="audio/mpeg">
-  </audio>
+  <audio id="bgMusic" loop preload="metadata" data-legacy-soundtrack aria-hidden="true"></audio>
 
   <script>
     /*
@@ -690,7 +689,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
           musicIcon.textContent = "❚❚";
           sessionStorage.setItem("birthdayMusic","on");
         }catch{
-          showToast("Add a file called song.mp3 beside this page ♫");
+          showToast("Choose a soundtrack in the Control Room ♫");
         }
       }else{
         music.pause();

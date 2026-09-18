@@ -646,6 +646,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 })();
 </script>
 <script src="./journey-runtime.js?v=phase4h1"></script>
+<script src="./soundtrack-runtime.js?v=phase7"></script>
 </head>
 <body>
 
@@ -653,7 +654,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 
 <div class="chrome">
   <div class="chip">03 / 08 · pretty archive</div>
-  <button class="chip" id="musicBtn">sound on</button>
+  <button class="chip" id="musicBtn" data-soundtrack-control data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
 </div>
 
 <main>
@@ -772,9 +773,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 
 <div class="toast" id="toast"></div>
 
-<audio id="bgMusic" loop preload="metadata">
-  <source src="song.mp3" type="audio/mpeg">
-</audio>
+<audio id="bgMusic" loop preload="metadata" data-legacy-soundtrack aria-hidden="true"></audio>
 
 <script>
 const CONFIG = {
@@ -859,7 +858,7 @@ musicBtn.addEventListener("click",async()=>{
       await music.play();
       musicBtn.textContent = "sound off";
     }catch{
-      showToast("add song.mp3 beside this page");
+      showToast("Choose a soundtrack in the Control Room");
     }
   }else{
     music.pause();
