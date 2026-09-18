@@ -8,7 +8,7 @@ const SUPABASE_URL='https://aaimjubffhdujevrdamo.supabase.co';
 const PUBLISHABLE_KEY='sb_publishable_y58fL0aRLE3wgV3nP5WIxQ_GE52Xaum';
 const KEY='birthday-site-state-v2';
 const DEFAULTS={
-  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-18T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''},
+  general:{name:'HER NAME',nickname:'NICKNAME',insideJoke:'',introLine:'',birthdayISO:'2026-09-18T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:'',soundtrack:{defaultTracks:[],pageTracks:{},shuffle:false}},
   pageOrder:['countdown.html','index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','finale.html'],
   pageEnabled:{'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'countdown.html':true,'finale.html':true},
   fairItems:{},fairPhotos:{},patches:{},pageCss:{},pages:{}
@@ -92,6 +92,23 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 .yap-existing select{width:100%;border:1px solid var(--line);background:#101217;color:#f5f5f5;padding:9px 10px;border-radius:9px}
 .yap-meta{font-size:10px;color:var(--muted);word-break:break-all}
 @media(max-width:700px){.yap-row{grid-template-columns:1fr}.yap-preview{max-height:240px}.yap-existing{grid-template-columns:1fr}.yap-actions>.btn,.yap-actions>.upload{flex:1 1 130px;text-align:center}}
+</style>
+<style id="animation-soundtrack-control-css">
+.ve-animation-panel{border-top:1px solid var(--line);background:#111318;padding:12px;max-height:44vh;overflow:auto}
+.ve-anim-toolbar,.ve-anim-head,.sound-track-row,.sound-add-row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.ve-anim-actions,.sound-track-actions{display:flex;gap:6px;flex-wrap:wrap}
+.ve-anim-master{display:grid;gap:5px;margin:10px 0}.ve-anim-master label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#aeb3bd}
+.ve-anim-master input,.ve-anim-row input[type=range]{width:100%}
+.ve-anim-help,.ve-anim-empty{font-size:10px;color:#858b96;line-height:1.5}
+.ve-animation-list{display:grid;gap:8px;margin-top:10px}
+.ve-anim-row{border:1px solid var(--line);border-radius:10px;padding:9px;background:#0e1014;display:grid;gap:7px}
+.ve-anim-head b{font-size:10px}.ve-anim-head small{display:block;color:#7f8590;font-size:9px}.ve-anim-time{font-size:9px;color:#aeb3bd;text-align:right}
+.sound-section{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}.sound-section h4{margin:0 0 8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em}
+.sound-track-list{display:grid;gap:8px;margin:10px 0}.sound-track-row{border:1px solid var(--line);background:#101217;border-radius:10px;padding:9px}
+.sound-track-main{min-width:0;flex:1}.sound-track-main input{width:100%;border:0;background:transparent;color:#f5f5f5;padding:2px 0 5px;font-weight:600}
+.sound-track-main small{display:block;color:#737985;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%}
+.sound-add-row{justify-content:flex-start;flex-wrap:wrap}.sound-add-row select{flex:1 1 180px;min-width:0;border:1px solid var(--line);background:#101217;color:#f5f5f5;border-radius:9px;padding:9px}
+@media(max-width:700px){.ve-anim-toolbar,.ve-anim-head,.sound-track-row{align-items:stretch;flex-direction:column}.sound-track-actions{width:100%}.sound-track-actions .btn{flex:1}.sound-add-row>*{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -194,7 +211,7 @@ function shopData(id){return Object.assign({},shopDefaults[id],state.fairItems[i
 function attr(s){return String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;')}function html(s){return String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')}
 function updateCountdownPreviewControl(){const page=document.getElementById('previewPage')?.value;const control=document.getElementById('countdownPreviewState');if(control)control.style.display=page==='countdown.html'?'block':'none'}
 function renderPageSelects(){for(const id of ['previewPage','cssPage']){const s=document.getElementById(id),cur=s.value;s.innerHTML='';state.pageOrder.forEach(p=>{const o=document.createElement('option');o.value=p;o.textContent=pages.find(x=>x[0]===p)?.[1]||p;s.appendChild(o)});if(state.pageOrder.includes(cur))s.value=cur}if(!document.getElementById('previewPage').value)document.getElementById('previewPage').value='index.html';updateCountdownPreviewControl()}
-function reloadPreview(){const f=document.getElementById('previewFrame');const p=document.getElementById('previewPage').value||'index.html';const mode=document.getElementById('countdownPreviewState')?.value||'auto';const extra=p==='countdown.html'?'&countdownView='+encodeURIComponent(mode):'';f.src=p+'?adminPreview=1'+extra+'&t='+Date.now()}
+function reloadPreview(){const f=document.getElementById('previewFrame');const p=document.getElementById('previewPage').value||'index.html';const mode=document.getElementById('countdownPreviewState')?.value||'auto';const extra=p==='countdown.html'?'&countdownView='+encodeURIComponent(mode):'';const animation=window.__animationEditMode?'&animationEdit=1':'';f.src=p+'?adminPreview=1'+extra+animation+'&t='+Date.now()}
 function openCountdownPreview(mode){const page=document.getElementById('previewPage'),stateControl=document.getElementById('countdownPreviewState');page.value='countdown.html';stateControl.value=mode;updateCountdownPreviewControl();const visual=document.querySelector('.nav button[data-view="visual"]');visual?.click();reloadPreview()}function cssSelector(el){if(el.id)return '#'+CSS.escape(el.id);const bits=[];let n=el;while(n&&n!==el.ownerDocument.body){let b=n.tagName.toLowerCase();if(n.classList.length)b+='.'+[...n.classList].slice(0,2).map(CSS.escape).join('.');const siblings=[...n.parentElement.children].filter(x=>x.tagName===n.tagName);if(siblings.length>1)b+=`:nth-of-type(${siblings.indexOf(n)+1})`;bits.unshift(b);n=n.parentElement;if(bits.length>=5)break}return bits.join(' > ')}
 function bindFrame(){const f=document.getElementById('previewFrame');f.onload=()=>{try{const d=f.contentDocument;if(document.getElementById('previewPage')?.value==='countdown.html')f.contentWindow?.COUNTDOWN_PAGE?.applyState?.(state);d.addEventListener('click',e=>{const el=e.target.closest('a,button,img,video,audio,source,h1,h2,h3,h4,h5,h6,p,span,div,small,strong,em,li,section,article');if(window.__previewInteractMode)return;if(!el)return;e.preventDefault();e.stopPropagation();selectElement(el)},true)}catch(e){}}}
 function currentPatch(selector){const p=document.getElementById('previewPage').value;return (state.patches[p]||[]).find(x=>x.selector===selector)||{selector,styles:{}}}function selectElement(el){const sel=cssSelector(el);selected={selector:sel,tag:el.tagName.toLowerCase()};document.getElementById('selectorBox').textContent=sel;const p=currentPatch(sel),isMedia=['img','video','audio','source'].includes(selected.tag),isLink=selected.tag==='a';const style=getComputedStyle(el);document.getElementById('inspectorFields').innerHTML=`<div class="field"><label>Text</label><textarea id="iText">${html(p.text??el.textContent.trim())}</textarea></div>${isMedia?`<div class="field"><label>Source URL</label><input id="iSrc" value="${attr(p.src??el.getAttribute('src')??'')}"><label class="btn upload" style="text-align:center">Choose uploaded file<input id="iFilePick" type="file" accept="image/*,video/*,audio/*"></label></div>`:''}${isLink?`<div class="field"><label>Link href</label><input id="iHref" value="${attr(p.href??el.getAttribute('href')??'')}"></div>`:''}<div class="toggle"><div><b>Hide element</b></div><label class="switch"><input id="iHidden" type="checkbox" ${p.hidden?'checked':''}><i></i></label></div><div class="row"><div class="field"><label>Text color</label><input id="iColor" value="${attr(p.styles?.color??style.color)}"></div><div class="field"><label>Background</label><input id="iBg" value="${attr(p.styles?.['background-color']??style.backgroundColor)}"></div></div><div class="row"><div class="field"><label>Font size</label><input id="iSize" value="${attr(p.styles?.['font-size']??style.fontSize)}"></div><div class="field"><label>Opacity</label><input id="iOpacity" value="${attr(p.styles?.opacity??style.opacity)}"></div></div><div class="row"><div class="field"><label>Border radius</label><input id="iRadius" value="${attr(p.styles?.['border-radius']??style.borderRadius)}"></div><div class="field"><label>Transform</label><input id="iTransform" value="${attr(p.styles?.transform??'')}"></div></div><div style="display:flex;gap:8px"><button class="btn primary" id="applyPatch">Apply</button><button class="btn danger" id="removePatch">Remove override</button></div>`;document.getElementById('applyPatch').onclick=saveInspectorPatch;document.getElementById('removePatch').onclick=removeInspectorPatch;const fi=document.getElementById('iFilePick');if(fi)fi.onchange=async()=>{if(fi.files[0]){const url=await addMedia(fi.files[0]);document.getElementById('iSrc').value=url}}}
@@ -266,7 +283,7 @@ function mergeRecovery(base,extra){
 }
 function modernDefaults(){
   const next=cloneState(B.defaults);
-  next.general={...next.general,birthdayISO:'2026-09-18T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:''};
+  next.general={...next.general,birthdayISO:'2026-09-18T00:00:00+05:30',previewCountdownHours:24,favoritePhoto:'',musicFile:'',soundDefault:false,motionScale:1,globalCss:'',soundtrack:{defaultTracks:[],pageTracks:{},shuffle:false}};
   next.pageOrder=['countdown.html','index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','finale.html'];
   next.pageEnabled={'countdown.html':true,'index.html':true,'memories.html':true,'pretty-photos.html':true,'heart.html':true,'yapping.html':true,'fair.html':true,'finale.html':true};
   next.fairItems=cloneState(shopDefaults);next.fairPhotos={};next.patches={};next.pageCss={};next.pages={};
@@ -279,6 +296,18 @@ function validateRecoveryState(value){
   for(const key of ['name','nickname','insideJoke','introLine','birthdayISO','favoritePhoto','musicFile','globalCss'])if(g[key]!==undefined&&typeof g[key]!=='string')errors.push('general.'+key+' must be text.');
   if(g.birthdayISO!==undefined&&!Number.isFinite(new Date(g.birthdayISO).getTime()))errors.push('general.birthdayISO must be a valid date/time.');
   if(g.soundDefault!==undefined&&typeof g.soundDefault!=='boolean')errors.push('general.soundDefault must be true or false.');
+  if(g.soundtrack!==undefined){
+    if(!plainObject(g.soundtrack))errors.push('general.soundtrack must be an object.');
+    else{
+      const checkTracks=(list,label)=>{if(!Array.isArray(list))errors.push(label+' must be an array.');else if(list.length>50)errors.push(label+' can contain at most 50 tracks.');else list.forEach((track,i)=>{if(!plainObject(track)||typeof track.url!=='string'||!track.url.trim())errors.push(label+'['+i+'] needs a URL.');if(plainObject(track)&&track.name!==undefined&&typeof track.name!=='string')errors.push(label+'['+i+'].name must be text.')})};
+      checkTracks(g.soundtrack.defaultTracks??[],'general.soundtrack.defaultTracks');
+      if(g.soundtrack.shuffle!==undefined&&typeof g.soundtrack.shuffle!=='boolean')errors.push('general.soundtrack.shuffle must be true or false.');
+      if(g.soundtrack.pageTracks!==undefined){
+        if(!plainObject(g.soundtrack.pageTracks))errors.push('general.soundtrack.pageTracks must be an object.');
+        else for(const [page,tracks] of Object.entries(g.soundtrack.pageTracks)){if(!ALLOWED_STATE_PAGES.has(page))errors.push('general.soundtrack.pageTracks contains unknown page '+page+'.');checkTracks(tracks,'general.soundtrack.pageTracks.'+page)}
+      }
+    }
+  }
   if(g.previewCountdownHours!==undefined&&(!Number.isFinite(Number(g.previewCountdownHours))||Number(g.previewCountdownHours)<1||Number(g.previewCountdownHours)>168))errors.push('general.previewCountdownHours must be between 1 and 168.');
   if(g.motionScale!==undefined&&(!Number.isFinite(Number(g.motionScale))||Number(g.motionScale)<0||Number(g.motionScale)>1.5))errors.push('general.motionScale must be between 0 and 1.5.');
   if(value.pageOrder!==undefined){
@@ -339,7 +368,7 @@ document.getElementById('applyRaw').onclick=()=>{try{stageRecovery(JSON.parse(do
 document.getElementById('exportState').onclick=()=>download('birthday-site-settings.json',JSON.stringify(state,null,2));
 document.getElementById('importState').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{stageRecovery(JSON.parse(r.result),'Imported JSON')}catch(err){alert(err.message||'Invalid JSON')}finally{e.target.value=''}};r.readAsText(f)};
 document.getElementById('resetState').onclick=()=>{if(confirm('Stage the safe current defaults? Nothing goes live until you publish.')){state=modernDefaults();dirty();renderAll();toast('Safe defaults staged — publish when ready')}};
-function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();window.renderYappingManager?.()}
+function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();window.renderYappingManager?.();window.renderSoundtrackManager?.()}
 renderAll();bindFrame();
 document.getElementById('adminUnlock').onclick=unlock;
 document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
@@ -420,4 +449,4 @@ if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminG
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260919-force-delete1"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-animation-sound1"></script></body></html>
