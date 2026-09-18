@@ -535,6 +535,129 @@
   };
   window.saveInspectorPatch=applyInspector;window.removeInspectorPatch=removeOverride;
 
+  let animationMode=false,animationRecords=[],animationObserver=null;
+  function animationFrame(){return document.getElementById('previewFrame')}
+  function animationDoc(){try{return animationFrame()?.contentDocument||null}catch(e){return null}}
+  function animationWin(){try{return animationFrame()?.contentWindow||null}catch(e){return null}}
+  function animationFreezeStyle(enabled=true){
+    const doc=animationDoc();if(!doc)return;
+    const style=doc.getElementById('birthday-animation-edit-freeze');
+    if(style)style.disabled=!enabled;
+  }
+  function animationLabel(animation,index){
+    const target=animation.effect?.target;
+    const name=animation.animationName||animation.transitionProperty||animation.id||'animation '+(index+1);
+    let targetName=target?.id?'#'+target.id:'';
+    if(!targetName&&target?.classList?.length)targetName='.'+[...target.classList].slice(0,2).join('.');
+    if(!targetName)targetName=target?.tagName?.toLowerCase()||'element';
+    return {name:String(name),targetName};
+  }
+  function animationDuration(animation){
+    try{
+      const timing=animation.effect?.getTiming?.()||{};
+      const duration=Number(timing.duration);
+      return Number.isFinite(duration)&&duration>0?duration:1000;
+    }catch(e){return 1000}
+  }
+  function setAnimationProgress(animation,progress){
+    const duration=animationDuration(animation);
+    try{animation.pause();animation.currentTime=Math.max(0,Math.min(1,progress))*duration}catch(e){}
+  }
+  function selectAnimationTarget(animation){
+    const target=animation.effect?.target;if(!target)return;
+    try{window.selectElement?.(target);target.scrollIntoView?.({block:'center',inline:'center'})}catch(e){}
+  }
+  function renderAnimationList(){
+    const panel=document.getElementById('veAnimationPanel'),list=document.getElementById('veAnimationList'),count=document.getElementById('veAnimationCount');
+    if(!panel||!list||!count)return;
+    panel.style.display=animationMode?'block':'none';
+    count.textContent=String(animationRecords.length);
+    list.innerHTML='';
+    if(!animationRecords.length){
+      list.innerHTML='<div class="ve-anim-empty">No active CSS/Web animations detected yet. Interact with the preview or press Rescan.</div>';
+      return;
+    }
+    animationRecords.forEach((animation,index)=>{
+      const meta=animationLabel(animation,index),duration=animationDuration(animation);
+      const row=document.createElement('div');row.className='ve-anim-row';
+      row.innerHTML='<div class="ve-anim-head"><div><b>'+esc(meta.name)+'</b><small>'+esc(meta.targetName)+' · '+Math.round(duration)+'ms</small></div><button class="btn" type="button" data-anim-select>Select</button></div><input data-anim-range type="range" min="0" max="1000" value="0"><div class="ve-anim-time">0%</div>';
+      const range=row.querySelector('[data-anim-range]'),time=row.querySelector('.ve-anim-time');
+      let progress=0;
+      try{progress=Math.max(0,Math.min(1,Number(animation.currentTime||0)/duration))}catch(e){}
+      range.value=String(Math.round(progress*1000));time.textContent=Math.round(progress*100)+'%';
+      range.oninput=()=>{
+        animationFreezeStyle(true);setAnimationProgress(animation,Number(range.value)/1000);
+        time.textContent=Math.round(Number(range.value)/10)+'%';
+      };
+      row.querySelector('[data-anim-select]').onclick=()=>selectAnimationTarget(animation);
+      list.appendChild(row);
+    });
+  }
+  function collectAnimations(){
+    if(!animationMode)return;
+    const doc=animationDoc();if(!doc)return;
+    const all=doc.getAnimations?.({subtree:true})||[];
+    const seen=new Set(),next=[];
+    for(const animation of all){
+      const target=animation.effect?.target;
+      if(!target||!target.isConnected)continue;
+      const key=(animation.animationName||animation.transitionProperty||animation.id||'')+'|'+(target.dataset?.editId||target.id||target.tagName)+'|'+animationDuration(animation);
+      if(seen.has(key))continue;seen.add(key);next.push(animation);
+      try{animation.pause()}catch(e){}
+    }
+    animationRecords=next;animationFreezeStyle(true);renderAnimationList();
+  }
+  function scheduleAnimationScans(){
+    [30,140,400,900,1700,3000,5000].forEach(delay=>setTimeout(()=>{if(animationMode)collectAnimations()},delay));
+    try{
+      animationObserver?.disconnect?.();
+      const doc=animationDoc();
+      if(doc){
+        animationObserver=new MutationObserver(()=>{if(animationMode)setTimeout(collectAnimations,30)});
+        animationObserver.observe(doc.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
+        setTimeout(()=>animationObserver?.disconnect?.(),8000);
+      }
+    }catch(e){}
+  }
+  function scrubAllAnimations(progress){
+    animationFreezeStyle(true);
+    animationRecords.forEach(animation=>setAnimationProgress(animation,progress));
+    document.getElementById('veAnimMasterValue').textContent=Math.round(progress*100)+'%';
+    document.querySelectorAll('#veAnimationList [data-anim-range]').forEach(input=>{input.value=String(Math.round(progress*1000))});
+    document.querySelectorAll('#veAnimationList .ve-anim-time').forEach(el=>{el.textContent=Math.round(progress*100)+'%'});
+  }
+  function playAnimations(){
+    animationFreezeStyle(false);
+    animationRecords.forEach(animation=>{try{animation.play()}catch(e){}});
+  }
+  function pauseAnimations(){
+    animationFreezeStyle(true);
+    animationRecords.forEach(animation=>{try{animation.pause()}catch(e){}});
+    collectAnimations();
+  }
+  function mountAnimationEditor(){
+    if(document.getElementById('veAnimationTools'))return;
+    const shell=document.querySelector('#view-visual .preview-shell'),bar=shell?.querySelector('.previewbar');if(!shell||!bar)return;
+    const toggle=document.createElement('button');toggle.className='btn';toggle.type='button';toggle.id='veAnimationToggle';toggle.textContent='Animations: off';
+    bar.insertBefore(toggle,bar.querySelector('.spacer')||null);
+    const panel=document.createElement('div');panel.id='veAnimationPanel';panel.className='ve-animation-panel';panel.style.display='none';
+    panel.innerHTML='<div class="ve-anim-toolbar"><b>Animation editor <span id="veAnimationCount">0</span></b><div class="ve-anim-actions"><button class="btn" type="button" id="veAnimPause">Pause</button><button class="btn" type="button" id="veAnimPlay">Play</button><button class="btn" type="button" id="veAnimRescan">Rescan</button></div></div><div class="ve-anim-master"><label>All animations <span id="veAnimMasterValue">0%</span></label><input id="veAnimMaster" type="range" min="0" max="1000" value="0"></div><div class="ve-anim-help">Drag the master slider to freeze the entire page at one point, or use the individual sliders below for a specific card/animation. Click Select to edit that animated element.</div><div id="veAnimationList" class="ve-animation-list"></div>';
+    bar.after(panel);
+    toggle.onclick=()=>{
+      animationMode=!animationMode;window.__animationEditMode=animationMode;
+      toggle.textContent=animationMode?'Animations: on':'Animations: off';
+      toggle.classList.toggle('primary',animationMode);
+      if(animationMode){window.reloadPreview?.();panel.style.display='block'}
+      else{animationObserver?.disconnect?.();animationRecords=[];panel.style.display='none';window.reloadPreview?.()}
+    };
+    panel.querySelector('#veAnimMaster').oninput=e=>scrubAllAnimations(Number(e.target.value)/1000);
+    panel.querySelector('#veAnimPause').onclick=pauseAnimations;
+    panel.querySelector('#veAnimPlay').onclick=playAnimations;
+    panel.querySelector('#veAnimRescan').onclick=collectAnimations;
+  }
+  window.__birthdayAnimationEditor={collect:collectAnimations,schedule:scheduleAnimationScans,get enabled(){return animationMode}};
+  mountAnimationEditor();
+
   function attachFrame(){
     const frame=document.getElementById('previewFrame'),doc=currentDoc(),win=currentWin();if(!frame||!doc||!win)return;
     ensureEditIds(doc);if(win.__phase3EditorPicking)return;win.__phase3EditorPicking=true;
@@ -557,7 +680,7 @@
     },true);
   }
   const frame=document.getElementById('previewFrame');
-  if(frame){frame.onload=()=>{setTimeout(attachFrame,20)};setTimeout(attachFrame,80)}
+  if(frame){frame.onload=()=>{setTimeout(attachFrame,20);if(animationMode)scheduleAnimationScans()};setTimeout(attachFrame,80)}
 
   if(mediaPanel){
     mediaPanel.querySelector('#veChoose').onclick=async()=>{const picker=mediaPanel.querySelector('#vePicker');picker.style.display=picker.style.display==='none'?'block':'none';if(picker.style.display!=='none'){try{await loadMedia()}catch(e){status.textContent=e?.message||String(e)}}};
@@ -696,9 +819,109 @@
   });
   document.getElementById('yappingRefreshMedia')?.addEventListener('click',()=>renderYappingManager(true));
   document.getElementById('nav')?.addEventListener('click',e=>{
-    const b=e.target.closest('button[data-view="yapping"]');if(b)setTimeout(()=>renderYappingManager(true),0);
+    const y=e.target.closest('button[data-view="yapping"]');if(y)setTimeout(()=>renderYappingManager(true),0);
+    const g=e.target.closest('button[data-view="general"]');if(g)setTimeout(()=>renderSoundtrackManager(true),0);
   });
   renderYappingManager(false);
+
+  const SOUND_PAGES=[
+    ['countdown.html','Countdown'],['index.html','Entry'],['memories.html','Memories'],['pretty-photos.html','Pretty Photos'],
+    ['heart.html','Heart'],['yapping.html','Yapping'],['fair.html','Fair'],['finale.html','Finale']
+  ];
+  function ensureSoundtrackModel(){
+    state.general??={};
+    if(!state.general.soundtrack||typeof state.general.soundtrack!=='object'||Array.isArray(state.general.soundtrack)){
+      const legacy=String(state.general.musicFile||'').trim();
+      state.general.soundtrack={defaultTracks:legacy?[{url:legacy,name:'Shared soundtrack'}]:[],pageTracks:{},shuffle:false};
+    }
+    const model=state.general.soundtrack;
+    if(!Array.isArray(model.defaultTracks))model.defaultTracks=[];
+    if(!model.pageTracks||typeof model.pageTracks!=='object'||Array.isArray(model.pageTracks))model.pageTracks={};
+    model.shuffle=!!model.shuffle;
+    return model;
+  }
+  function audioItems(){return mediaItems.filter(item=>kind(item)==='audio')}
+  function trackName(track,index){return String(track?.name||('Track '+(index+1)))}
+  function cleanTrack(rec){return {url:String(rec?.url||''),name:label(rec)}}
+  function soundtrackMediaOptions(){
+    const options=['<option value="">Choose audio from Media Library…</option>'];
+    audioItems().forEach((rec,index)=>options.push('<option value="'+index+'">'+esc(label(rec))+'</option>'));
+    return options.join('');
+  }
+  function renderTrackList(list,container,scope,page=''){
+    container.innerHTML='';
+    if(!list.length){container.innerHTML='<div class="ve-anim-empty">'+(scope==='page'?'This page is silent because its custom playlist is empty.':'No default songs yet.')+'</div>';return}
+    list.forEach((track,index)=>{
+      const row=document.createElement('div');row.className='sound-track-row';
+      row.innerHTML='<div class="sound-track-main"><input data-track-name value="'+attr(trackName(track,index))+'"><small>'+esc(track.url||'')+'</small></div><div class="sound-track-actions"><button class="btn" type="button" data-up '+(index===0?'disabled':'')+'>↑</button><button class="btn" type="button" data-down '+(index===list.length-1?'disabled':'')+'>↓</button><button class="btn danger" type="button" data-remove>Remove</button></div>';
+      row.querySelector('[data-track-name]').oninput=e=>{track.name=e.target.value;dirty()};
+      row.querySelector('[data-up]').onclick=()=>{if(index<1)return;[list[index-1],list[index]]=[list[index],list[index-1]];dirty();renderSoundtrackManager(false)};
+      row.querySelector('[data-down]').onclick=()=>{if(index>=list.length-1)return;[list[index+1],list[index]]=[list[index],list[index+1]];dirty();renderSoundtrackManager(false)};
+      row.querySelector('[data-remove]').onclick=()=>{list.splice(index,1);dirty();renderSoundtrackManager(false)};
+      container.appendChild(row);
+    });
+  }
+  let soundtrackPage='countdown.html';
+  async function renderSoundtrackManager(refreshMedia=false){
+    const root=document.getElementById('soundtrackManager');if(!root)return;
+    const model=ensureSoundtrackModel();
+    if(refreshMedia||!mediaItems.length){try{await sharedMedia()}catch(e){}}
+    const defaultList=root.querySelector('#soundDefaultTracks');
+    renderTrackList(model.defaultTracks,defaultList,'default');
+    const existing=root.querySelector('#soundDefaultExisting');if(existing)existing.innerHTML=soundtrackMediaOptions();
+    const shuffle=root.querySelector('#soundShuffle');if(shuffle)shuffle.checked=!!model.shuffle;
+    const pageSelect=root.querySelector('#soundPageSelect');
+    if(pageSelect){
+      pageSelect.innerHTML=SOUND_PAGES.map(([value,name])=>'<option value="'+value+'" '+(value===soundtrackPage?'selected':'')+'>'+name+'</option>').join('');
+    }
+    const hasOverride=Object.prototype.hasOwnProperty.call(model.pageTracks,soundtrackPage);
+    const override=root.querySelector('#soundPageOverride');if(override)override.checked=hasOverride;
+    const pageArea=root.querySelector('#soundPageArea');if(pageArea)pageArea.style.display=hasOverride?'block':'none';
+    if(hasOverride){
+      const list=Array.isArray(model.pageTracks[soundtrackPage])?model.pageTracks[soundtrackPage]:(model.pageTracks[soundtrackPage]=[]);
+      renderTrackList(list,root.querySelector('#soundPageTracks'),'page',soundtrackPage);
+      root.querySelector('#soundPageExisting').innerHTML=soundtrackMediaOptions();
+    }
+  }
+  function mountSoundtrackManager(){
+    const old=document.getElementById('soundtrackUpload');const card=old?.closest('.card');if(!card||document.getElementById('soundtrackManager'))return;
+    card.innerHTML='<h3>Soundtrack</h3><div id="soundtrackManager"><div class="toggle"><div><b>Sound on by default</b><div class="help">Browser autoplay rules may still require the visitor\'s first interaction.</div></div><label class="switch"><input type="checkbox" id="soundDefaultOn"><i></i></label></div><div class="toggle"><div><b>Shuffle playlists</b><div class="help">Off = play songs in order. On = choose another song randomly when one finishes.</div></div><label class="switch"><input type="checkbox" id="soundShuffle"><i></i></label></div><div class="sound-section"><h4>Default playlist · all pages</h4><div class="help">One song here = one song everywhere. Multiple songs here = playlist everywhere unless a page has its own override.</div><div id="soundDefaultTracks" class="sound-track-list"></div><div class="sound-add-row"><label class="btn upload">Upload songs<input id="soundDefaultUpload" type="file" multiple accept="audio/*"></label><select id="soundDefaultExisting"></select><button class="btn" id="soundDefaultAddExisting" type="button">Add selected</button></div></div><div class="sound-section"><h4>Per-page soundtrack</h4><div class="field"><label>Page</label><select id="soundPageSelect"></select></div><div class="toggle"><div><b>Use custom playlist on this page</b><div class="help">Turn on to override the default playlist. Leave its list empty to make this page silent.</div></div><label class="switch"><input type="checkbox" id="soundPageOverride"><i></i></label></div><div id="soundPageArea" style="display:none"><div id="soundPageTracks" class="sound-track-list"></div><div class="sound-add-row"><label class="btn upload">Upload songs<input id="soundPageUpload" type="file" multiple accept="audio/*"></label><select id="soundPageExisting"></select><button class="btn" id="soundPageAddExisting" type="button">Add selected</button></div><button class="btn" id="soundPageUseDefault" type="button" style="margin-top:8px">Remove override · use default</button></div></div><div class="help" style="margin-top:10px">The old shared soundtrack URL is kept only as a compatibility fallback until this playlist model is published.</div></div>';
+    const root=document.getElementById('soundtrackManager'),model=ensureSoundtrackModel();
+    root.querySelector('#soundDefaultOn').checked=!!state.general.soundDefault;
+    root.querySelector('#soundDefaultOn').onchange=e=>{state.general.soundDefault=e.target.checked;dirty()};
+    root.querySelector('#soundShuffle').onchange=e=>{ensureSoundtrackModel().shuffle=e.target.checked;dirty()};
+    root.querySelector('#soundPageSelect').onchange=e=>{soundtrackPage=e.target.value;renderSoundtrackManager(false)};
+    root.querySelector('#soundPageOverride').onchange=e=>{
+      const model=ensureSoundtrackModel();
+      if(e.target.checked){if(!Object.prototype.hasOwnProperty.call(model.pageTracks,soundtrackPage))model.pageTracks[soundtrackPage]=[]}
+      else delete model.pageTracks[soundtrackPage];
+      dirty();renderSoundtrackManager(false);
+    };
+    root.querySelector('#soundPageUseDefault').onclick=()=>{delete ensureSoundtrackModel().pageTracks[soundtrackPage];dirty();renderSoundtrackManager(false)};
+    async function uploadTracks(input,getList){
+      const files=[...(input.files||[])];if(!files.length)return;
+      try{
+        for(const file of files){
+          if(!String(file.type||'').startsWith('audio/'))throw new Error(file.name+' is not an audio file.');
+          const rec=await uploadShared(file);mediaItems.unshift(rec);getList().push(cleanTrack(rec));
+        }
+        dirty();await renderSoundtrackManager(false);toast(files.length+' soundtrack file'+(files.length===1?'':'s')+' added — publish to save');
+      }catch(e){alert(e?.message||String(e))}finally{input.value=''}
+    }
+    root.querySelector('#soundDefaultUpload').onchange=e=>uploadTracks(e.target,()=>ensureSoundtrackModel().defaultTracks);
+    root.querySelector('#soundPageUpload').onchange=e=>uploadTracks(e.target,()=>ensureSoundtrackModel().pageTracks[soundtrackPage]??=([]));
+    root.querySelector('#soundDefaultAddExisting').onclick=()=>{
+      const index=Number(root.querySelector('#soundDefaultExisting').value);const rec=audioItems()[index];if(!rec)return;
+      ensureSoundtrackModel().defaultTracks.push(cleanTrack(rec));dirty();renderSoundtrackManager(false);
+    };
+    root.querySelector('#soundPageAddExisting').onclick=()=>{
+      const index=Number(root.querySelector('#soundPageExisting').value);const rec=audioItems()[index];if(!rec)return;
+      const list=ensureSoundtrackModel().pageTracks[soundtrackPage]??=[];list.push(cleanTrack(rec));dirty();renderSoundtrackManager(false);
+    };
+    renderSoundtrackManager(false);
+  }
+  window.renderSoundtrackManager=()=>renderSoundtrackManager(false);
+  mountSoundtrackManager();
 
   function bindGeneralUpload(id,field,kind){
     const input=document.getElementById(id);if(!input)return;
@@ -711,7 +934,6 @@
       await renderLibrary();
     }catch(e){alert(e?.message||String(e))}finally{input.value=''}};
   }
-  bindGeneralUpload('soundtrackUpload','musicFile','audio');
-  bindGeneralUpload('favoritePhotoUpload','favoritePhoto','image');
+   bindGeneralUpload('favoritePhotoUpload','favoritePhoto','image');
   renderLibrary();
 })();
