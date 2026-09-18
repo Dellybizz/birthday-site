@@ -571,9 +571,10 @@
     return null;
   }
   function clearCapturedTimers(){
-    const win=currentWin();if(!win)return;
-    for(const id of selectedAnimation.timers||[])try{win.clearTimeout(id)}catch(e){}
-    selectedAnimation.timers=[];
+    const win=currentWin();
+    if(win)for(const id of selectedAnimation.timers||[])try{win.clearTimeout(id)}catch(e){}
+    for(const animation of selectedAnimation.animations||[])try{animation.cancel()}catch(e){}
+    selectedAnimation.timers=[];selectedAnimation.animations=[];
   }
   function setSelectedAnimationProgress(progress){
     const p=Math.max(0,Math.min(1,Number(progress)||0));
@@ -596,7 +597,7 @@
     clearCapturedTimers();resetKnownInteraction(candidate.owner);
     await new Promise(resolve=>win.requestAnimationFrame(()=>win.requestAnimationFrame(resolve)));
 
-    const originalTimeout=win.setTimeout.bind(win),captured=[];
+    const nativeTimeout=win.setTimeout,originalTimeout=nativeTimeout.bind(win),captured=[];
     win.setTimeout=(fn,delay,...args)=>{
       const id=originalTimeout(fn,delay,...args);
       captured.push({id,delay:Number(delay)||0});
@@ -606,7 +607,7 @@
     window.__previewInteractMode=true;
     try{candidate.trigger.click()}catch(e){}
     finally{
-      win.setTimeout=originalTimeout;
+      win.setTimeout=nativeTimeout;
       window.__previewInteractMode=previousInteract;
     }
     selectedAnimation.timers=captured.map(x=>x.id);
