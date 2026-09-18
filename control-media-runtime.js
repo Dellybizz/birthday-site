@@ -522,6 +522,7 @@
     });
     addColorPicker('iColor');addColorPicker('iBg');
     updateMediaPanel();
+    bindSelectedAnimationInspector(el).catch(()=>{});
   }
   window.cssSelector=selectorFor;
   window.currentPatch=selector=>findPatch(selector)||{selector,styles:{}};
@@ -538,127 +539,129 @@
   };
   window.saveInspectorPatch=applyInspector;window.removeInspectorPatch=removeOverride;
 
-  let animationMode=false,animationRecords=[],animationObserver=null;
-  function animationFrame(){return document.getElementById('previewFrame')}
-  function animationDoc(){try{return animationFrame()?.contentDocument||null}catch(e){return null}}
-  function animationWin(){try{return animationFrame()?.contentWindow||null}catch(e){return null}}
-  function animationFreezeStyle(enabled=true){
-    const doc=animationDoc();if(!doc)return;
-    const style=doc.getElementById('birthday-animation-edit-freeze');
-    if(style)style.disabled=!enabled;
-  }
-  function animationLabel(animation,index){
-    const target=animation.effect?.target;
-    const name=animation.animationName||animation.transitionProperty||animation.id||'animation '+(index+1);
-    let targetName=target?.id?'#'+target.id:'';
-    if(!targetName&&target?.classList?.length)targetName='.'+[...target.classList].slice(0,2).join('.');
-    if(!targetName)targetName=target?.tagName?.toLowerCase()||'element';
-    return {name:String(name),targetName};
-  }
+  let selectedAnimation={owner:null,trigger:null,label:'Animation',animations:[],timers:[]};
   function animationDuration(animation){
     try{
-      const timing=animation.effect?.getTiming?.()||{};
+      const timing=animation.effect?.getComputedTiming?.()||animation.effect?.getTiming?.()||{};
+      const end=Number(timing.endTime);
+      if(Number.isFinite(end)&&end>0)return end;
       const duration=Number(timing.duration);
       return Number.isFinite(duration)&&duration>0?duration:1000;
     }catch(e){return 1000}
   }
-  function setAnimationProgress(animation,progress){
-    const duration=animationDuration(animation);
-    try{animation.pause();animation.currentTime=Math.max(0,Math.min(1,progress))*duration}catch(e){}
-  }
-  function selectAnimationTarget(animation){
-    const target=animation.effect?.target;if(!target)return;
-    try{window.selectElement?.(target);target.scrollIntoView?.({block:'center',inline:'center'})}catch(e){}
-  }
-  function renderAnimationList(){
-    const panel=document.getElementById('veAnimationPanel'),list=document.getElementById('veAnimationList'),count=document.getElementById('veAnimationCount');
-    if(!panel||!list||!count)return;
-    panel.style.display=animationMode?'block':'none';
-    count.textContent=String(animationRecords.length);
-    list.innerHTML='';
-    if(!animationRecords.length){
-      list.innerHTML='<div class="ve-anim-empty">No active CSS/Web animations detected yet. Interact with the preview or press Rescan.</div>';
-      return;
-    }
-    animationRecords.forEach((animation,index)=>{
-      const meta=animationLabel(animation,index),duration=animationDuration(animation);
-      const row=document.createElement('div');row.className='ve-anim-row';
-      row.innerHTML='<div class="ve-anim-head"><div><b>'+esc(meta.name)+'</b><small>'+esc(meta.targetName)+' · '+Math.round(duration)+'ms</small></div><button class="btn" type="button" data-anim-select>Select</button></div><input data-anim-range type="range" min="0" max="1000" value="0"><div class="ve-anim-time">0%</div>';
-      const range=row.querySelector('[data-anim-range]'),time=row.querySelector('.ve-anim-time');
-      let progress=0;
-      try{progress=Math.max(0,Math.min(1,Number(animation.currentTime||0)/duration))}catch(e){}
-      range.value=String(Math.round(progress*1000));time.textContent=Math.round(progress*100)+'%';
-      range.oninput=()=>{
-        animationFreezeStyle(true);setAnimationProgress(animation,Number(range.value)/1000);
-        time.textContent=Math.round(Number(range.value)/10)+'%';
-      };
-      row.querySelector('[data-anim-select]').onclick=()=>selectAnimationTarget(animation);
-      list.appendChild(row);
+  function relatedAnimations(owner){
+    const doc=currentDoc();if(!doc||!owner)return [];
+    return (doc.getAnimations?.()||[]).filter(animation=>{
+      const target=animation.effect?.target;
+      return !!target&&(target===owner||owner.contains?.(target));
     });
   }
-  function collectAnimations(){
-    if(!animationMode)return;
-    const doc=animationDoc();if(!doc)return;
-    const all=doc.getAnimations?.()||[];
-    const next=[];
-    for(const animation of all){
-      const target=animation.effect?.target;
-      if(!target||!target.isConnected)continue;
-      next.push(animation);
-      try{animation.pause()}catch(e){}
-    }
-    animationRecords=next;animationFreezeStyle(true);renderAnimationList();
-  }
-  function scheduleAnimationScans(){
-    [30,140,400,900,1700,3000,5000].forEach(delay=>setTimeout(()=>{if(animationMode)collectAnimations()},delay));
-    try{
-      animationObserver?.disconnect?.();
-      const doc=animationDoc();
-      if(doc){
-        animationObserver=new MutationObserver(()=>{if(animationMode)setTimeout(collectAnimations,30)});
-        animationObserver.observe(doc.documentElement,{subtree:true,childList:true,attributes:true,attributeFilter:['class','style']});
-        setTimeout(()=>animationObserver?.disconnect?.(),8000);
+  function interactionAnimationFor(el){
+    const doc=currentDoc();if(!doc||!el)return null;
+    if(pageName()==='index.html'){
+      const envelope=el.closest?.('#envelope')||(el.id==='envelope'?el:null);
+      if(envelope){
+        return {owner:envelope,trigger:doc.getElementById('sealBtn'),label:'Envelope opening',autoCapture:true};
       }
-    }catch(e){}
+    }
+    const active=relatedAnimations(el);
+    if(active.length)return {owner:el,trigger:null,label:'Animation',animations:active,autoCapture:false};
+    const trigger=el.matches?.('button,a,[role="button"]')?el:el.querySelector?.('button,[role="button"]');
+    if(trigger)return {owner:el,trigger,label:'Interaction animation',autoCapture:false};
+    return null;
   }
-  function scrubAllAnimations(progress){
-    animationFreezeStyle(true);
-    animationRecords.forEach(animation=>setAnimationProgress(animation,progress));
-    document.getElementById('veAnimMasterValue').textContent=Math.round(progress*100)+'%';
-    document.querySelectorAll('#veAnimationList [data-anim-range]').forEach(input=>{input.value=String(Math.round(progress*1000))});
-    document.querySelectorAll('#veAnimationList .ve-anim-time').forEach(el=>{el.textContent=Math.round(progress*100)+'%'});
+  function clearCapturedTimers(){
+    const win=currentWin();if(!win)return;
+    for(const id of selectedAnimation.timers||[])try{win.clearTimeout(id)}catch(e){}
+    selectedAnimation.timers=[];
   }
-  function playAnimations(){
-    animationFreezeStyle(false);
-    animationRecords.forEach(animation=>{try{animation.play()}catch(e){}});
+  function setSelectedAnimationProgress(progress){
+    const p=Math.max(0,Math.min(1,Number(progress)||0));
+    for(const animation of selectedAnimation.animations||[]){
+      try{animation.pause();animation.currentTime=p*animationDuration(animation)}catch(e){}
+    }
+    const value=document.getElementById('veSelectedAnimValue');if(value)value.textContent=Math.round(p*100)+'%';
+    const range=document.getElementById('veSelectedAnimRange');if(range&&Number(range.value)!==Math.round(p*1000))range.value=String(Math.round(p*1000));
   }
-  function pauseAnimations(){
-    animationFreezeStyle(true);
-    animationRecords.forEach(animation=>{try{animation.pause()}catch(e){}});
-    collectAnimations();
+  function resetKnownInteraction(owner){
+    const doc=currentDoc();if(!doc||!owner)return;
+    if(pageName()==='index.html'&&owner.id==='envelope'){
+      owner.classList.remove('open');
+      doc.getElementById('sealBtn')?.classList.remove('hidden');
+      const caption=doc.getElementById('envelopeCaption');if(caption)caption.textContent='tap the seal to open it';
+    }
   }
-  function mountAnimationEditor(){
-    if(document.getElementById('veAnimationTools'))return;
-    const shell=document.querySelector('#view-visual .preview-shell'),bar=shell?.querySelector('.previewbar');if(!shell||!bar)return;
-    const toggle=document.createElement('button');toggle.className='btn';toggle.type='button';toggle.id='veAnimationToggle';toggle.textContent='Animations: off';
-    bar.insertBefore(toggle,bar.querySelector('.spacer')||null);
-    const panel=document.createElement('div');panel.id='veAnimationPanel';panel.className='ve-animation-panel';panel.style.display='none';
-    panel.innerHTML='<div class="ve-anim-toolbar"><b>Animation editor <span id="veAnimationCount">0</span></b><div class="ve-anim-actions"><button class="btn" type="button" id="veAnimPause">Pause</button><button class="btn" type="button" id="veAnimPlay">Play</button><button class="btn" type="button" id="veAnimRescan">Rescan</button></div></div><div class="ve-anim-master"><label>All animations <span id="veAnimMasterValue">0%</span></label><input id="veAnimMaster" type="range" min="0" max="1000" value="0"></div><div class="ve-anim-help">Drag the master slider to freeze the entire page at one point, or use the individual sliders below for a specific card/animation. Click Select to edit that animated element.</div><div id="veAnimationList" class="ve-animation-list"></div>';
-    bar.after(panel);
-    toggle.onclick=()=>{
-      animationMode=!animationMode;window.__animationEditMode=animationMode;
-      toggle.textContent=animationMode?'Animations: on':'Animations: off';
-      toggle.classList.toggle('primary',animationMode);
-      if(animationMode){window.reloadPreview?.();panel.style.display='block'}
-      else{animationObserver?.disconnect?.();animationRecords=[];panel.style.display='none';window.reloadPreview?.()}
+  async function captureSelectedAnimation(candidate){
+    const win=currentWin(),doc=currentDoc();if(!win||!doc||!candidate?.owner||!candidate?.trigger)return false;
+    clearCapturedTimers();resetKnownInteraction(candidate.owner);
+    await new Promise(resolve=>win.requestAnimationFrame(()=>win.requestAnimationFrame(resolve)));
+
+    const originalTimeout=win.setTimeout.bind(win),captured=[];
+    win.setTimeout=(fn,delay,...args)=>{
+      const id=originalTimeout(fn,delay,...args);
+      captured.push({id,delay:Number(delay)||0});
+      return id;
     };
-    panel.querySelector('#veAnimMaster').oninput=e=>scrubAllAnimations(Number(e.target.value)/1000);
-    panel.querySelector('#veAnimPause').onclick=pauseAnimations;
-    panel.querySelector('#veAnimPlay').onclick=playAnimations;
-    panel.querySelector('#veAnimRescan').onclick=collectAnimations;
+    const previousInteract=window.__previewInteractMode;
+    window.__previewInteractMode=true;
+    try{candidate.trigger.click()}catch(e){}
+    finally{
+      win.setTimeout=originalTimeout;
+      window.__previewInteractMode=previousInteract;
+    }
+    selectedAnimation.timers=captured.map(x=>x.id);
+    captured.filter(x=>x.delay>=120).forEach(x=>{try{win.clearTimeout(x.id)}catch(e){}});
+    await new Promise(resolve=>originalTimeout(resolve,40));
+
+    const animations=relatedAnimations(candidate.owner);
+    animations.forEach(animation=>{try{animation.pause()}catch(e){}});
+    selectedAnimation={...candidate,animations,timers:selectedAnimation.timers||[]};
+    setSelectedAnimationProgress(0);
+    return animations.length>0;
   }
-  window.__birthdayAnimationEditor={collect:collectAnimations,schedule:scheduleAnimationScans,get enabled(){return animationMode}};
-  mountAnimationEditor();
+  function animationInspectorMarkup(candidate){
+    if(!candidate)return '';
+    const hasAnimations=(candidate.animations||relatedAnimations(candidate.owner)).length>0;
+    const capture=candidate.trigger?'<button class="btn" type="button" id="veCaptureAnimation">'+(candidate.autoCapture?'Reload animation':'Capture animation')+'</button>':'';
+    return '<div class="ve-selected-animation" id="veSelectedAnimation">'+
+      '<div class="ve-selected-animation-head"><div><b>'+esc(candidate.label)+'</b><small>Drag to the exact point you want to edit.</small></div>'+capture+'</div>'+
+      '<div class="ve-selected-animation-slider"><input id="veSelectedAnimRange" type="range" min="0" max="1000" value="0" '+(hasAnimations?'':'disabled')+'><span id="veSelectedAnimValue">0%</span></div>'+
+      '<div class="ve-note" id="veSelectedAnimNote">'+(hasAnimations?'Animation ready.':'Click Capture animation to load this interaction.')+'</div>'+
+    '</div>';
+  }
+  async function bindSelectedAnimationInspector(el){
+    const candidate=interactionAnimationFor(el);
+    if(!candidate)return;
+    const existing=relatedAnimations(candidate.owner);
+    selectedAnimation={...candidate,animations:existing,timers:[]};
+    const holder=document.createElement('div');
+    holder.innerHTML=animationInspectorMarkup({...candidate,animations:existing});
+    const node=holder.firstElementChild;
+    const actions=document.getElementById('applyPatch')?.parentElement;
+    if(actions)actions.before(node);else fields.appendChild(node);
+
+    const range=node.querySelector('#veSelectedAnimRange');
+    if(existing.length){
+      existing.forEach(animation=>{try{animation.pause()}catch(e){}});
+      let progress=0;
+      try{progress=Math.max(0,Math.min(1,Number(existing[0].currentTime||0)/animationDuration(existing[0])))}catch(e){}
+      range.value=String(Math.round(progress*1000));
+      node.querySelector('#veSelectedAnimValue').textContent=Math.round(progress*100)+'%';
+      range.disabled=false;
+    }
+    range.oninput=()=>setSelectedAnimationProgress(Number(range.value)/1000);
+
+    const capture=node.querySelector('#veCaptureAnimation');
+    if(capture)capture.onclick=async()=>{
+      capture.disabled=true;capture.textContent='Loading…';
+      const ok=await captureSelectedAnimation(candidate);
+      range.disabled=!ok;
+      node.querySelector('#veSelectedAnimNote').textContent=ok?'Animation ready — drag the slider.':'No scrub-able animation was detected for this interaction.';
+      capture.disabled=false;capture.textContent='Reload animation';
+    };
+    if(candidate.autoCapture&&!existing.length&&capture)capture.click();
+  }
+
 
   function attachFrame(){
     const frame=document.getElementById('previewFrame'),doc=currentDoc(),win=currentWin();if(!frame||!doc||!win)return;
@@ -682,7 +685,7 @@
     },true);
   }
   const frame=document.getElementById('previewFrame');
-  if(frame){frame.addEventListener('load',()=>{setTimeout(attachFrame,20);if(animationMode)scheduleAnimationScans()});setTimeout(attachFrame,80)}
+  if(frame){frame.addEventListener('load',()=>{clearCapturedTimers();selectedAnimation={owner:null,trigger:null,label:'Animation',animations:[],timers:[]};setTimeout(attachFrame,20)});setTimeout(attachFrame,80)}
 
   if(mediaPanel){
     mediaPanel.querySelector('#veChoose').onclick=async()=>{const picker=mediaPanel.querySelector('#vePicker');picker.style.display=picker.style.display==='none'?'block':'none';if(picker.style.display!=='none'){try{await loadMedia()}catch(e){status.textContent=e?.message||String(e)}}};
