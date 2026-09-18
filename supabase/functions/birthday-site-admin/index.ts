@@ -1,8 +1,24 @@
-const cors = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Headers': 'content-type,x-admin-key,authorization,apikey',
-  'Access-Control-Allow-Methods': 'POST,OPTIONS',
-};
+const ALLOWED_ORIGINS = new Set([
+  'https://birthday-site-zhlw.onrender.com',
+  'http://localhost:3000',
+  'http://127.0.0.1:3000',
+]);
+
+function corsHeaders(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  const allowedOrigin = !origin || ALLOWED_ORIGINS.has(origin) ? origin : '';
+  return {
+    ...(allowedOrigin ? { 'Access-Control-Allow-Origin': allowedOrigin } : {}),
+    'Vary': 'Origin',
+    'Access-Control-Allow-Headers': 'content-type,x-admin-key,authorization,apikey',
+    'Access-Control-Allow-Methods': 'POST,OPTIONS',
+  };
+}
+
+function originAllowed(req: Request) {
+  const origin = req.headers.get('origin') || '';
+  return !origin || ALLOWED_ORIGINS.has(origin);
+}
 
 const ALLOWED_PAGES = new Set([
   'countdown.html',
@@ -22,11 +38,6 @@ const GENERAL_KEYS = new Set([
 ]);
 const GENERATED_SELECTOR = /(bday-added-media|bday-added-photo|data-bday-inserted|data-bday-group)/i;
 
-async function sha256Hex(value: string) {
-  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
-}
-
 function env() {
   return {
     url: Deno.env.get('SUPABASE_URL')!,
@@ -34,28 +45,49 @@ function env() {
   };
 }
 
-async function getAdminHash() {
+async function sha256Hex(value: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(value));
+  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('');
+}
+
+async function clientFingerprint(req: Request) {
+  const forwarded = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim()
+    || req.headers.get('cf-connecting-ip')
+    || req.headers.get('x-real-ip')
+    || 'unknown';
+  return await sha256Hex(forwarded);
+}
+
+async function authorize(req: Request) {
+  const key = req.headers.get('x-admin-key') || '';
+  if (!key) return { allowed: false, rate_limited: false };
   const { url, service } = env();
-  const r = await fetch(`${url}/rest/v1/site_admin_security?id=eq.primary&select=key_hash`, {
-    headers: { Authorization: `Bearer ${service}`, apikey: service },
-    cache: 'no-store',
+  const r = await fetch(`${url}/rest/v1/rpc/birthday_admin_authorize`, {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${service}`,
+      apikey: service,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      p_key: key,
+      p_fingerprint: await clientFingerprint(req),
+    }),
   });
-  if (!r.ok) throw new Error(`Could not read admin security state: ${r.status}`);
-  const rows = await r.json();
-  const hash = rows?.[0]?.key_hash;
-  if (!hash) throw new Error('Admin security state is missing');
-  return hash as string;
+  const result = await r.json().catch(() => ({}));
+  if (!r.ok) throw new Error(result?.message || result?.error || `Admin authorization failed: ${r.status}`);
+  return result || { allowed: false, rate_limited: false };
 }
 
-async function authorized(key: string) {
-  if (!key) return false;
-  return (await sha256Hex(key)) === (await getAdminHash());
-}
-
-function json(body: unknown, status = 200) {
+function json(req: Request, body: unknown, status = 200, extra: Record<string,string> = {}) {
   return new Response(JSON.stringify(body), {
     status,
-    headers: { ...cors, 'Content-Type': 'application/json', 'Cache-Control': 'no-store' },
+    headers: {
+      ...corsHeaders(req),
+      ...extra,
+      'Content-Type': 'application/json',
+      'Cache-Control': 'no-store',
+    },
   });
 }
 
@@ -228,49 +260,53 @@ function validateState(data: unknown): string[] {
 }
 
 Deno.serve(async (req: Request) => {
-  if (req.method === 'OPTIONS') return new Response('ok', { headers: cors });
-  if (req.method !== 'POST') return json({ error: 'Method not allowed' }, 405);
+  if (!originAllowed(req)) return json(req, { error: 'Origin not allowed' }, 403);
+  if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders(req) });
+  if (req.method !== 'POST') return json(req, { error: 'Method not allowed' }, 405);
 
   try {
     const key = req.headers.get('x-admin-key') || '';
-    if (!(await authorized(key))) return json({ error: 'Unauthorized' }, 401);
+    const auth = await authorize(req);
+    if (auth?.rate_limited) {
+      const retry = Math.max(1, Number(auth.retry_after || 900));
+      return json(req, { error: 'Too many failed admin-key attempts. Try again later.', code: 'RATE_LIMITED', retryAfter: retry }, 429, { 'Retry-After': String(retry) });
+    }
+    if (!auth?.allowed) return json(req, { error: 'Unauthorized' }, 401);
 
     const body = await req.json().catch(() => ({}));
 
-    if (body?.action === 'ping') return json({ ok: true });
+    if (body?.action === 'ping') return json(req, { ok: true });
 
     if (body?.action === 'change_key') {
       const newKey = typeof body?.newKey === 'string' ? body.newKey : '';
-      if (newKey.length < 8 || newKey.length > 128) return json({ error: 'New admin key must be 8–128 characters.' }, 400);
-      if (newKey === key) return json({ error: 'Choose a different admin key.' }, 400);
+      if (newKey.length < 8 || newKey.length > 128) return json(req, { error: 'New admin key must be 8–128 characters.' }, 400);
+      if (newKey === key) return json(req, { error: 'Choose a different admin key.' }, 400);
 
-      const newHash = await sha256Hex(newKey);
       const { url, service } = env();
-      const r = await fetch(`${url}/rest/v1/site_admin_security?id=eq.primary`, {
-        method: 'PATCH',
+      const r = await fetch(`${url}/rest/v1/rpc/birthday_admin_change_key`, {
+        method: 'POST',
         headers: {
           Authorization: `Bearer ${service}`,
           apikey: service,
           'Content-Type': 'application/json',
-          Prefer: 'return=representation',
         },
-        body: JSON.stringify({ key_hash: newHash, updated_at: new Date().toISOString() }),
+        body: JSON.stringify({ p_new_key: newKey }),
       });
-      const text = await r.text();
-      if (!r.ok) throw new Error(text || `Admin key update failed: ${r.status}`);
-      return json({ ok: true, changed: true });
+      const result = await r.json().catch(() => ({}));
+      if (!r.ok || !result?.ok) throw new Error(result?.message || result?.error || `Admin key update failed: ${r.status}`);
+      return json(req, { ok: true, changed: true, hashScheme: result.hash_scheme || 'bcrypt-sha256' });
     }
 
-    if (body?.action !== 'publish' || !body?.data || typeof body.data !== 'object') return json({ error: 'Invalid payload' }, 400);
+    if (body?.action !== 'publish' || !body?.data || typeof body.data !== 'object') return json(req, { error: 'Invalid payload' }, 400);
 
     const expectedRevision = Number(body?.expectedRevision);
     if (!Number.isSafeInteger(expectedRevision) || expectedRevision < 1) {
-      return json({ error: 'A valid state revision is required.', code: 'MISSING_REVISION' }, 409);
+      return json(req, { error: 'A valid state revision is required.', code: 'MISSING_REVISION' }, 409);
     }
 
     const validationErrors = validateState(body.data);
     if (validationErrors.length) {
-      return json({ error: 'State validation failed.', code: 'INVALID_STATE', details: validationErrors }, 400);
+      return json(req, { error: 'State validation failed.', code: 'INVALID_STATE', details: validationErrors }, 400);
     }
 
     const { url, service } = env();
@@ -287,17 +323,17 @@ Deno.serve(async (req: Request) => {
     if (!rpc.ok) throw new Error(result?.message || result?.error || `State publish failed: ${rpc.status}`);
 
     if (result?.conflict || result?.error === 'STALE_STATE') {
-      return json({
+      return json(req, {
         error: 'This Control Room tab is out of date.',
         code: 'STALE_STATE',
         currentRevision: result?.current_revision ?? null,
         updatedAt: result?.updated_at ?? null,
       }, 409);
     }
-    if (!result?.ok) return json({ error: result?.error || 'State publish failed.', code: result?.error || 'PUBLISH_FAILED' }, 400);
+    if (!result?.ok) return json(req, { error: result?.error || 'State publish failed.', code: result?.error || 'PUBLISH_FAILED' }, 400);
 
-    return json({ ok: true, revision: result.revision, updatedAt: result.updated_at });
+    return json(req, { ok: true, revision: result.revision, updatedAt: result.updated_at });
   } catch (err) {
-    return json({ error: String((err as Error)?.message || err) }, 500);
+    return json(req, { error: String((err as Error)?.message || err) }, 500);
   }
 });
