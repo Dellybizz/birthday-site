@@ -123,7 +123,60 @@ function reloadPreview(){const f=document.getElementById('previewFrame');const p
 function bindFrame(){const f=document.getElementById('previewFrame');f.onload=()=>{try{const d=f.contentDocument;d.addEventListener('click',e=>{const el=e.target.closest('a,button,img,video,audio,source,h1,h2,h3,h4,h5,h6,p,span,div,small,strong,em,li,section,article');if(window.__previewInteractMode)return;if(!el)return;e.preventDefault();e.stopPropagation();selectElement(el)},true)}catch(e){}}}
 function currentPatch(selector){const p=document.getElementById('previewPage').value;return (state.patches[p]||[]).find(x=>x.selector===selector)||{selector,styles:{}}}function selectElement(el){const sel=cssSelector(el);selected={selector:sel,tag:el.tagName.toLowerCase()};document.getElementById('selectorBox').textContent=sel;const p=currentPatch(sel),isMedia=['img','video','audio','source'].includes(selected.tag),isLink=selected.tag==='a';const style=getComputedStyle(el);document.getElementById('inspectorFields').innerHTML=`<div class="field"><label>Text</label><textarea id="iText">${html(p.text??el.textContent.trim())}</textarea></div>${isMedia?`<div class="field"><label>Source URL</label><input id="iSrc" value="${attr(p.src??el.getAttribute('src')??'')}"><label class="btn upload" style="text-align:center">Choose uploaded file<input id="iFilePick" type="file" accept="image/*,video/*,audio/*"></label></div>`:''}${isLink?`<div class="field"><label>Link href</label><input id="iHref" value="${attr(p.href??el.getAttribute('href')??'')}"></div>`:''}<div class="toggle"><div><b>Hide element</b></div><label class="switch"><input id="iHidden" type="checkbox" ${p.hidden?'checked':''}><i></i></label></div><div class="row"><div class="field"><label>Text color</label><input id="iColor" value="${attr(p.styles?.color??style.color)}"></div><div class="field"><label>Background</label><input id="iBg" value="${attr(p.styles?.['background-color']??style.backgroundColor)}"></div></div><div class="row"><div class="field"><label>Font size</label><input id="iSize" value="${attr(p.styles?.['font-size']??style.fontSize)}"></div><div class="field"><label>Opacity</label><input id="iOpacity" value="${attr(p.styles?.opacity??style.opacity)}"></div></div><div class="row"><div class="field"><label>Border radius</label><input id="iRadius" value="${attr(p.styles?.['border-radius']??style.borderRadius)}"></div><div class="field"><label>Transform</label><input id="iTransform" value="${attr(p.styles?.transform??'')}"></div></div><div style="display:flex;gap:8px"><button class="btn primary" id="applyPatch">Apply</button><button class="btn danger" id="removePatch">Remove override</button></div>`;document.getElementById('applyPatch').onclick=saveInspectorPatch;document.getElementById('removePatch').onclick=removeInspectorPatch;const fi=document.getElementById('iFilePick');if(fi)fi.onchange=async()=>{if(fi.files[0]){const url=await addMedia(fi.files[0]);document.getElementById('iSrc').value=url}}}
 function saveInspectorPatch(){if(!selected)return;const page=document.getElementById('previewPage').value;state.patches[page]??=[];let p=state.patches[page].find(x=>x.selector===selected.selector);if(!p){p={selector:selected.selector,styles:{}};state.patches[page].push(p)}p.text=document.getElementById('iText').value;p.hidden=document.getElementById('iHidden').checked;p.styles={color:document.getElementById('iColor').value,'background-color':document.getElementById('iBg').value,'font-size':document.getElementById('iSize').value,opacity:document.getElementById('iOpacity').value,'border-radius':document.getElementById('iRadius').value,transform:document.getElementById('iTransform').value};const s=document.getElementById('iSrc'),h=document.getElementById('iHref');if(s)p.src=s.value;if(h)p.href=h.value;dirty();save()}function removeInspectorPatch(){if(!selected)return;const page=document.getElementById('previewPage').value;state.patches[page]=(state.patches[page]||[]).filter(x=>x.selector!==selected.selector);dirty();save()}
-let uploadedMedia=[];async function addMedia(file){if(!ADMIN_KEY){showGate();throw new Error('Unlock first')}toast('Uploading '+file.name+'…');const rec=await B.upload(file,ADMIN_KEY,'birthday-site');uploadedMedia.unshift({name:file.name,type:file.type,size:file.size,url:rec.url,createdAt:Date.now()});renderMedia();toast('Media uploaded');return rec.url}async function listMedia(){return uploadedMedia}async function deleteMedia(){toast('Media deletion is not enabled yet; remove its URL from the site instead.')}async function renderMedia(){const box=document.getElementById('mediaGrid'),items=await listMedia();box.innerHTML='';if(!items.length){box.innerHTML='<div class="empty">Upload a photo, video or audio file. New uploads appear here for this session and remain stored in the live media bucket.</div>';return}items.forEach(rec=>{const u=rec.url,c=document.createElement('div');c.className='media-card';let preview=rec.type.startsWith('image/')?`<img src="${u}">`:rec.type.startsWith('video/')?`<video src="${u}" muted></video>`:rec.type.startsWith('audio/')?`<audio controls src="${u}"></audio>`:'file';c.innerHTML=`<div class="media-thumb">${preview}</div><div class="media-meta"><b>${html(rec.name)}</b><small>${html(u)}</small><div style="display:flex;gap:6px;margin-top:8px"><button class="btn" data-copy>Copy URL</button></div></div>`;c.querySelector('[data-copy]').onclick=()=>navigator.clipboard.writeText(u).then(()=>toast('URL copied'));box.appendChild(c)})}
+async function addMedia(file){
+  if(!ADMIN_KEY){showGate();throw new Error('Unlock first')}
+  toast('Uploading '+file.name+'…');
+  const rec=window.__birthdayUploadShared
+    ?await window.__birthdayUploadShared(file)
+    :await B.upload(file,ADMIN_KEY,'birthday-site');
+  await renderMedia();
+  toast('Media uploaded');
+  return rec.url;
+}
+async function listMedia(){
+  if(!ADMIN_KEY)return [];
+  if(window.__birthdayListShared)return await window.__birthdayListShared();
+  return [];
+}
+async function deleteMedia(rec){
+  if(!rec?.path)return;
+  if(rec.referenced){toast('This file is referenced by live state or history and cannot be deleted.');return}
+  if(!confirm('Delete this unused upload permanently?'))return;
+  if(!window.__birthdayDeleteShared)throw new Error('Media deletion is not available.');
+  await window.__birthdayDeleteShared(rec);
+  toast('Unused media deleted');
+  await renderMedia();
+}
+async function renderMedia(){
+  const box=document.getElementById('mediaGrid');
+  if(!box)return;
+  box.innerHTML='<div class="empty">Scanning shared media and references…</div>';
+  let items=[];
+  try{items=await listMedia()}catch(e){box.innerHTML='<div class="empty">'+html(e?.message||String(e))+'</div>';return}
+  box.innerHTML='';
+  if(!items.length){
+    box.innerHTML='<div class="empty">No shared uploads yet. Add a supported image, video or audio file.</div>';
+    return;
+  }
+  items.forEach(rec=>{
+    const u=rec.url,c=document.createElement('div');
+    c.className='media-card';
+    let preview=String(rec.type||'').startsWith('image/')?`<img src="${u}" alt="">`
+      :String(rec.type||'').startsWith('video/')?`<video src="${u}" muted></video>`
+      :String(rec.type||'').startsWith('audio/')?`<audio controls src="${u}"></audio>`:'file';
+    const usage=rec.referencedLive?'used live'
+      :rec.historyReferences>0?'kept by history'
+      :'unused';
+    const detail=rec.referenced
+      ?'Protected from deletion · '+usage
+      :'Safe to delete · orphan scanner found no references';
+    c.innerHTML=`<div class="media-thumb">${preview}</div><div class="media-meta"><b>${html(rec.name)}</b><small>${html(u)}</small><small>${html(detail)}</small><div style="display:flex;gap:6px;margin-top:8px;flex-wrap:wrap"><button class="btn" data-copy>Copy URL</button><button class="btn danger" data-delete ${rec.referenced?'disabled title="Referenced media cannot be deleted"':''}>Delete unused</button></div></div>`;
+    c.querySelector('[data-copy]').onclick=()=>navigator.clipboard.writeText(u).then(()=>toast('URL copied'));
+    const del=c.querySelector('[data-delete]');
+    if(del&&!rec.referenced)del.onclick=()=>deleteMedia(rec).catch(e=>toast(e?.message||String(e)));
+    box.appendChild(c);
+  });
+}
 function renderRaw(){document.getElementById('rawState').value=JSON.stringify(state,null,2)}function download(name,text,type='application/json'){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000)}
 const ALLOWED_STATE_PAGES=new Set(pages.map(x=>x[0]));
 const GENERATED_SELECTOR_RE=/(?:\.bday-added-media|\.bday-added-photo|\[data-bday-inserted|\[data-bday-group|:nth-of-type\()/i;
@@ -289,4 +342,4 @@ if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminG
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=phase8"></script></body></html>
+</script><script src="./control-media-runtime.js?v=phase9"></script></body></html>
