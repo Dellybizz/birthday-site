@@ -130,7 +130,28 @@ function validateFile(file: File, bytes: Uint8Array) {
 function collectReferencePaths(value: unknown, needles: string[], path = '', out: string[] = [], limit = 60) {
   if (out.length >= limit) return out;
   if (typeof value === 'string') {
-    if (needles.some((needle) => needle && value.includes(needle))) out.push(path || '
+    if (needles.some((needle) => needle && value.includes(needle))) out.push(path || 'root');
+    return out;
+  }
+  if (Array.isArray(value)) {
+    value.forEach((item, index) => {
+      if (out.length < limit) collectReferencePaths(item, needles, path ? path + '[' + index + ']' : '[' + index + ']', out, limit);
+    });
+    return out;
+  }
+  if (value && typeof value === 'object') {
+    for (const [key, item] of Object.entries(value as Record<string, unknown>)) {
+      if (out.length >= limit) break;
+      const safeKey = /^[A-Za-z_$][\w$]*$/.test(key)
+        ? (path ? '.' + key : key)
+        : '[' + JSON.stringify(key) + ']';
+      collectReferencePaths(item, needles, path + safeKey, out, limit);
+    }
+  }
+  return out;
+}
+
+async function referenceStatus(urlValue: string, path: string) {
   const { url, service } = env();
   const r = await fetch(`${url}/rest/v1/rpc/birthday_media_reference_status`, {
     method: 'POST',
@@ -144,6 +165,33 @@ function collectReferencePaths(value: unknown, needles: string[], path = '', out
   const result = await r.json().catch(() => ({}));
   if (!r.ok) throw new Error(result?.message || result?.error || `Reference scan failed: ${r.status}`);
   return result || { referenced: false, live: false, history_count: 0 };
+}
+
+async function referenceDetails(urlValue: string, path: string) {
+  const { url, service } = env();
+  const headers = { Authorization: `Bearer ${service}`, apikey: service };
+  const [liveResponse, historyResponse] = await Promise.all([
+    fetch(`${url}/rest/v1/site_state?id=eq.live&select=revision,data`, { headers, cache: 'no-store' }),
+    fetch(`${url}/rest/v1/site_state_history?state_id=eq.live&select=revision,data&order=revision.desc&limit=200`, { headers, cache: 'no-store' }),
+  ]);
+  if (!liveResponse.ok) throw new Error(`Could not inspect live media references: ${liveResponse.status}`);
+  if (!historyResponse.ok) throw new Error(`Could not inspect media history references: ${historyResponse.status}`);
+
+  const liveRows = await liveResponse.json().catch(() => []);
+  const historyRows = await historyResponse.json().catch(() => []);
+  const needles = [urlValue, path].filter(Boolean);
+  const live = liveRows?.[0] || null;
+  const liveLocations = live ? [...new Set(collectReferencePaths(live.data, needles))] : [];
+  const historyMatches: Array<{ revision: number; locations: string[] }> = [];
+  for (const row of Array.isArray(historyRows) ? historyRows : []) {
+    const locations = [...new Set(collectReferencePaths(row?.data, needles))];
+    if (locations.length) historyMatches.push({ revision: Number(row?.revision || 0), locations });
+  }
+  return {
+    liveRevision: Number(live?.revision || 0) || null,
+    liveLocations,
+    historyMatches,
+  };
 }
 
 Deno.serve(async (req: Request) => {
