@@ -332,13 +332,25 @@
       await sharedMedia();box.innerHTML='';
       for(const rec of mediaItems){
         const card=document.createElement('div');card.className='media-card';const k=kind(rec);
-        const referenced=!!rec.referenced;
-        const usage=rec.referencedLive?'Used by live site':Number(rec.historyReferences||0)>0?'Protected by history':'Unused';
+        const liveUsed=!!rec.referencedLive;
+        const historyOnly=!liveUsed&&Number(rec.historyReferences||0)>0;
+        const protectedMedia=liveUsed||historyOnly;
+        const usage=liveUsed
+          ?'Used by live site'
+          :historyOnly
+            ?'Not live · kept by history ('+Number(rec.historyReferences||0)+' snapshot'+(Number(rec.historyReferences||0)===1?'':'s')+')'
+            :'Unused · safe to delete';
+        const actionLabel=liveUsed?'In use':historyOnly?'History protected':'Delete';
+        const actionTitle=liveUsed
+          ?'This file is used by the current live site. Remove or replace it there and publish first.'
+          :historyOnly
+            ?'This file is not used live, but an older site-history snapshot still references it.'
+            :'Permanently delete this unused media file.';
         const preview=k==='image'?'<img src="'+attr(rec.url)+'" alt="">':k==='video'?'<video src="'+attr(rec.url)+'" muted playsinline preload="metadata"></video>':'<audio controls src="'+attr(rec.url)+'"></audio>';
-        card.innerHTML='<div class="media-thumb">'+preview+'</div><div class="media-meta"><b>'+esc(label(rec))+'</b><small>'+esc(rec.url||'')+'</small><small>'+esc(usage)+'</small><div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap"><button class="btn" data-copy type="button">Copy URL</button><button class="btn danger" data-delete type="button" '+(referenced?'disabled title="Remove this media from the live site/history references before deleting it."':'')+'>'+(referenced?'In use':'Delete')+'</button></div></div>';
+        card.innerHTML='<div class="media-thumb">'+preview+'</div><div class="media-meta"><b>'+esc(label(rec))+'</b><small>'+esc(rec.url||'')+'</small><small>'+esc(usage)+'</small><div style="display:flex;gap:7px;margin-top:8px;flex-wrap:wrap"><button class="btn" data-copy type="button">Copy URL</button><button class="btn danger" data-delete type="button" '+(protectedMedia?'disabled ':'')+'title="'+attr(actionTitle)+'">'+actionLabel+'</button></div></div>';
         card.querySelector('[data-copy]').onclick=async()=>{try{await navigator.clipboard.writeText(rec.url||'');toast('URL copied')}catch(e){}};
         const del=card.querySelector('[data-delete]');
-        if(del&&!referenced)del.onclick=async()=>{
+        if(del&&!protectedMedia)del.onclick=async()=>{
           if(!confirm('Permanently delete "'+label(rec)+'" from the Media Library?'))return;
           try{
             del.disabled=true;del.textContent='Deleting…';
