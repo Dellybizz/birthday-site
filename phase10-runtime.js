@@ -176,19 +176,10 @@ button,input,select,textarea{font:inherit}
 
   function applyCountdown(state){
     if(!location.pathname.endsWith('/countdown.html'))return;
-    const g=state.general||{};
     try{
-      if(typeof target!=='undefined'){
-        const parsed=new Date(g.birthdayISO||'');
-        if(!Number.isNaN(parsed.getTime())){
-          target=parsed;
-          if(typeof previewMode!=='undefined')previewMode=false;
-          const preview=document.getElementById('preview');if(preview)preview.textContent='';
-          if(Date.now()<target.getTime()){
-            document.getElementById('stage')?.classList.remove('arrived');
-            document.getElementById('next')?.classList.remove('show');
-          }
-        }
+      if(window.COUNTDOWN_PAGE?.applyState){
+        window.COUNTDOWN_PAGE.applyState(state);
+        return;
       }
     }catch(e){}
   }
