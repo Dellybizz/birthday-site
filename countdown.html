@@ -1,6 +1,34 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+<script id="birthday-freshness-guard">
+(()=>{
+  const root=document.documentElement;
+  root.classList.add('birthday-freshness-check');
+  const style=document.createElement('style');
+  style.textContent='html.birthday-freshness-check body{visibility:hidden!important}';
+  document.head.appendChild(style);
+  let done=false;
+  const reveal=()=>{if(done)return;done=true;root.classList.remove('birthday-freshness-check')};
+  const params=new URLSearchParams(location.search);
+  if(params.get('adminPreview')==='1'&&params.has('t')){reveal();return}
+  const probe=new URL(location.href);
+  probe.searchParams.set('_freshcheck',Date.now().toString());
+  fetch(probe,{method:'HEAD',cache:'no-store'}).then(response=>{
+    const remote=Date.parse(response.headers.get('last-modified')||'');
+    const local=Date.parse(document.lastModified||'');
+    if(Number.isFinite(remote)&&Number.isFinite(local)&&remote>local+500){
+      const next=new URL(location.href);
+      next.searchParams.delete('_freshcheck');
+      next.searchParams.set('_build',String(remote));
+      location.replace(next.href);
+      return;
+    }
+    reveal();
+  }).catch(reveal);
+  setTimeout(reveal,2200);
+})();
+</script>
 <script>document.documentElement.classList.add('countdown-booting')</script>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
@@ -79,7 +107,7 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;b
 .stage{height:100%;display:grid;place-items:center;padding:28px}.inner{width:min(94vw,1180px);text-align:center}.eyebrow{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8b847d;margin-bottom:24px}.title{margin:0;font-family:Georgia,serif;font-size:clamp(38px,5.8vw,78px);font-weight:400;line-height:.95;letter-spacing:-.05em}.title em{font-style:italic}.count{margin:44px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.unit{padding:30px 12px;position:relative}.unit:not(:last-child){border-right:1px solid var(--line)}.num{display:block;font-family:Georgia,serif;font-size:clamp(50px,10vw,135px);line-height:.8;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.label{display:block;margin-top:18px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#777069}.sub{margin:28px auto 0;max-width:620px;font-size:13px;line-height:1.75;color:#746d66}.preview{margin-top:12px;font:9px "Courier New",monospace;color:#9a928a;letter-spacing:.08em;text-transform:uppercase}.next{display:inline-flex;margin-top:28px;background:#151413;color:#f4f1eb;text-decoration:none;padding:12px 16px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:0;pointer-events:none;transition:.5s ease}.next.show{opacity:1;pointer-events:auto}.arrived .title{font-size:clamp(52px,8vw,108px)}.arrived .count{display:none}.arrived .sub{font-family:Georgia,serif;font-size:clamp(22px,3vw,36px);color:#403b36}.pulse{position:fixed;left:50%;top:50%;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.08);transform:translate(-50%,-50%);pointer-events:none;animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{width:74vh;height:74vh;border-color:rgba(0,0,0,.025)}}
 @media(max-width:640px){.stage{padding:22px}.count{grid-template-columns:repeat(2,1fr)}.unit:nth-child(2){border-right:0}.unit:nth-child(-n+2){border-bottom:1px solid var(--line)}.unit{padding:26px 8px}.num{font-size:clamp(58px,19vw,90px)}}
 </style>
-<script src="./phase10-runtime.js?v=20260919-animation1"></script>
+<script src="./phase10-runtime.js?v=20260919-freshness1"></script>
 <script src="./journey-runtime.js?v=20260918-p10"></script>
 <script src="./soundtrack-runtime.js?v=20260919-soundtrack3"></script>
 </head>
