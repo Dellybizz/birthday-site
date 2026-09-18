@@ -460,6 +460,123 @@
   mountHistory();
   document.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(!mod)return;const tag=document.activeElement?.tagName?.toLowerCase();if(['input','textarea','select'].includes(tag))return;if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo().catch(()=>{}):undo().catch(()=>{})}else if(e.key.toLowerCase()==='y'){e.preventDefault();redo().catch(()=>{})}});
   document.getElementById('previewPage')?.addEventListener('change',()=>{selected=null;updateMediaPanel()});
+  const YAPPING_DEFAULTS=[
+    {title:'session 001',note:'topic lost at 00:43',src:'',mediaType:'video'},
+    {title:'session 002',note:'side quest detected',src:'',mediaType:'video'},
+    {title:'session 003',note:'actually funny',src:'',mediaType:'video'},
+    {title:'session 004',note:'still talking',src:'',mediaType:'video'},
+    {title:'session 005',note:'no conclusion',src:'',mediaType:'video'}
+  ];
+  function yappingClips(){
+    state.pages??={};state.pages.yapping??={};
+    if(!Array.isArray(state.pages.yapping.clips))state.pages.yapping.clips=clone(YAPPING_DEFAULTS);
+    return state.pages.yapping.clips;
+  }
+  function yappingTitle(index){return 'session '+String(index+1).padStart(3,'0')}
+  function yappingVideoItems(){return mediaItems.filter(rec=>kind(rec)==='video')}
+  function yappingPreviewHtml(clip){
+    if(clip?.src)return '<video src="'+attr(clip.src)+'" controls muted playsinline preload="metadata"></video>';
+    return '<span>No video yet</span>';
+  }
+  function yappingMediaOptions(selectedUrl=''){
+    const options=['<option value="">Choose an uploaded video…</option>'];
+    for(const rec of yappingVideoItems())options.push('<option value="'+attr(rec.url)+'" '+(rec.url===selectedUrl?'selected':'')+'>'+esc(label(rec))+'</option>');
+    return options.join('');
+  }
+  async function renderYappingManager(refreshMedia=false){
+    const box=document.getElementById('yappingClipManager');if(!box)return;
+    if(refreshMedia||!mediaItems.length){
+      try{await sharedMedia()}catch(e){box.innerHTML='<div class="empty">'+esc(e?.message||String(e))+'</div>';return}
+    }
+    const clips=yappingClips();
+    box.innerHTML='';
+    if(!clips.length){
+      box.innerHTML='<div class="empty">No clips yet. Use <b>Add videos</b> to upload one or more videos.</div>';
+      return;
+    }
+    clips.forEach((clip,index)=>{
+      const row=document.createElement('div');row.className='yap-row';row.dataset.index=String(index);
+      row.innerHTML=
+        '<div class="yap-preview">'+yappingPreviewHtml(clip)+'</div>'+
+        '<div class="yap-fields">'+
+          '<div class="row">'+
+            '<div class="field"><label>Session title</label><input data-yap-title value="'+attr(clip?.title||yappingTitle(index))+'"></div>'+
+            '<div class="field"><label>Archive note</label><input data-yap-note value="'+attr(clip?.note||'')+'"></div>'+
+          '</div>'+
+          '<div class="yap-meta">'+(clip?.src?esc(clip.src):'No video attached')+'</div>'+
+          '<div class="yap-existing"><select data-yap-existing>'+yappingMediaOptions(clip?.src||'')+'</select><button class="btn" type="button" data-yap-use>Use selected</button></div>'+
+          '<div class="yap-actions">'+
+            '<label class="btn upload">Replace upload<input data-yap-upload type="file" accept="video/mp4,video/webm"></label>'+
+            '<button class="btn" type="button" data-yap-clear>Clear video</button>'+
+            '<button class="btn" type="button" data-yap-up '+(index===0?'disabled':'')+'>↑ Up</button>'+
+            '<button class="btn" type="button" data-yap-down '+(index===clips.length-1?'disabled':'')+'>↓ Down</button>'+
+            '<button class="btn danger" type="button" data-yap-remove>Remove clip</button>'+
+          '</div>'+
+        '</div>';
+
+      const title=row.querySelector('[data-yap-title]'),note=row.querySelector('[data-yap-note]');
+      title.oninput=()=>{clip.title=title.value;dirty()};
+      note.oninput=()=>{clip.note=note.value;dirty()};
+
+      row.querySelector('[data-yap-use]').onclick=()=>{
+        const sel=row.querySelector('[data-yap-existing]'),url=sel.value;
+        if(!url){toast('Choose an uploaded video first');return}
+        clip.src=url;clip.mediaType='video';dirty();renderYappingManager(false);toast('Video attached — publish to save');
+      };
+      row.querySelector('[data-yap-upload]').onchange=async e=>{
+        const file=e.target.files?.[0];if(!file)return;
+        try{
+          if(!String(file.type||'').startsWith('video/'))throw new Error('Choose an MP4 or WebM video.');
+          toast('Uploading '+file.name+'…');
+          const rec=await uploadShared(file);
+          if(kind(rec)!=='video')throw new Error('The uploaded file is not a supported video.');
+          mediaItems.unshift(rec);clip.src=rec.url;clip.mediaType='video';
+          if(!clip.title||/^session \d+$/i.test(clip.title))clip.title=file.name.replace(/\.[^.]+$/,'')||clip.title;
+          dirty();await renderYappingManager(false);toast('Video ready — publish to save');
+        }catch(err){alert(err?.message||String(err))}finally{e.target.value=''}
+      };
+      row.querySelector('[data-yap-clear]').onclick=()=>{clip.src='';clip.mediaType='video';dirty();renderYappingManager(false);toast('Video cleared — publish to save')};
+      row.querySelector('[data-yap-up]').onclick=()=>{if(index<1)return;[clips[index-1],clips[index]]=[clips[index],clips[index-1]];dirty();renderYappingManager(false)};
+      row.querySelector('[data-yap-down]').onclick=()=>{if(index>=clips.length-1)return;[clips[index+1],clips[index]]=[clips[index],clips[index+1]];dirty();renderYappingManager(false)};
+      row.querySelector('[data-yap-remove]').onclick=()=>{if(!confirm('Remove this Yapping Archive clip? The uploaded file itself stays in Media Library.'))return;clips.splice(index,1);dirty();renderYappingManager(false);toast('Clip removed — publish to save')};
+      box.appendChild(row);
+    });
+  }
+  window.renderYappingManager=()=>renderYappingManager(false);
+
+  const yappingAdd=document.getElementById('yappingAddVideos');
+  if(yappingAdd)yappingAdd.onchange=async()=>{
+    const files=[...(yappingAdd.files||[])];if(!files.length)return;
+    const clips=yappingClips();
+    try{
+      for(const file of files){
+        if(!String(file.type||'').startsWith('video/'))throw new Error(file.name+' is not a video.');
+        if(clips.length>=50)throw new Error('The Yapping Archive supports up to 50 clips.');
+        toast('Uploading '+file.name+'…');
+        const rec=await uploadShared(file);
+        if(kind(rec)!=='video')throw new Error(file.name+' is not a supported video.');
+        mediaItems.unshift(rec);
+        const empty=clips.findIndex(item=>!item?.src);
+        if(empty>=0){
+          clips[empty]={...clips[empty],src:rec.url,mediaType:'video'};
+          if(!clips[empty].title||/^session \d+$/i.test(clips[empty].title))clips[empty].title=file.name.replace(/\.[^.]+$/,'')||yappingTitle(empty);
+        }else{
+          clips.push({title:file.name.replace(/\.[^.]+$/,'')||yappingTitle(clips.length),note:'archived yapping evidence',src:rec.url,mediaType:'video'});
+        }
+      }
+      dirty();await renderYappingManager(false);toast(files.length+' video'+(files.length===1?'':'s')+' added — publish to save');
+    }catch(e){alert(e?.message||String(e))}finally{yappingAdd.value=''}
+  };
+  document.getElementById('yappingAddEmpty')?.addEventListener('click',()=>{
+    const clips=yappingClips();if(clips.length>=50){alert('The Yapping Archive supports up to 50 clips.');return}
+    clips.push({title:yappingTitle(clips.length),note:'archived yapping evidence',src:'',mediaType:'video'});dirty();renderYappingManager(false);
+  });
+  document.getElementById('yappingRefreshMedia')?.addEventListener('click',()=>renderYappingManager(true));
+  document.getElementById('nav')?.addEventListener('click',e=>{
+    const b=e.target.closest('button[data-view="yapping"]');if(b)setTimeout(()=>renderYappingManager(true),0);
+  });
+  renderYappingManager(false);
+
   function bindGeneralUpload(id,field,kind){
     const input=document.getElementById(id);if(!input)return;
     input.onchange=async()=>{const file=input.files?.[0];if(!file)return;try{
