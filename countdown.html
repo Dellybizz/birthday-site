@@ -29,7 +29,12 @@ function read(){try{return merge(DEFAULTS,JSON.parse(localStorage.getItem(KEY)||
 function write(v){localStorage.setItem(KEY,JSON.stringify(v));syncSiteConfig(v);return v}
 function syncSiteConfig(state){
   const g=state.general||{};
-  window.SITE_CONFIG={...(window.SITE_CONFIG||{}),...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+  const next={...g,pages:state.pages||{},fairItems:state.fairItems||{},fairPhotos:state.fairPhotos||{},pageOrder:state.pageOrder||DEFAULTS.pageOrder,pageEnabled:state.pageEnabled||DEFAULTS.pageEnabled};
+  const target=window.SITE_CONFIG&&typeof window.SITE_CONFIG==='object'?window.SITE_CONFIG:{};
+  for(const key of Object.keys(target))delete target[key];
+  Object.assign(target,next);
+  window.SITE_CONFIG=target;
+  return target;
 }
 async function fetchRemote(){
   const r=await fetch(`${SUPABASE_URL}/rest/v1/site_state?id=eq.live&select=data,updated_at`,{headers:{apikey:PUBLISHABLE_KEY,Authorization:`Bearer ${PUBLISHABLE_KEY}`},cache:'no-store'});
@@ -38,6 +43,14 @@ async function fetchRemote(){
   const row=rows&&rows[0];
   if(!row) return {state:read(),updated_at:null};
   const st=merge(DEFAULTS,row.data||{}); write(st); return {state:st,updated_at:row.updated_at};
+}
+let liveLoadPromise=null;
+function load(){
+  if(!liveLoadPromise)liveLoadPromise=fetchRemote().then(result=>{
+    try{window.dispatchEvent(new CustomEvent('birthday:state',{detail:result}))}catch(e){}
+    return result;
+  }).catch(err=>{liveLoadPromise=null;throw err});
+  return liveLoadPromise;
 }
 async function publish(state,adminKey){
   const r=await fetch(`${SUPABASE_URL}/functions/v1/birthday-site-admin`,{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':adminKey},body:JSON.stringify({action:'publish',data:state})});
@@ -53,7 +66,7 @@ async function upload(file,adminKey,folder='uploads'){
   const j=await r.json().catch(()=>({}));if(!r.ok)throw new Error(j.error||'Upload failed');return j;
 }
 const initial=read();syncSiteConfig(initial);
-window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};
+window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,upload,supabaseUrl:SUPABASE_URL,publishableKey:PUBLISHABLE_KEY};window.BDAY.ready=load();
 })();
 </script>
 <style>
@@ -64,8 +77,9 @@ body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.13;b
 .stage{height:100%;display:grid;place-items:center;padding:28px}.inner{width:min(94vw,1180px);text-align:center}.eyebrow{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:#8b847d;margin-bottom:24px}.title{margin:0;font-family:Georgia,serif;font-size:clamp(38px,5.8vw,78px);font-weight:400;line-height:.95;letter-spacing:-.05em}.title em{font-style:italic}.count{margin:44px auto 0;display:grid;grid-template-columns:repeat(4,1fr);gap:0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}.unit{padding:30px 12px;position:relative}.unit:not(:last-child){border-right:1px solid var(--line)}.num{display:block;font-family:Georgia,serif;font-size:clamp(50px,10vw,135px);line-height:.8;letter-spacing:-.06em;font-variant-numeric:tabular-nums}.label{display:block;margin-top:18px;font-size:9px;letter-spacing:.17em;text-transform:uppercase;color:#777069}.sub{margin:28px auto 0;max-width:620px;font-size:13px;line-height:1.75;color:#746d66}.preview{margin-top:12px;font:9px "Courier New",monospace;color:#9a928a;letter-spacing:.08em;text-transform:uppercase}.next{display:inline-flex;margin-top:28px;background:#151413;color:#f4f1eb;text-decoration:none;padding:12px 16px;font-size:9px;letter-spacing:.13em;text-transform:uppercase;opacity:0;pointer-events:none;transition:.5s ease}.next.show{opacity:1;pointer-events:auto}.arrived .title{font-size:clamp(52px,8vw,108px)}.arrived .count{display:none}.arrived .sub{font-family:Georgia,serif;font-size:clamp(22px,3vw,36px);color:#403b36}.pulse{position:fixed;left:50%;top:50%;width:20px;height:20px;border-radius:50%;border:1px solid rgba(0,0,0,.08);transform:translate(-50%,-50%);pointer-events:none;animation:breathe 4s ease-in-out infinite}@keyframes breathe{50%{width:74vh;height:74vh;border-color:rgba(0,0,0,.025)}}
 @media(max-width:640px){.stage{padding:22px}.count{grid-template-columns:repeat(2,1fr)}.unit:nth-child(2){border-right:0}.unit:nth-child(-n+2){border-bottom:1px solid var(--line)}.unit{padding:26px 8px}.num{font-size:clamp(58px,19vw,90px)}}
 </style>
-<script src="./journey-runtime.js?v=phase4h1"></script>
-<script src="./soundtrack-runtime.js?v=phase7"></script>
+<script src="./phase10-runtime.js?v=20260918-p10"></script>
+<script src="./journey-runtime.js?v=20260918-p10"></script>
+<script src="./soundtrack-runtime.js?v=20260918-p10"></script>
 </head>
 <body>
 <div class="pulse"></div><div class="chapter">07 / 08 · until your birthday</div><button class="sound" id="soundBtn" data-soundtrack-control hidden data-sound-off-label="sound" data-sound-on-label="sound on">sound</button>
@@ -78,31 +92,7 @@ function pad(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
 function tick(){let diff=target-Date.now();if(diff<=0&&!previewMode){stage.classList.add('arrived');document.getElementById('eyebrow').textContent='it is officially time';document.getElementById('title').innerHTML='happy birthday,<br><em>'+(cfg.nickname||'NICKNAME')+'.</em>';document.getElementById('sub').textContent='The waiting part is over. There is one last thing I made for you.';preview.textContent='';next.classList.add('show');return}diff=Math.max(0,diff);const d=diff/86400000,h=(diff%86400000)/3600000,m=(diff%3600000)/60000,s=(diff%60000)/1000;document.getElementById('days').textContent=pad(d);document.getElementById('hours').textContent=pad(h);document.getElementById('minutes').textContent=pad(m);document.getElementById('seconds').textContent=pad(s);requestAnimationFrame(()=>setTimeout(tick,250))}tick();
 let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.preload='metadata';audio.style.display='none';document.body.appendChild(audio);document.getElementById('soundBtn').onclick=async()=>{if(audio.paused){try{await audio.play();sessionStorage.setItem('birthdayMusic','on');document.getElementById('soundBtn').textContent='sound on'}catch(e){document.getElementById('soundBtn').textContent='choose soundtrack'}}else{audio.pause();sessionStorage.setItem('birthdayMusic','off');document.getElementById('soundBtn').textContent='sound'}};
 </script>
-<script>(async function(){
-const B=window.BDAY;if(!B)return;
-const rawPage=location.pathname.split('/').pop()||'index.html';const page=rawPage==='entry.html'?'index.html':rawPage;
-let state=B.read();
-function apply(st){
-  state=st;B.write(st);
-  const css=[st.general?.globalCss||'',st.pageCss?.[page]||''].filter(Boolean).join('\n');
-  if(css){let s=document.getElementById('birthday-runtime-css');if(!s){s=document.createElement('style');s.id='birthday-runtime-css';document.head.appendChild(s)}s.textContent=css}
-  // Visual overrides are applied only by page-patch-runtime.js.
-  document.documentElement.style.setProperty('--motion-scale',String(st.general?.motionScale??1));
-  if(st.general?.motionScale===0) document.documentElement.classList.add('reduce-birthday-motion');
-  // Journey gating and disabled-page routing are handled by journey-runtime.js.
-}
-apply(state);
-try{
-  const remote=await B.fetchRemote();
-  const before=JSON.stringify(state),after=JSON.stringify(remote.state);
-  if(before!==after){
-    const stamp=remote.updated_at||after.length;const sk='birthday-live-version-'+page;
-    if(sessionStorage.getItem(sk)!==stamp){sessionStorage.setItem(sk,stamp);location.reload();return}
-  }
-  apply(remote.state);
-}catch(e){console.warn('Birthday site live settings unavailable; using cached settings.',e)}
-})();
-</script>
+
 
 <style>
 #next{display:none!important}
@@ -130,7 +120,7 @@ try{
   const PASSWORD='200905';
   const preview=new URLSearchParams(location.search).get('adminPreview')==='1';
   let cfg=window.SITE_CONFIG||{};
-  try{if(window.BDAY?.fetchRemote){const r=await window.BDAY.fetchRemote();cfg={...cfg,...(r.state?.general||{})}}}catch(e){}
+  try{if(window.BDAY){const r=await (window.BDAY.ready||window.BDAY.load?.()||window.BDAY.fetchRemote());cfg={...cfg,...(r.state?.general||{})}}}catch(e){}
   const fallback='2026-09-18T00:00:00+05:30';
   const parsed=new Date(cfg.birthdayISO||fallback);
   const target=isNaN(parsed)?new Date(fallback):parsed;
@@ -154,7 +144,7 @@ try{
     note.textContent=isReady?'The wait is over. One tiny password check and the rest is yours.':'The timer is the key. When it reaches zero, the lock can finally be opened.';
     if(isReady&&sub)sub.textContent='The countdown is over. The lock is ready.';
   }
-  sync();setInterval(sync,500);
+  function scheduleUnlockSync(){const wait=target.getTime()-Date.now();if(wait<=0){sync();return}setTimeout(()=>{sync();scheduleUnlockSync()},Math.min(wait+100,2147483000))}sync();if(!ready())scheduleUnlockSync();
   button.addEventListener('click',()=>{if(!ready())return;modal.classList.add('open');code.value='';error.textContent='';setTimeout(()=>code.focus(),50)});
   document.getElementById('lockCancel').addEventListener('click',()=>modal.classList.remove('open'));
   modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
@@ -170,5 +160,5 @@ try{
   document.getElementById('lockGo').addEventListener('click',submit);
 })();
 </script>
-<script src="./page-patch-runtime.js?v=phase4h1"></script>
+<script src="./page-patch-runtime.js?v=20260918-p10"></script>
 </body></html>
