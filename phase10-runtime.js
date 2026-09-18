@@ -6,7 +6,7 @@
   document.documentElement.classList.add('birthday-state-loading');
   const stateBootStyle=document.createElement('style');
   stateBootStyle.id='birthday-state-loading-style';
-  stateBootStyle.textContent='html.birthday-state-loading body{visibility:hidden!important}';
+  stateBootStyle.textContent='html.birthday-state-loading body{visibility:hidden!important}html.birthday-state-loading *,html.birthday-state-loading *::before,html.birthday-state-loading *::after{animation-play-state:paused!important}';
   document.head.appendChild(stateBootStyle);
   let stateRevealed=false;
   function revealState(){
