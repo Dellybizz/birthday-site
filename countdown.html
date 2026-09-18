@@ -89,7 +89,7 @@ const cfg=window.SITE_CONFIG||{};const stage=document.getElementById('stage'),ne
 if(cfg.birthdayISO){const parsed=new Date(cfg.birthdayISO);if(!isNaN(parsed))target=parsed}
 if(!target){previewMode=true;target=new Date(Date.now()+(Number(cfg.previewCountdownHours)||24)*3600000);preview.textContent='preview mode · set birthdayISO in config.js';next.classList.add('show')}
 function pad(n){return String(Math.max(0,Math.floor(n))).padStart(2,'0')}
-function tick(){let diff=target-Date.now();if(diff<=0&&!previewMode){stage.classList.add('arrived');document.getElementById('eyebrow').textContent='it is officially time';document.getElementById('title').innerHTML='happy birthday,<br><em>'+(cfg.nickname||'NICKNAME')+'.</em>';document.getElementById('sub').textContent='The waiting part is over. There is one last thing I made for you.';preview.textContent='';next.classList.add('show');return}diff=Math.max(0,diff);const d=diff/86400000,h=(diff%86400000)/3600000,m=(diff%3600000)/60000,s=(diff%60000)/1000;document.getElementById('days').textContent=pad(d);document.getElementById('hours').textContent=pad(h);document.getElementById('minutes').textContent=pad(m);document.getElementById('seconds').textContent=pad(s);requestAnimationFrame(()=>setTimeout(tick,250))}tick();
+function tick(){let diff=target-Date.now();if(diff<=0&&!previewMode){stage.classList.add('arrived');document.getElementById('eyebrow').textContent='it is officially time';document.getElementById('title').innerHTML='happy birthday,<br><em>'+(cfg.nickname||'NICKNAME')+'.</em>';document.getElementById('sub').textContent='The waiting part is over. There is one last thing I made for you.';preview.textContent='';next.classList.add('show');return}diff=Math.max(0,diff);const d=diff/86400000,h=(diff%86400000)/3600000,m=(diff%3600000)/60000,s=(diff%60000)/1000;document.getElementById('days').textContent=pad(d);document.getElementById('hours').textContent=pad(h);document.getElementById('minutes').textContent=pad(m);document.getElementById('seconds').textContent=pad(s);setTimeout(tick,Math.max(250,Math.min(1000,Math.ceil(diff%1000)||1000)))}tick();
 let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.preload='metadata';audio.style.display='none';document.body.appendChild(audio);document.getElementById('soundBtn').onclick=async()=>{if(audio.paused){try{await audio.play();sessionStorage.setItem('birthdayMusic','on');document.getElementById('soundBtn').textContent='sound on'}catch(e){document.getElementById('soundBtn').textContent='choose soundtrack'}}else{audio.pause();sessionStorage.setItem('birthdayMusic','off');document.getElementById('soundBtn').textContent='sound'}};
 </script>
 
@@ -120,7 +120,7 @@ let audio=document.createElement('audio');audio.src='';audio.loop=true;audio.pre
   const PASSWORD='200905';
   const preview=new URLSearchParams(location.search).get('adminPreview')==='1';
   let cfg=window.SITE_CONFIG||{};
-  try{if(window.BDAY){const r=await (window.BDAY.ready||window.BDAY.load?.()||window.BDAY.fetchRemote());cfg={...cfg,...(r.state?.general||{})}}}catch(e){}
+  try{if(window.BDAY){const ready=window.BDAY.ready||window.BDAY.load?.();if(ready){const r=await ready;cfg={...cfg,...(r.state?.general||{})}}}catch(e){}
   const fallback='2026-09-18T00:00:00+05:30';
   const parsed=new Date(cfg.birthdayISO||fallback);
   const target=isNaN(parsed)?new Date(fallback):parsed;
