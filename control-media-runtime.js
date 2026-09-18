@@ -596,13 +596,12 @@
   function collectAnimations(){
     if(!animationMode)return;
     const doc=animationDoc();if(!doc)return;
-    const all=doc.getAnimations?.({subtree:true})||[];
-    const seen=new Set(),next=[];
+    const all=doc.getAnimations?.()||[];
+    const next=[];
     for(const animation of all){
       const target=animation.effect?.target;
       if(!target||!target.isConnected)continue;
-      const key=(animation.animationName||animation.transitionProperty||animation.id||'')+'|'+(target.dataset?.editId||target.id||target.tagName)+'|'+animationDuration(animation);
-      if(seen.has(key))continue;seen.add(key);next.push(animation);
+      next.push(animation);
       try{animation.pause()}catch(e){}
     }
     animationRecords=next;animationFreezeStyle(true);renderAnimationList();
@@ -680,7 +679,7 @@
     },true);
   }
   const frame=document.getElementById('previewFrame');
-  if(frame){frame.onload=()=>{setTimeout(attachFrame,20);if(animationMode)scheduleAnimationScans()};setTimeout(attachFrame,80)}
+  if(frame){frame.addEventListener('load',()=>{setTimeout(attachFrame,20);if(animationMode)scheduleAnimationScans()});setTimeout(attachFrame,80)}
 
   if(mediaPanel){
     mediaPanel.querySelector('#veChoose').onclick=async()=>{const picker=mediaPanel.querySelector('#vePicker');picker.style.display=picker.style.display==='none'?'block':'none';if(picker.style.display!=='none'){try{await loadMedia()}catch(e){status.textContent=e?.message||String(e)}}};
