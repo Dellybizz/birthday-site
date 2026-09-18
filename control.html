@@ -217,7 +217,7 @@ if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminG
 </script>
 
 <style>
-.preview-mode{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}.preview-mode button{border:0;background:#101217;color:#9298a3;padding:8px 10px;cursor:pointer;font-size:10px}.preview-mode button.active{background:#f5f5f4;color:#111}.date-easy{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.date-easy input{width:100%;border:1px solid var(--line);background:#101217;color:#f5f5f5;padding:10px 11px;border-radius:9px;color-scheme:dark}.add-photo-row{display:grid;grid-template-columns:1fr auto;gap:8px;align-items:end;margin:10px 0 14px}.add-photo-row select{border:1px solid var(--line);background:#101217;color:#fff;padding:10px;border-radius:9px}.add-photo-row label{position:relative;overflow:hidden}.add-photo-row input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}.editor-tip{font-size:10px;color:#7f8590;margin:-5px 0 10px}.photo-mini{display:none}.photo-mini.show{display:block;margin-top:8px;padding:8px;border:1px solid var(--line);border-radius:10px;color:#aeb3bd;font-size:10px}@media(max-width:600px){.date-easy{grid-template-columns:1fr}.add-photo-row{grid-template-columns:1fr}}
+.preview-mode{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden}.preview-mode button{border:0;background:#101217;color:#9298a3;padding:8px 10px;cursor:pointer;font-size:10px}.preview-mode button.active{background:#f5f5f4;color:#111}.date-easy{display:grid;grid-template-columns:1.2fr .8fr;gap:10px}.date-easy input{width:100%;border:1px solid var(--line);background:#101217;color:#f5f5f5;padding:10px 11px;border-radius:9px;color-scheme:dark}.editor-tip{font-size:10px;color:#7f8590;margin:-5px 0 10px}@media(max-width:600px){.date-easy{grid-template-columns:1fr}}
 </style>
 <script>
 (()=>{
@@ -244,28 +244,6 @@ if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminG
     const edit=group.querySelector('#modeEdit'),interact=group.querySelector('#modeInteract');
     function setMode(v){window.__previewInteractMode=v;edit.classList.toggle('active',!v);interact.classList.toggle('active',v);const box=document.getElementById('selectorBox');if(v)box.textContent='Interact mode — links and buttons work normally.';else if(!selected)box.textContent='Click something in the preview.'}
     edit.onclick=()=>setMode(false);interact.onclick=()=>setMode(true);
-  }
-  const inspector=document.querySelector('.inspector');
-  const selectorBox=document.getElementById('selectorBox');
-  if(inspector&&selectorBox){
-    const tip=document.createElement('div');tip.className='editor-tip';tip.textContent='Edit mode selects elements. Interact mode lets you use the page normally and move to the next screen.';selectorBox.after(tip);
-    const row=document.createElement('div');row.className='add-photo-row';
-    row.innerHTML='<div><label style="display:block;font-size:10px;text-transform:uppercase;letter-spacing:.09em;color:#8d929d;margin-bottom:6px">Add photo placement</label><select id="photoPlacement"><option value="after">After selected element</option><option value="inside">Inside selected element</option><option value="before">Before selected element</option></select></div><label class="btn primary" style="text-align:center">+ Add photo<input id="visualPhotoUpload" type="file" accept="image/*"></label>';
-    tip.after(row);
-    const status=document.createElement('div');status.className='photo-mini';row.after(status);
-    row.querySelector('#visualPhotoUpload').onchange=async e=>{
-      const file=e.target.files?.[0];if(!file)return;
-      if(!selected){status.className='photo-mini show';status.textContent='Select where the photo should go first.';e.target.value='';return}
-      try{
-        status.className='photo-mini show';status.textContent='Uploading '+file.name+'…';
-        const url=await addMedia(file);
-        const page=document.getElementById('previewPage').value;state.patches[page]??=[];
-        let p=state.patches[page].find(x=>x.selector===selected.selector);
-        if(!p){p={selector:selected.selector,styles:{}};state.patches[page].push(p)}
-        p.insertImages??=[];p.insertImages.push({id:'img-'+Date.now().toString(36),url,placement:row.querySelector('#photoPlacement').value,alt:''});
-        dirty();await save();status.textContent='Photo added and published.';reloadPreview();
-      }catch(err){status.textContent=err.message||'Upload failed'}finally{e.target.value=''}
-    };
   }
   const frame=document.getElementById('previewFrame');
   frame?.addEventListener('load',()=>{
