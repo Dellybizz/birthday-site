@@ -81,10 +81,22 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 @media(max-width:360px){.nav{grid-template-columns:1fr}.top strong{width:100%}.preview-shell{height:52dvh}}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.001ms!important;animation-iteration-count:1!important;transition-duration:.001ms!important;scroll-behavior:auto!important}}
 </style>
+<style id="yapping-control-css">
+.yap-manager{display:grid;gap:12px}
+.yap-row{display:grid;grid-template-columns:180px minmax(0,1fr);gap:14px;padding:14px;border:1px solid var(--line);border-radius:14px;background:#111318}
+.yap-preview{aspect-ratio:16/10;background:#090a0d;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:11px;text-align:center}
+.yap-preview video{width:100%;height:100%;object-fit:cover}
+.yap-fields{display:grid;gap:9px}
+.yap-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.yap-existing{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;min-width:min(100%,420px)}
+.yap-existing select{width:100%;border:1px solid var(--line);background:#101217;color:#f5f5f5;padding:9px 10px;border-radius:9px}
+.yap-meta{font-size:10px;color:var(--muted);word-break:break-all}
+@media(max-width:700px){.yap-row{grid-template-columns:1fr}.yap-preview{max-height:240px}.yap-existing{grid-template-columns:1fr}.yap-actions>.btn,.yap-actions>.upload{flex:1 1 130px;text-align:center}}
+</style>
 </head>
 <body>
 <div class="app">
-<aside class="side"><div class="brand"><small>private control room</small><h1>Birthday Site</h1></div><nav class="nav" id="nav"><button data-view="general" class="active">General</button><button data-view="journey">Journey</button><button data-view="pages">Pages</button><button data-view="visual">Visual editor</button><button data-view="media">Media library</button><button data-view="fair">Fair</button><button data-view="finale">Finale</button><button data-view="security">Security</button><button data-view="advanced">Advanced</button></nav><div class="status"><b><span class="dot" style="background:#7fe0a3"></span>Live publishing</b><p>Publish pushes changes to the shared live site for every device.</p></div></aside>
+<aside class="side"><div class="brand"><small>private control room</small><h1>Birthday Site</h1></div><nav class="nav" id="nav"><button data-view="general" class="active">General</button><button data-view="journey">Journey</button><button data-view="pages">Pages</button><button data-view="visual">Visual editor</button><button data-view="media">Media library</button><button data-view="yapping">Yapping archive</button><button data-view="fair">Fair</button><button data-view="finale">Finale</button><button data-view="security">Security</button><button data-view="advanced">Advanced</button></nav><div class="status"><b><span class="dot" style="background:#7fe0a3"></span>Live publishing</b><p>Publish pushes changes to the shared live site for every device.</p></div></aside>
 <main class="main"><header class="top"><strong id="topTitle">General</strong><span class="pill" id="saveState">saved</span><div class="spacer"></div><a class="btn" href="index.html" target="_blank">Open site ↗</a><button class="btn primary" id="saveAll">Publish changes</button></header><div class="content">
 <section class="view active" id="view-general"><div class="pagehead"><div><h2>General</h2><p>Personal details and the shared soundtrack used across the birthday experience.</p></div></div><div class="grid">
 <div class="card"><h3>Identity</h3><div class="row"><div class="field"><label>Her name</label><input data-bind="general.name"></div><div class="field"><label>Nickname</label><input data-bind="general.nickname"></div></div><div class="field"><label>Entry inside joke</label><textarea data-bind="general.insideJoke"></textarea></div><div class="field"><label>Entry personal line</label><textarea data-bind="general.introLine"></textarea></div></div>
@@ -95,6 +107,20 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 <div class="card"><h3>Canonical flow</h3><div class="help" style="font-size:12px;line-height:1.8;color:#b7bbc4">Countdown → Entry → Memories → Pretty Photos → Heart → Yapping → Fair → Finale</div><div class="help" style="margin-top:10px">Optional middle pages can be disabled or reordered from Pages. Countdown, Entry and Finale remain fixed journey points.</div></div>
 </div></section>
 <section class="view" id="view-pages"><div class="pagehead"><div><h2>Pages</h2><p>Enable, disable or reorder the optional chapters. Navigation skips disabled chapters automatically.</p></div></div><div class="card full"><div id="pageList" class="pages"></div></div></section>
+<section class="view" id="view-yapping">
+  <div class="pagehead">
+    <div><h2>Yapping Archive</h2><p>Add as many yapping videos as you want. Upload new videos or reuse videos already in the Media Library, then edit the session title/note and publish.</p></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap">
+      <label class="btn primary upload">Add videos<input id="yappingAddVideos" type="file" multiple accept="video/mp4,video/webm"></label>
+      <button class="btn" id="yappingAddEmpty" type="button">Add empty clip</button>
+      <button class="btn" id="yappingRefreshMedia" type="button">Refresh media</button>
+    </div>
+  </div>
+  <div class="card full">
+    <div class="help" style="margin-bottom:12px">New uploads are stored in the shared birthday media bucket. Changes to the archive stay staged until you press <b>Publish changes</b>.</div>
+    <div id="yappingClipManager" class="yap-manager"><div class="empty">Loading yapping archive…</div></div>
+  </div>
+</section>
 <section class="view" id="view-fair"><div class="pagehead"><div><h2>Fair</h2><p>Edit the eight Fair stalls: canonical text, pricing labels, theme and photos.</p></div></div><div class="card full"><div class="shop-tabs" id="shopTabs"></div><div id="shopEditor"></div></div></section>
 <section class="view" id="view-visual"><div class="pagehead"><div><h2>Visual editor</h2><p>Choose any page, click almost any visible element, then change its text, image, link, visibility or CSS. This is the catch-all editor for details not covered elsewhere.</p></div></div><div class="visual-layout"><div class="inspector"><div class="selected" id="selectorBox">Click something in the preview.</div><div id="inspectorFields"><div class="empty">Select an element to edit it.</div></div></div><div class="preview-shell"><div class="previewbar"><select id="previewPage"></select><button class="btn" id="reloadPreview">Reload</button><div class="spacer"></div><span class="help">click an element to inspect</span></div><div class="preview"><iframe id="previewFrame"></iframe></div></div></div></section>
 <section class="view" id="view-media"><div class="pagehead"><div><h2>Media library</h2><p>Upload photos, video and audio to the shared birthday-site media bucket. Uploaded files are available to this Control Room on other devices after login.</p></div><label class="btn primary upload">Upload files<input id="mediaUpload" type="file" multiple accept="image/*,video/*,audio/*"></label></div><div id="mediaGrid" class="media-grid"></div></section>
@@ -279,7 +305,7 @@ document.getElementById('applyRaw').onclick=()=>{try{stageRecovery(JSON.parse(do
 document.getElementById('exportState').onclick=()=>download('birthday-site-settings.json',JSON.stringify(state,null,2));
 document.getElementById('importState').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{stageRecovery(JSON.parse(r.result),'Imported JSON')}catch(err){alert(err.message||'Invalid JSON')}finally{e.target.value=''}};r.readAsText(f)};
 document.getElementById('resetState').onclick=()=>{if(confirm('Stage the safe current defaults? Nothing goes live until you publish.')){state=modernDefaults();dirty();renderAll();toast('Safe defaults staged — publish when ready')}};
-function renderAll(){renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw()}
+function renderAll(){renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();window.renderYappingManager?.()}
 renderAll();bindFrame();
 document.getElementById('adminUnlock').onclick=unlock;
 document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
@@ -360,4 +386,4 @@ if(ADMIN_KEY){B.ping(ADMIN_KEY).then(ok=>{if(ok){document.getElementById('adminG
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260918-p10"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-yapping1"></script></body></html>
