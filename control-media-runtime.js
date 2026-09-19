@@ -234,9 +234,11 @@
   window.__birthdayDeleteShared=deleteShared;
   function kind(rec){const t=String(rec?.type||'').toLowerCase(),u=String(rec?.url||'').toLowerCase().split('?')[0];if(t.startsWith('video/')||/\.(mp4|webm|mov|m4v)$/.test(u))return 'video';if(t.startsWith('audio/')||/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(u))return 'audio';return 'image'}
   function label(rec){return rec?.name||rec?.path?.split('/').pop()||'media'}
-  function mediaNode(rec,id){
+  function mediaNode(rec,id,fit='cover',position='center center'){
     const k=kind(rec);let el;if(k==='video'){el=document.createElement('video');el.controls=true;el.playsInline=true;el.preload='metadata'}else if(k==='audio'){el=document.createElement('audio');el.controls=true;el.preload='metadata'}else{el=document.createElement('img');el.alt=label(rec);el.loading='lazy'}
-    el.src=rec.url;el.className='bday-added-media';el.dataset.bdayInserted=id||rec.url;return el;
+    el.src=rec.url;el.className='bday-added-media';el.dataset.bdayInserted=id||rec.url;
+    if(k!=='audio'){el.style.objectFit=fit||'cover';el.style.objectPosition=position||'center center'}
+    return el;
   }
   function prepareSlot(el){
     if(!el||isBroad(el))return false;
@@ -264,6 +266,31 @@
     }
     return null;
   }
+  function mediaFitOwner(){const owner=ownerForSelection();return owner&&['image','video'].includes(kind(owner.item))?owner:null}
+  function mediaFitElement(el=previewElement()){
+    if(el&&['IMG','VIDEO'].includes(el.tagName))return el;
+    const owner=mediaFitOwner();if(!owner)return null;
+    const token=String(owner.item?.id||owner.item?.url||'');if(!token)return null;
+    try{return currentDoc()?.querySelector('[data-bday-inserted="'+CSS.escape(token)+'"]')||null}catch(e){return null}
+  }
+  function mediaFitValues(el=previewElement()){
+    const owner=mediaFitOwner();
+    if(owner)return {fit:owner.item.fit||'cover',position:owner.item.position||'center center'};
+    const target=mediaFitElement(el);if(!target)return null;
+    const s=target.ownerDocument.defaultView.getComputedStyle(target),p=findPatch(selected?.selector||'');
+    return {fit:p?.styles?.['object-fit']||s.objectFit||'cover',position:p?.styles?.['object-position']||s.objectPosition||'center center'};
+  }
+  function applyMediaFitPreview(){
+    const fit=document.getElementById('iMediaFit')?.value,position=document.getElementById('iMediaPosition')?.value;
+    if(!fit||!position)return;
+    const owner=mediaFitOwner();
+    if(owner){
+      const token=String(owner.item?.id||owner.item?.url||'');
+      if(token)for(const el of currentDoc()?.querySelectorAll('[data-bday-inserted="'+CSS.escape(token)+'"]')||[]){el.style.objectFit=fit;el.style.objectPosition=position}
+      return;
+    }
+    const el=mediaFitElement();if(el){el.style.objectFit=fit;el.style.objectPosition=position}
+  }
   function showMedia(rec,itemId,itemPlacement){
     const primary=previewElement();if(!primary)return;
     const mirrors=primary.hasAttribute?.('data-media-slot')?lookupAll(selected.selector):[primary];
@@ -274,7 +301,7 @@
         el.setAttribute('src',rec.url);if('src' in el)el.src=rec.url;el.load?.();continue;
       }
       if(!mediaSlot(el))continue;
-      const node=mediaNode(rec,itemId),p=itemPlacement||placement;
+      const owner=ownerForSelection(),node=mediaNode(rec,itemId,owner?.item?.fit||'cover',owner?.item?.position||'center center'),p=itemPlacement||placement;
       if(p==='replace'){prepareSlot(el);el.querySelectorAll(':scope > .bday-added-media').forEach(n=>n.remove());el.appendChild(node)}
       else if(p==='inside')el.appendChild(node);
       else{
@@ -474,6 +501,7 @@
     const href=document.getElementById('iHref');if(href&&el.matches('a'))el.setAttribute('href',href.value);
     const map=[['iColor','color'],['iBg','background-color'],['iSize','font-size'],['iOpacity','opacity'],['iRadius','border-radius'],['iTransform','transform']];
     for(const [id,prop] of map){const input=document.getElementById(id);if(input)el.style.setProperty(prop,input.value)}
+    applyMediaFitPreview();
   }
   async function applyInspector(){
     const el=previewElement();if(!el||!selected?.selector)return;
@@ -484,6 +512,11 @@
     }else delete p.text;
     const hidden=document.getElementById('iHidden');if(hidden)p.hidden=hidden.checked;
     p.styles={color:document.getElementById('iColor')?.value||'','background-color':document.getElementById('iBg')?.value||'','font-size':document.getElementById('iSize')?.value||'',opacity:document.getElementById('iOpacity')?.value||'','border-radius':document.getElementById('iRadius')?.value||'',transform:document.getElementById('iTransform')?.value||''};
+    const mediaOwner=mediaFitOwner(),fit=document.getElementById('iMediaFit')?.value,position=document.getElementById('iMediaPosition')?.value;
+    if(fit&&position){
+      if(mediaOwner){mediaOwner.item.fit=fit;mediaOwner.item.position=position;delete p.styles['object-fit'];delete p.styles['object-position']}
+      else if(mediaFitElement(el)){p.styles['object-fit']=fit;p.styles['object-position']=position}
+    }
     const href=document.getElementById('iHref');if(href&&el.matches('a'))p.href=href.value;else delete p.href;
     prunePatch(p);dirty();if(countdownBinding)syncCountdownDraft();else livePreview();
     const result=await publishNoReload();if(result)toast(countdownBinding?'Countdown text updated':'Element updated');
@@ -503,18 +536,21 @@
   function renderInspector(el,selector,mediaToken=''){
     selected={selector,tag:el.tagName.toLowerCase(),mediaToken,element:el};
     document.getElementById('selectorBox').textContent=selector;
-    const p=findPatch(selector)||{selector,styles:{}},style=fieldStyle(el,p),canText=textEditable(el),isLink=el.matches('a'),countdownBinding=countdownTextBinding(el);
+    const p=findPatch(selector)||{selector,styles:{}},style=fieldStyle(el,p),canText=textEditable(el),isLink=el.matches('a'),countdownBinding=countdownTextBinding(el),mediaFit=mediaFitValues(el);
     const inspectorText=countdownBinding?(readStatePath(countdownBinding.path)??el.textContent.trim()):(p.text??el.textContent.trim());
+    const mediaFitControls=mediaFit?'<div class="row"><div class="field"><label>Media fit</label><select id="iMediaFit"><option value="cover" '+(mediaFit.fit==='cover'?'selected':'')+'>Cover</option><option value="contain" '+(mediaFit.fit==='contain'?'selected':'')+'>Contain</option><option value="fill" '+(mediaFit.fit==='fill'?'selected':'')+'>Fill</option><option value="none" '+(mediaFit.fit==='none'?'selected':'')+'>None</option><option value="scale-down" '+(mediaFit.fit==='scale-down'?'selected':'')+'>Scale down</option></select></div><div class="field"><label>Media position</label><select id="iMediaPosition"><option value="center center" '+(mediaFit.position==='center center'?'selected':'')+'>Center</option><option value="center top" '+(mediaFit.position==='center top'?'selected':'')+'>Top</option><option value="center bottom" '+(mediaFit.position==='center bottom'?'selected':'')+'>Bottom</option><option value="left center" '+(mediaFit.position==='left center'?'selected':'')+'>Left</option><option value="right center" '+(mediaFit.position==='right center'?'selected':'')+'>Right</option><option value="left top" '+(mediaFit.position==='left top'?'selected':'')+'>Top left</option><option value="right top" '+(mediaFit.position==='right top'?'selected':'')+'>Top right</option><option value="left bottom" '+(mediaFit.position==='left bottom'?'selected':'')+'>Bottom left</option><option value="right bottom" '+(mediaFit.position==='right bottom'?'selected':'')+'>Bottom right</option></select></div></div>':'';
     fields.innerHTML=(canText?'<div class="field"><label>Text</label><textarea id="iText">'+esc(inspectorText)+'</textarea></div>':'<div class="ve-note">Container text editing is disabled to protect child elements. Select the actual text element instead.</div>')+
       (isLink?'<div class="field"><label>Link href</label><input id="iHref" value="'+attr(p.href??el.getAttribute('href')??'')+'"></div>':'')+
       '<div class="toggle"><div><b>Hide element</b></div><label class="switch"><input id="iHidden" type="checkbox" '+(p.hidden?'checked':'')+'><i></i></label></div>'+
       '<div class="row"><div class="field"><label>Text color</label><input id="iColor" value="'+attr(style.color)+'"></div><div class="field"><label>Background</label><input id="iBg" value="'+attr(style.bg)+'"></div></div>'+
       '<div class="row"><div class="field"><label>Font size</label><input id="iSize" value="'+attr(style.size)+'"></div><div class="field"><label>Opacity</label><input id="iOpacity" value="'+attr(style.opacity)+'"></div></div>'+
       '<div class="row"><div class="field"><label>Border radius</label><input id="iRadius" value="'+attr(style.radius)+'"></div><div class="field"><label>Transform</label><input id="iTransform" value="'+attr(style.transform)+'"></div></div>'+
+      mediaFitControls+
       '<div style="display:flex;gap:8px"><button class="btn primary" id="applyPatch" type="button">Apply</button><button class="btn danger" id="removePatch" type="button">Remove override</button></div>';
     document.getElementById('applyPatch').onclick=()=>applyInspector().catch(()=>{});
     document.getElementById('removePatch').onclick=()=>removeOverride().catch(()=>{});
     for(const id of ['iText','iHref','iColor','iBg','iSize','iOpacity','iRadius','iTransform'])document.getElementById(id)?.addEventListener('input',livePreview);
+    for(const id of ['iMediaFit','iMediaPosition'])document.getElementById(id)?.addEventListener('change',livePreview);
     document.getElementById('iHidden')?.addEventListener('change',async e=>{
       pushHistory();const patch=patchFor(selector);patch.hidden=e.target.checked;dirty();
       if(e.target.checked){el.style.outline='2px dashed #ff7f7f';el.style.outlineOffset='2px'}else{el.style.removeProperty('outline');el.style.removeProperty('outline-offset')}
@@ -528,7 +564,9 @@
   window.currentPatch=selector=>findPatch(selector)||{selector,styles:{}};
   window.selectElement=function(clicked){
     if(!clicked)return;
-    const modelNode=clicked.closest?.('[data-model-page][data-model-index]');if(modelNode)clicked=modelNode;
+    const clickedMedia=clicked.closest?.('img,video');
+    const modelNode=clicked.closest?.('[data-model-page][data-model-index]');
+    if(modelNode&&!clickedMedia)clicked=modelNode;else if(clickedMedia)clicked=clickedMedia;
     let token=clicked.dataset?.bdayInserted||'',el=clicked,selector='';
     if(token){
       const owner=generatedOwnerByToken(token);if(owner){selector=owner.patch.selector;el=lookup(selector)||clicked}
