@@ -1,8 +1,26 @@
 (()=>{
   const PREF='birthdayMusic';
+  const VOLUME_PREF='birthdayMusicVolume';
   const PLAYBACK='birthdaySoundtrackPlaybackV2';
   const CONTROL='[data-soundtrack-control]';
   let audio=null,tracks=[],trackIndex=0,wanted=false,gestureArmed=false,shuffle=false,lastSavedSecond=-1;
+  let volume=readVolume();
+  const volumeUi=new WeakMap();
+
+  function readVolume(){
+    try{
+      const raw=localStorage.getItem(VOLUME_PREF);
+      if(raw===null)return .72;
+      const n=Number(raw);
+      return Number.isFinite(n)?Math.max(0,Math.min(1,n)):.72;
+    }catch(e){return .72}
+  }
+  function saveVolume(value){
+    volume=Math.max(0,Math.min(1,Number(value)||0));
+    try{localStorage.setItem(VOLUME_PREF,String(volume))}catch(e){}
+    if(audio)audio.volume=volume;
+    syncVolumeUi();
+  }
 
   function config(){
     try{
@@ -44,8 +62,98 @@
     }
     return {tracks:list,shuffle:!!model.shuffle};
   }
+  function ensureControlStyles(){
+    if(document.getElementById('birthdaySoundtrackUiStyles'))return;
+    const style=document.createElement('style');
+    style.id='birthdaySoundtrackUiStyles';
+    style.textContent=`
+      .birthday-soundtrack-global{
+        position:fixed;right:18px;top:18px;z-index:2147483000;
+        border:1px solid rgba(255,255,255,.24);border-radius:999px;
+        padding:9px 12px;background:rgba(15,15,18,.78);color:#fff;
+        backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+        box-shadow:0 8px 28px rgba(0,0,0,.16);cursor:pointer;
+        font:600 11px/1.1 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+        letter-spacing:.02em;display:inline-flex;align-items:center;gap:7px
+      }
+      .birthday-soundtrack-global[aria-pressed="true"]{background:rgba(255,255,255,.92);color:#17171a;border-color:rgba(0,0,0,.08)}
+      .birthday-volume-popover{
+        position:fixed;z-index:2147483646;width:154px;padding:9px 10px 10px;
+        border:1px solid rgba(255,255,255,.18);border-radius:12px;
+        background:rgba(15,15,18,.92);color:#fff;
+        backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+        box-shadow:0 12px 34px rgba(0,0,0,.24);
+        opacity:0;visibility:hidden;transform:translateY(-4px);
+        transition:opacity .14s ease,transform .14s ease,visibility .14s linear;
+        font:600 10px/1.2 ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif
+      }
+      .birthday-volume-popover.show{opacity:1;visibility:visible;transform:translateY(0)}
+      .birthday-volume-head{display:flex;justify-content:space-between;gap:8px;margin-bottom:7px}
+      .birthday-volume-popover input[type="range"]{width:100%;margin:0;accent-color:#fff;cursor:pointer}
+      @media(max-width:640px){
+        .birthday-soundtrack-global{right:12px;top:12px}
+        .birthday-volume-popover{width:142px}
+      }
+    `;
+    document.head.appendChild(style);
+  }
+  function ensureGlobalControl(){
+    if(document.querySelector(CONTROL))return;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='birthday-soundtrack-global';
+    btn.setAttribute('data-soundtrack-control','');
+    btn.dataset.soundOffLabel='sound';
+    btn.dataset.soundOnLabel='sound on';
+    btn.hidden=true;
+    btn.innerHTML='<span data-soundtrack-icon>♫</span><span data-soundtrack-label>sound</span>';
+    document.body.appendChild(btn);
+  }
   function controls(){return [...document.querySelectorAll(CONTROL)]}
   function currentTrack(){return tracks[trackIndex]||null}
+  function syncVolumeUi(){
+    for(const btn of controls()){
+      const ui=volumeUi.get(btn);if(!ui)continue;
+      ui.input.value=String(Math.round(volume*100));
+      ui.value.textContent=Math.round(volume*100)+'%';
+    }
+  }
+  function positionVolumeUi(btn,pop){
+    const r=btn.getBoundingClientRect();
+    const w=154;
+    let left=Math.min(window.innerWidth-w-10,Math.max(10,r.left+r.width/2-w/2));
+    let top=r.bottom+8;
+    if(top+72>window.innerHeight)top=Math.max(10,r.top-72);
+    pop.style.left=left+'px';
+    pop.style.top=top+'px';
+  }
+  function attachVolumeUi(btn){
+    if(volumeUi.has(btn))return;
+    const pop=document.createElement('div');
+    pop.className='birthday-volume-popover';
+    pop.innerHTML='<div class="birthday-volume-head"><span>volume</span><span data-volume-value></span></div><input type="range" min="0" max="100" step="1" aria-label="Soundtrack volume">';
+    document.body.appendChild(pop);
+    const input=pop.querySelector('input');
+    const value=pop.querySelector('[data-volume-value]');
+    let hideTimer=null;
+    const show=()=>{
+      clearTimeout(hideTimer);
+      positionVolumeUi(btn,pop);
+      pop.classList.add('show');
+    };
+    const hide=()=>{clearTimeout(hideTimer);hideTimer=setTimeout(()=>pop.classList.remove('show'),130)};
+    btn.addEventListener('pointerenter',show);
+    btn.addEventListener('pointerleave',hide);
+    btn.addEventListener('focus',show);
+    btn.addEventListener('blur',hide);
+    pop.addEventListener('pointerenter',()=>clearTimeout(hideTimer));
+    pop.addEventListener('pointerleave',hide);
+    input.addEventListener('input',()=>saveVolume(Number(input.value)/100));
+    input.addEventListener('click',e=>e.stopPropagation());
+    input.addEventListener('pointerdown',e=>e.stopPropagation());
+    volumeUi.set(btn,{pop,input,value});
+    syncVolumeUi();
+  }
   function labelFor(btn,on){
     const label=btn.querySelector('[data-soundtrack-label]');
     const target=label||btn;
@@ -57,13 +165,17 @@
     if(icon)icon.textContent=on?'❚❚':'♫';
   }
   function updateControls(){
+    ensureControlStyles();
+    ensureGlobalControl();
     const available=tracks.length>0,on=!!audio&&!audio.paused&&available;
     for(const btn of controls()){
+      attachVolumeUi(btn);
       btn.hidden=!available;
       btn.setAttribute('aria-pressed',on?'true':'false');
       btn.dataset.soundtrackCount=String(tracks.length);
       labelFor(btn,on);
     }
+    syncVolumeUi();
   }
   function readPlayback(){
     try{return JSON.parse(sessionStorage.getItem(PLAYBACK)||'{}')||{}}catch(e){return {}}
@@ -80,7 +192,7 @@
     audio=document.createElement('audio');
     audio.id='birthdaySharedSoundtrack';
     audio.dataset.soundtrackUrl=track.url;
-    audio.src=track.url;audio.loop=tracks.length===1;audio.preload='metadata';audio.volume=.72;audio.style.display='none';
+    audio.src=track.url;audio.loop=tracks.length===1;audio.preload='metadata';audio.volume=volume;audio.style.display='none';
     document.body.appendChild(audio);
     audio.addEventListener('loadedmetadata',()=>{
       if(Number.isFinite(resumeTime)&&resumeTime>0&&audio?.duration&&resumeTime<audio.duration-1){
@@ -182,6 +294,9 @@
     if(wanted)play();
   }
   function bind(){
+    ensureControlStyles();
+    ensureGlobalControl();
+    controls().forEach(attachVolumeUi);
     applyGeneral(config());
     document.addEventListener('click',e=>{
       const btn=e.target?.closest?.(CONTROL);if(!btn)return;
@@ -197,7 +312,9 @@
     get url(){return currentTrack()?.url||''},
     get track(){return currentTrack()},
     get tracks(){return tracks.slice()},
-    get page(){return pageKey()}
+    get page(){return pageKey()},
+    get volume(){return volume},
+    setVolume:value=>saveVolume(value)
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',bind,{once:true});else bind();
 })();
