@@ -156,6 +156,16 @@ body::before{
 .control-btn:hover{background:var(--acid)}
 .control-btn:disabled{opacity:.45;cursor:not-allowed;background:#c5bea9;color:#655f53}
 
+.section-clip-strip{
+  margin-top:10px;display:flex;gap:7px;overflow-x:auto;padding:2px 2px 6px
+}
+.section-clip-strip:empty{display:none}
+.section-clip{
+  flex:0 0 82px;border:1px solid #312f28;background:#bfb69f;padding:4px;cursor:pointer;text-align:left
+}
+.section-clip.active{outline:2px solid var(--acid)}
+.section-clip video{width:100%;aspect-ratio:16/10;object-fit:contain;object-position:center;background:#111;display:block}
+.section-clip small{display:block;margin-top:4px;font-size:7px;color:#514d43;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .evidence-strip{
   margin-top:12px;display:flex;gap:8px;overflow-x:auto;padding:2px 2px 7px;scroll-snap-type:x proximity;scroll-behavior:smooth
 }
@@ -412,6 +422,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
         <button class="control-btn" id="flagBtn">flag as excessive</button>
       </div>
 
+      <div class="section-clip-strip" id="sectionClipStrip"></div>
       <div class="evidence-strip" id="evidenceStrip"></div>
     </div>
   </div>
@@ -475,9 +486,15 @@ const savedClips=Array.isArray(savedYapping.clips)?savedYapping.clips:[];
 function defaultClip(index){
   return DEFAULT_CLIPS[index]||{title:"session "+String(index+1).padStart(3,"0"),note:"archived yapping evidence",src:"",mediaType:"video"};
 }
+function normalizeSectionMedia(saved){
+  const list=Array.isArray(saved?.clips)?saved.clips.filter(item=>item&&typeof item.src==="string"&&item.src).map(item=>({src:item.src,mediaType:item.mediaType==="audio"?"audio":"video",name:typeof item.name==="string"?item.name:""})):[];
+  if(!list.length&&typeof saved?.src==="string"&&saved.src)list.push({src:saved.src,mediaType:saved.mediaType==="audio"?"audio":"video",name:""});
+  return list;
+}
 function normalizeClip(value,index){
   const base=defaultClip(index),saved=value&&typeof value==="object"?value:{};
-  return {...base,...saved,title:typeof saved.title==="string"?saved.title:base.title,note:typeof saved.note==="string"?saved.note:base.note,src:typeof saved.src==="string"?saved.src:"",mediaType:["video","audio"].includes(saved.mediaType)?saved.mediaType:base.mediaType};
+  const clips=normalizeSectionMedia(saved);
+  return {...base,...saved,title:typeof saved.title==="string"?saved.title:base.title,note:typeof saved.note==="string"?saved.note:base.note,src:clips[0]?.src||"",mediaType:clips[0]?.mediaType||"video",clips};
 }
 const initialClips=savedClips.length?savedClips:DEFAULT_CLIPS;
 const CONFIG = {
@@ -492,6 +509,7 @@ const popupTitle = document.getElementById("popupTitle");
 const popupStrong = document.getElementById("popupStrong");
 const popupText = document.getElementById("popupText");
 const evidenceStrip = document.getElementById("evidenceStrip");
+const sectionClipStrip = document.getElementById("sectionClipStrip");
 const player = document.getElementById("player");
 const bootLog = document.getElementById("bootLog");
 const clipMeta = document.getElementById("clipMeta");
@@ -500,8 +518,9 @@ const playButton = document.getElementById("playFake");
 const videosWindow = document.getElementById("videosWindow");
 let lastPopupFocus=null,diagnosticTimer=0,topWindowZ=700;
 
+function sectionMedia(clip){return Array.isArray(clip?.clips)&&clip.clips.length?clip.clips:(clip?.src?[{src:clip.src,mediaType:clip.mediaType||"video",name:""}]:[])}
 function archiveCounts(){
-  const attached=CONFIG.clips.filter(clip=>clip?.src).length;
+  const attached=CONFIG.clips.reduce((sum,clip)=>sum+sectionMedia(clip).length,0);
   return {indexed:CONFIG.clips.length,attached};
 }
 function refreshBootLog(){
@@ -621,9 +640,24 @@ document.getElementById("flagBtn").addEventListener("click",()=>{
   );
 });
 
-let activeClipIndex=Math.max(0,CONFIG.clips.findIndex(clip=>clip?.src));
+let activeClipIndex=Math.max(0,CONFIG.clips.findIndex(clip=>sectionMedia(clip).length));
 if(activeClipIndex<0)activeClipIndex=0;
+let activeSectionMediaIndex=0;
 function clipKind(clip){return clip?.mediaType==="audio"?"audio":"video"}
+function renderSectionClipStrip(sectionIndex){
+  sectionClipStrip.replaceChildren();
+  const section=CONFIG.clips[sectionIndex],mediaList=sectionMedia(section);
+  mediaList.forEach((item,index)=>{
+    const button=document.createElement("button");button.type="button";button.className="section-clip"+(index===activeSectionMediaIndex?" active":"");
+    const video=document.createElement(item.mediaType==="audio"?"div":"video");
+    if(item.mediaType==="audio"){video.textContent="AUDIO";video.style.cssText="aspect-ratio:16/10;display:grid;place-items:center;background:#111;color:#aaa;font-size:8px"}
+    else{video.src=item.src;video.muted=true;video.playsInline=true;video.preload="metadata"}
+    const label=document.createElement("small");label.textContent=item.name||("clip "+String(index+1).padStart(2,"0"));
+    button.append(video,label);
+    button.onclick=()=>renderClipPlayer(sectionIndex,false,false,index);
+    sectionClipStrip.appendChild(button);
+  });
+}
 function formatDuration(seconds){
   if(!Number.isFinite(seconds)||seconds<=0)return "waiting";
   const mins=Math.floor(seconds/60),secs=Math.floor(seconds%60);
@@ -636,7 +670,7 @@ function syncClipSelection(){
     card.setAttribute("aria-pressed",active?"true":"false");
   });
 }
-function renderClipPlayer(index,autoplay=false,ensureVisible=false){
+function renderClipPlayer(index,autoplay=false,ensureVisible=false,mediaIndex=0){
   if(!CONFIG.clips.length){
     activeClipIndex=0;
     document.getElementById("videoWindowTitle").textContent="YAPPING_VIDEOS / empty archive";
@@ -648,16 +682,19 @@ function renderClipPlayer(index,autoplay=false,ensureVisible=false){
     return;
   }
   activeClipIndex=Math.max(0,Math.min(CONFIG.clips.length-1,index));
-  const clip=CONFIG.clips[activeClipIndex],kind=clipKind(clip);
+  const clip=CONFIG.clips[activeClipIndex],mediaList=sectionMedia(clip);
+  activeSectionMediaIndex=Math.max(0,Math.min(Math.max(0,mediaList.length-1),Number(mediaIndex)||0));
+  const activeMedia=mediaList[activeSectionMediaIndex]||null,kind=activeMedia?.mediaType==="audio"?"audio":"video";
   document.getElementById("videoWindowTitle").textContent="YAPPING_VIDEOS / "+(clip?.title||("session "+String(activeClipIndex+1).padStart(3,"0")));
   syncClipSelection();
+  renderSectionClipStrip(activeClipIndex);
   if(ensureVisible)document.querySelectorAll(".clip")[activeClipIndex]?.scrollIntoView({behavior:"smooth",block:"nearest",inline:"center"});
   clipTopic.textContent="NOTE: "+(clip?.note||"no annotation");
-  playButton.disabled=!clip?.src;
-  playButton.textContent=clip?.src?"play evidence":"file missing";
+  playButton.disabled=!activeMedia?.src;
+  playButton.textContent=activeMedia?.src?"play evidence":"file missing";
   player.replaceChildren();
-  player.classList.toggle("is-empty",!clip?.src);
-  if(!clip?.src){
+  player.classList.toggle("is-empty",!activeMedia?.src);
+  if(!activeMedia?.src){
     const placeholder=document.createElement("div");placeholder.className="player-placeholder";
     const strong=document.createElement("strong");strong.textContent=clip?.title||"evidence";
     placeholder.append(strong,document.createTextNode((kind==="audio"?" audio":" video")+" slot indexed · file not attached"));
@@ -666,7 +703,7 @@ function renderClipPlayer(index,autoplay=false,ensureVisible=false){
     return;
   }
   const media=document.createElement(kind);
-  media.src=clip.src;media.controls=true;media.preload="metadata";
+  media.src=activeMedia.src;media.controls=true;media.preload="metadata";
   if(kind==="video")media.playsInline=true;
   media.addEventListener("loadedmetadata",()=>{clipMeta.textContent="DURATION: "+formatDuration(media.duration)+" · "+kind.toUpperCase()},{once:true});
   media.addEventListener("play",()=>{clipMeta.textContent="PLAYING · "+kind.toUpperCase()});
@@ -684,23 +721,23 @@ function renderClips(){
   evidenceStrip.innerHTML="";
   CONFIG.clips.forEach((clip,index)=>{
     const card=document.createElement("button");card.type="button";
-    card.className="clip"+(clip?.src?" has-file":"")+(index===activeClipIndex?" active":"");
+    card.className="clip"+(sectionMedia(clip).length?" has-file":"")+(index===activeClipIndex?" active":"");
     card.dataset.mediaSlot=`yapping-${String(index+1).padStart(2,"0")}`;
     card.dataset.mediaLabel=`Yapping clip ${String(index+1).padStart(2,"0")}`;
     card.dataset.modelPage="yapping";
     card.dataset.modelIndex=String(index);
     card.setAttribute("aria-pressed",index===activeClipIndex?"true":"false");
-    const kind=clipKind(clip);
+    const firstMedia=sectionMedia(clip)[0]||null,kind=firstMedia?.mediaType==="audio"?"audio":"video";
     const thumb=document.createElement("div");thumb.className="clip-thumb";
-    if(clip.src&&kind==="video"){
-      const video=document.createElement("video");video.src=clip.src;video.muted=true;video.playsInline=true;video.preload="metadata";thumb.appendChild(video);
-    }else thumb.textContent=clip.src?"♫ AUDIO":"NO FILE";
+    if(firstMedia?.src&&kind==="video"){
+      const video=document.createElement("video");video.src=firstMedia.src;video.muted=true;video.playsInline=true;video.preload="metadata";thumb.appendChild(video);
+    }else thumb.textContent=firstMedia?.src?"♫ AUDIO":"NO FILE";
     const title=document.createElement("strong");title.textContent=clip.title||("session "+String(index+1).padStart(3,"0"));
     const note=document.createElement("span");note.textContent=clip.note||"no annotation";
-    const status=document.createElement("span");status.className="clip-status";status.textContent=clip.src?(kind+" ready"):"waiting for file";
+    const status=document.createElement("span");status.className="clip-status";status.textContent=sectionMedia(clip).length?(sectionMedia(clip).length+" clip"+(sectionMedia(clip).length===1?"":"s")):"waiting for file";
     card.append(thumb,title,note,status);
-    card.addEventListener("click",()=>renderClipPlayer(index,false,true));
-    card.addEventListener("dblclick",()=>{if(clip.src)renderClipPlayer(index,true,true)});
+    card.addEventListener("click",()=>renderClipPlayer(index,false,true,0));
+    card.addEventListener("dblclick",()=>{if(sectionMedia(clip).length)renderClipPlayer(index,true,true,0)});
     evidenceStrip.appendChild(card);
   });
 }
@@ -710,7 +747,7 @@ function updateYappingClip(index,next){
   CONFIG.clips[index]=normalizeClip({...CONFIG.clips[index],...next},index);
   renderClips();
   refreshBootLog();
-  if(activeClipIndex===index)renderClipPlayer(index,false);
+  if(activeClipIndex===index)renderClipPlayer(index,false,false,Math.min(activeSectionMediaIndex,Math.max(0,sectionMedia(CONFIG.clips[index]).length-1)));
 }
 function setYappingClips(next){
   if(!Array.isArray(next))return;
@@ -719,14 +756,15 @@ function setYappingClips(next){
   if(activeClipIndex>=CONFIG.clips.length)activeClipIndex=Math.max(0,CONFIG.clips.length-1);
   renderClips();
   refreshBootLog();
-  renderClipPlayer(activeClipIndex,false);
+  activeSectionMediaIndex=0;
+  renderClipPlayer(activeClipIndex,false,false,0);
 }
 playButton.addEventListener("click",()=>{
   const clip=CONFIG.clips[activeClipIndex];
-  if(clip?.src)renderClipPlayer(activeClipIndex,true,true);
+  if(sectionMedia(clip)[activeSectionMediaIndex]?.src)renderClipPlayer(activeClipIndex,true,true,activeSectionMediaIndex);
 });
 renderClips();
-renderClipPlayer(activeClipIndex,false);
+renderClipPlayer(activeClipIndex,false,false,0);
 window.YAPPING_ARCHIVE={clips:CONFIG.clips,updateClip:updateYappingClip,setClips:setYappingClips,renderClips,select:index=>renderClipPlayer(index,false,true),play:index=>renderClipPlayer(index,true,true)};
 window.addEventListener("birthday:state",event=>{
   const clips=event.detail?.state?.pages?.yapping?.clips;
@@ -799,6 +837,6 @@ let clockTimer=0;function scheduleClock(){clearTimeout(clockTimer);if(document.h
   
 
 <script src="./soundtrack-runtime.js?v=20260919-soundtrack3"></script>
-<script src="./page-patch-runtime.js?v=20260919-section-media1"></script>
+<script src="./page-patch-runtime.js?v=20260919-yapping-sections11"></script>
 </body>
 </html>
