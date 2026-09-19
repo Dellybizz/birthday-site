@@ -39,9 +39,12 @@
       return state.pages.heart.memories[binding.index];
     }
     state.pages.yapping??={clips:[]};state.pages.yapping.clips??=[];
-    const defaults=[["session 001","topic lost at 00:43"],["session 002","side quest detected"],["session 003","actually funny"],["session 004","still talking"],["session 005","no conclusion"]];
-    while(state.pages.yapping.clips.length<5){const i=state.pages.yapping.clips.length,d=defaults[i];state.pages.yapping.clips.push({title:d[0],note:d[1],src:"",mediaType:"video"})}
-    return state.pages.yapping.clips[binding.index];
+    const existing=state.pages.yapping.clips[binding.index];
+    if(existing)return existing;
+    const created={title:'session '+String(binding.index+1).padStart(3,'0'),note:'archived yapping evidence',src:'',mediaType:'video'};
+    while(state.pages.yapping.clips.length<binding.index)state.pages.yapping.clips.push({title:'session '+String(state.pages.yapping.clips.length+1).padStart(3,'0'),note:'archived yapping evidence',src:'',mediaType:'video'});
+    state.pages.yapping.clips[binding.index]=created;
+    return created;
   }
   function updateModelPreview(binding,record){
     const win=currentWin();if(!binding||!win)return;
