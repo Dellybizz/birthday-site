@@ -139,7 +139,7 @@ body::before{
 
 .main-window{left:19%;top:15%;width:min(560px,58vw)}
 .player{
-  aspect-ratio:16/10;background:#050605;border:2px inset #787268;display:grid;place-items:center;overflow:hidden
+  aspect-ratio:16/9;background:#050605;border:2px inset #787268;display:grid;place-items:center;overflow:hidden
 }
 .player video{width:100%;height:100%;object-fit:contain;object-position:center;background:#050605;display:block}
 .player audio{width:min(92%,520px)}
@@ -164,7 +164,7 @@ body::before{
   flex:0 0 82px;border:1px solid #312f28;background:#bfb69f;padding:4px;cursor:pointer;text-align:left
 }
 .section-clip.active{outline:2px solid var(--acid)}
-.section-clip video{width:100%;aspect-ratio:16/10;object-fit:contain;object-position:center;background:#111;display:block}
+.section-clip video{width:100%;aspect-ratio:16/9;object-fit:contain;object-position:center;background:#111;display:block}
 .section-clip small{display:block;margin-top:4px;font-size:7px;color:#514d43;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .evidence-strip{
   margin-top:12px;display:flex;gap:8px;overflow-x:auto;padding:2px 2px 7px;scroll-snap-type:x proximity;scroll-behavior:smooth
@@ -176,7 +176,7 @@ body::before{
 }
 .clip:hover,.clip:focus-visible{background:#ddd5bd;transform:translateY(-2px);outline:1px solid #111;outline-offset:1px}
 .clip-thumb{
-  aspect-ratio:4/3;background:#191b17;display:grid;place-items:center;color:#747b6b;font-size:9px;margin-bottom:5px;overflow:hidden
+  aspect-ratio:16/9;background:#191b17;display:grid;place-items:center;color:#747b6b;font-size:9px;margin-bottom:5px;overflow:hidden
 }
 .clip-thumb video{width:100%;height:100%;object-fit:contain;object-position:center;background:#191b17;display:block}
 .clip-status{display:block;margin-top:5px;padding-top:4px;border-top:1px dashed rgba(49,47,40,.35);font-size:7px!important;letter-spacing:.08em;text-transform:uppercase;color:#6b6659!important}
@@ -650,7 +650,7 @@ function renderSectionClipStrip(sectionIndex){
   mediaList.forEach((item,index)=>{
     const button=document.createElement("button");button.type="button";button.className="section-clip"+(index===activeSectionMediaIndex?" active":"");
     const video=document.createElement(item.mediaType==="audio"?"div":"video");
-    if(item.mediaType==="audio"){video.textContent="AUDIO";video.style.cssText="aspect-ratio:16/10;display:grid;place-items:center;background:#111;color:#aaa;font-size:8px"}
+    if(item.mediaType==="audio"){video.textContent="AUDIO";video.style.cssText="aspect-ratio:16/9;display:grid;place-items:center;background:#111;color:#aaa;font-size:8px"}
     else{video.src=item.src;video.muted=true;video.playsInline=true;video.preload="metadata"}
     const label=document.createElement("small");label.textContent=item.name||("clip "+String(index+1).padStart(2,"0"));
     button.append(video,label);
