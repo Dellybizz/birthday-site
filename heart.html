@@ -504,31 +504,40 @@ button,a{font:inherit}
 
 .corner-popup{
   position:fixed;
-  right:18px;
-  bottom:66px;
+  right:16px;
+  bottom:64px;
   z-index:80;
-  width:min(336px,calc(100vw - 36px));
+  width:min(372px,calc(100vw - 32px));
+  max-height:calc(100dvh - 88px);
   opacity:0;
   visibility:hidden;
-  transform:translateY(16px) scale(.97);
-  transition:.26s cubic-bezier(.2,.7,.2,1);
+  pointer-events:none;
+  transform:translateY(18px) scale(.965);
+  transform-origin:bottom right;
+  transition:opacity .24s ease,transform .32s cubic-bezier(.2,.78,.2,1),visibility .24s linear;
 }
-.corner-popup.show{opacity:1;visibility:visible;transform:none}
+.corner-popup.show{opacity:1;visibility:visible;pointer-events:auto;transform:none}
 .popup-card{
-  border:1px solid rgba(255,208,228,.18);
-  border-radius:26px;
-  padding:10px;
-  background:linear-gradient(180deg,rgba(43,16,30,.92),rgba(21,8,18,.88));
-  backdrop-filter:blur(18px);
-  box-shadow:0 24px 72px rgba(0,0,0,.44),0 0 42px rgba(255,110,168,.08);
+  position:relative;
+  border:1px solid rgba(255,208,228,.20);
+  border-radius:28px;
+  padding:11px;
+  background:linear-gradient(180deg,rgba(43,16,30,.96),rgba(21,8,18,.94));
+  backdrop-filter:blur(22px);
+  box-shadow:0 28px 82px rgba(0,0,0,.50),0 0 52px rgba(255,110,168,.09);
+  overflow:hidden;
 }
 .popup-media{
   width:100%;
   aspect-ratio:4/5;
-  border-radius:18px;
+  max-height:min(62dvh,560px);
+  border-radius:20px;
   overflow:hidden;
   background:linear-gradient(135deg,#4a1d32,#160811);
+  touch-action:pan-y;
+  transition:opacity .16s ease,transform .2s ease;
 }
+.popup-media.switching{opacity:.5;transform:scale(.985)}
 .popup-media img,.popup-media video{
   width:100%;
   height:100%;
@@ -541,8 +550,9 @@ button,a{font:inherit}
   justify-content:space-between;
   align-items:flex-start;
   gap:12px;
-  padding:11px 4px 4px;
+  padding:13px 6px 5px;
 }
+.popup-copy{min-width:0;padding-right:6px}
 .popup-copy strong{
   display:block;
   font-size:10px;
@@ -564,35 +574,62 @@ button,a{font:inherit}
   white-space:nowrap;
 }
 .popup-actions{
-  display:flex;
-  gap:7px;
-  padding:8px 4px 4px;
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  padding:9px 5px 5px;
 }
 .popup-btn{
-  min-height:32px;
-  padding:0 11px;
+  min-height:38px;
+  padding:0 12px;
   border-radius:999px;
-  border:1px solid rgba(255,255,255,.11);
-  background:rgba(255,255,255,.03);
-  color:rgba(255,246,251,.72);
+  border:1px solid rgba(255,255,255,.12);
+  background:rgba(255,255,255,.035);
+  color:rgba(255,246,251,.76);
   font-size:8px;
   letter-spacing:.1em;
   text-transform:uppercase;
   cursor:pointer;
+  transition:.18s ease;
+}
+.popup-btn:hover,.popup-btn:focus-visible{
+  color:#fff;
+  border-color:rgba(255,190,219,.34);
+  background:rgba(255,143,192,.10);
+  outline:none;
 }
 .popup-close{
   position:absolute;
-  right:-8px;
-  top:-8px;
-  width:32px;
-  height:32px;
+  right:16px;
+  top:16px;
+  z-index:5;
+  width:40px;
+  height:40px;
+  display:grid;
+  place-items:center;
+  padding:0;
   border-radius:50%;
-  border:1px solid rgba(255,255,255,.13);
-  background:rgba(24,9,18,.94);
+  border:1px solid rgba(255,255,255,.22);
+  background:rgba(24,9,18,.78);
+  backdrop-filter:blur(14px);
   color:#fff;
-  font-size:16px;
+  font:300 24px/1 Arial,sans-serif;
   cursor:pointer;
+  box-shadow:0 8px 24px rgba(0,0,0,.28);
+  transition:transform .18s ease,background .18s ease,border-color .18s ease;
 }
+.popup-close:hover,.popup-close:focus-visible{
+  transform:scale(1.07);
+  background:rgba(78,27,51,.96);
+  border-color:rgba(255,200,224,.48);
+  outline:none;
+}
+.node.popup-active{
+  border-color:rgba(255,222,236,.90)!important;
+  box-shadow:0 24px 70px rgba(0,0,0,.48),0 0 0 2px rgba(255,180,211,.20),0 0 38px rgba(255,126,176,.28)!important;
+}
+.stage.popup-open .node:not(.popup-active){filter:brightness(.76) saturate(.84)}
+.stage.popup-open{cursor:default}
 
 
 /* HEARTBEAT SYSTEM */
@@ -662,7 +699,9 @@ body.heartbeat-on::after{
   .brand{display:none}
   .pov-switch{top:56px}
   .node{width:86px;border-radius:13px}
-  .corner-popup{right:10px;bottom:58px;width:min(292px,calc(100vw - 20px))}
+  .corner-popup{right:10px;bottom:58px;width:min(330px,calc(100vw - 20px));max-height:calc(100dvh - 76px)}
+  .popup-close{right:14px;top:14px;width:38px;height:38px}
+  .popup-media{max-height:56dvh}
   .zoom-hint{bottom:56px}
   .center-heart{width:122px;height:108px}
 }
@@ -828,9 +867,9 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
 
 <a class="next" data-journey-next="1" href="yapping.html">continue →</a>
 
-<div class="corner-popup" id="cornerPopup">
-  <button class="popup-close" id="popupClose" type="button">×</button>
+<div class="corner-popup" id="cornerPopup" role="dialog" aria-modal="false" aria-hidden="true" aria-labelledby="popupTitle">
   <div class="popup-card">
+    <button class="popup-close" id="popupClose" type="button" aria-label="Close memory">×</button>
     <div class="popup-media" id="popupMedia"></div>
     <div class="popup-top">
       <div class="popup-copy">
@@ -1002,6 +1041,7 @@ function updateHeartMemory(index,next){
   MEMORIES[index]={...MEMORIES[index],...next};
   renderHeartNode(index);
   if(popup.classList.contains("show")&&popupIndex===index)openPopup(index);
+  markActiveMemory();
 }
 
 function buildMesh(){
@@ -1133,11 +1173,17 @@ function setPov(next){
   }
 }
 
+function markActiveMemory(){
+  nodes.forEach((node,index)=>node.el.classList.toggle("popup-active",index===popupIndex&&popup.classList.contains("show")));
+}
 function openPopup(index){
+  const wasOpen=popup.classList.contains("show");
   popupIndex = ((index % MEMORIES.length) + MEMORIES.length) % MEMORIES.length;
   const item = MEMORIES[popupIndex];
   const kind=heartMediaKind(item),url=item.mediaUrl||"";
 
+  popupMedia.querySelectorAll("video,audio").forEach(media=>media.pause?.());
+  if(wasOpen)popupMedia.classList.add("switching");
   popupMedia.innerHTML = "";
 
   if(kind==="video"&&url){
@@ -1145,7 +1191,7 @@ function openPopup(index){
     video.src=url;video.controls=true;video.autoplay=true;video.loop=true;video.playsInline=true;
     popupMedia.appendChild(video);
   }else if(kind==="image"&&url){
-    const img=document.createElement("img");img.src=url;img.alt="";popupMedia.appendChild(img);
+    const img=document.createElement("img");img.src=url;img.alt=item.title||"";popupMedia.appendChild(img);
   }else if(kind==="audio"&&url){
     const audio=document.createElement("audio");audio.src=url;audio.controls=true;audio.autoplay=true;audio.preload="metadata";popupMedia.appendChild(audio);
   }else{
@@ -1154,20 +1200,27 @@ function openPopup(index){
 
   popupTitle.textContent=item.title;
   popupNote.textContent=item.note;
-  popupType.textContent=`${kind} · ${String(popupIndex+1).padStart(2,"0")}/${MEMORIES.length}`;
+  popupType.textContent=kind+" · "+String(popupIndex+1).padStart(2,"0")+"/"+MEMORIES.length;
 
   popup.classList.add("show");
+  popup.setAttribute("aria-hidden","false");
   stage.classList.add("popup-open");
+  markActiveMemory();
+  requestAnimationFrame(()=>requestAnimationFrame(()=>popupMedia.classList.remove("switching")));
 }
 
 function closePopup(){
+  if(!popup.classList.contains("show"))return;
   popupMedia.querySelectorAll("video,audio").forEach(media=>media.pause?.());
   popup.classList.remove("show");
+  popup.setAttribute("aria-hidden","true");
   stage.classList.remove("popup-open");
+  nodes.forEach(node=>node.el.classList.remove("popup-active"));
 }
 
 function animate(){
-  if(drifting && !drag){
+  const readingMemory=popup.classList.contains("show");
+  if(drifting && !drag && !readingMemory){
     yaw += .00062;
   } else if(!drag){
     yaw += yawVelocity;
@@ -1224,6 +1277,10 @@ function animate(){
 
 stage.addEventListener("pointerdown", e => {
   if(e.target.closest(".node")) return;
+  if(popup.classList.contains("show")){
+    closePopup();
+    return;
+  }
   drag = true;
   lastX = e.clientX;
   lastY = e.clientY;
@@ -1295,9 +1352,22 @@ document.getElementById("collapseBtn").addEventListener("click",()=>{ targetSpre
 document.getElementById("overviewPov").addEventListener("click",()=>setPov("overview"));
 document.getElementById("corePov").addEventListener("click",()=>setPov("core"));
 
-document.getElementById("popupClose").addEventListener("click",closePopup);
+document.getElementById("popupClose").addEventListener("click",e=>{e.stopPropagation();closePopup()});
 document.getElementById("popupPrev").addEventListener("click",()=>openPopup(popupIndex-1));
 document.getElementById("popupNext").addEventListener("click",()=>openPopup(popupIndex+1));
+
+let popupSwipeX=null,popupSwipeY=null;
+popupMedia.addEventListener("pointerdown",e=>{
+  if(e.pointerType==="mouse")return;
+  popupSwipeX=e.clientX;popupSwipeY=e.clientY;
+  popupMedia.setPointerCapture?.(e.pointerId);
+});
+popupMedia.addEventListener("pointerup",e=>{
+  if(popupSwipeX===null)return;
+  const dx=e.clientX-popupSwipeX,dy=e.clientY-popupSwipeY;
+  popupSwipeX=null;popupSwipeY=null;
+  if(Math.abs(dx)>52&&Math.abs(dx)>Math.abs(dy)*1.15)openPopup(popupIndex+(dx<0?1:-1));
+});
 
 document.addEventListener("keydown",e=>{
   if(popup.classList.contains("show")){
@@ -1353,6 +1423,6 @@ animate();
   
 
 <script src="./soundtrack-runtime.js?v=20260919-editor-mute18"></script>
-<script src="./page-patch-runtime.js?v=20260919-heart-intro-edit8"></script>
+<script src="./page-patch-runtime.js?v=20260919-heart-interactions19"></script>
 </body>
 </html>
