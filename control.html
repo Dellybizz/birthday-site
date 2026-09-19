@@ -130,6 +130,20 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 .yap-batch label{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:#aeb3bd}
 .yap-batch-select{min-height:132px}
 .yap-batch-note{font-size:9px;color:var(--muted);line-height:1.45}
+.yap-video-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px}
+.yap-video-choice{position:relative;display:grid;gap:5px;padding:6px;border:1px solid var(--line);border-radius:10px;background:#101217;cursor:pointer;text-align:left;color:#f5f5f5}
+.yap-video-choice:hover{border-color:#555c68}.yap-video-choice.selected{border-color:#e8e8e5;box-shadow:0 0 0 1px #e8e8e5 inset}
+.yap-video-choice video{width:100%;aspect-ratio:16/10;object-fit:contain;object-position:center;background:#08090b;border-radius:7px}
+.yap-video-choice small{font-size:9px;line-height:1.25;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#b8bdc6}
+.yap-section-media{display:grid;gap:8px;padding:10px;border:1px solid var(--line);border-radius:10px;background:#0d0f13}
+.yap-section-media-head{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.yap-section-media-head b{font-size:10px;text-transform:uppercase;letter-spacing:.08em}
+.yap-attached-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(96px,1fr));gap:8px}
+.yap-attached{border:1px solid var(--line);border-radius:9px;padding:5px;background:#101217;display:grid;gap:5px}
+.yap-attached video{width:100%;aspect-ratio:16/10;object-fit:contain;background:#08090b;border-radius:6px}
+.yap-attached-actions{display:flex;gap:4px}.yap-attached-actions .btn{padding:5px 7px;font-size:9px;flex:1}
+.yap-section-picker{display:none;gap:8px;padding-top:8px;border-top:1px solid var(--line)}.yap-section-picker.open{display:grid}
+.yap-picker-actions{display:flex;gap:7px;flex-wrap:wrap}
 @media(max-width:700px){.yap-row{grid-template-columns:28px minmax(0,1fr)}.yap-drag{grid-row:1 / span 2}.yap-preview{max-height:240px;grid-column:2}.yap-fields{grid-column:2}.yap-existing{grid-template-columns:1fr}.yap-actions>.btn,.yap-actions>.upload{flex:1 1 130px;text-align:center}.yap-add-more-head{display:block}.yap-add-more-head .upload{display:block;margin-top:10px;text-align:center}.yap-add-more-actions{grid-template-columns:1fr}.yap-add-more-actions>.btn,.yap-add-more-actions>.upload{text-align:center}}
 </style>
 <style id="animation-soundtrack-control-css">
@@ -562,4 +576,4 @@ if(ADMIN_KEY){const err=document.getElementById('adminError');err.textContent='L
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260919-yapping-fit10"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-yapping-sections11"></script></body></html>
