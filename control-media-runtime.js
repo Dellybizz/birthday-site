@@ -1226,6 +1226,56 @@
     for(const rec of yappingVideoItems())options.push('<option value="'+attr(rec.url)+'" '+(rec.url===selectedUrl?'selected':'')+'>'+esc(label(rec))+'</option>');
     return options.join('');
   }
+  function addYappingClipFromRecord(rec){
+    const clips=yappingClips();
+    if(clips.length>=50)throw new Error('The Yapping Archive supports up to 50 clips.');
+    const index=clips.length;
+    clips.push({
+      title:label(rec).replace(/\.[^.]+$/,'')||yappingTitle(index),
+      note:'archived yapping evidence',
+      src:rec.url,
+      mediaType:'video'
+    });
+    return clips[clips.length-1];
+  }
+  function appendYappingAddMore(box,clips){
+    const add=document.createElement('div');
+    add.className='yap-add-more';
+    add.innerHTML=
+      '<div class="yap-add-more-head"><div><b>+ Add another yapping video</b><small>Add a new clip without replacing any of the existing ones.</small></div><label class="btn primary upload">Upload video<input data-yap-add-more-upload type="file" multiple accept="video/mp4,video/webm"></label></div>'+
+      '<div class="yap-add-more-actions"><select data-yap-add-more-existing>'+yappingMediaOptions('')+'</select><button class="btn" type="button" data-yap-add-more-use>Add selected video</button><button class="btn" type="button" data-yap-add-more-empty>Add blank slot</button></div>';
+    const upload=add.querySelector('[data-yap-add-more-upload]');
+    upload.onchange=async()=>{
+      const files=[...(upload.files||[])];if(!files.length)return;
+      try{
+        for(const file of files){
+          if(clips.length>=50)throw new Error('The Yapping Archive supports up to 50 clips.');
+          if(!String(file.type||'').startsWith('video/'))throw new Error(file.name+' is not a video.');
+          toast('Uploading '+file.name+'…');
+          const rec=await uploadShared(file);
+          if(kind(rec)!=='video')throw new Error(file.name+' is not a supported video.');
+          mediaItems.unshift(rec);
+          addYappingClipFromRecord(rec);
+        }
+        dirty();await renderYappingManager(false);toast(files.length+' new yapping video'+(files.length===1?'':'s')+' added — publish to save');
+      }catch(e){alert(e?.message||String(e))}finally{upload.value=''}
+    };
+    add.querySelector('[data-yap-add-more-use]').onclick=()=>{
+      const select=add.querySelector('[data-yap-add-more-existing]');
+      const rec=yappingVideoItems().find(item=>item.url===select.value);
+      if(!rec){toast('Choose an uploaded video first');return}
+      try{
+        addYappingClipFromRecord(rec);
+        dirty();renderYappingManager(false);toast('New yapping video added — publish to save');
+      }catch(e){alert(e?.message||String(e))}
+    };
+    add.querySelector('[data-yap-add-more-empty]').onclick=()=>{
+      if(clips.length>=50){alert('The Yapping Archive supports up to 50 clips.');return}
+      clips.push({title:yappingTitle(clips.length),note:'archived yapping evidence',src:'',mediaType:'video'});
+      dirty();renderYappingManager(false);toast('Blank yapping slot added — publish to save');
+    };
+    box.appendChild(add);
+  }
   async function renderYappingManager(refreshMedia=false){
     const box=document.getElementById('yappingClipManager');if(!box)return;
     if(refreshMedia||!mediaItems.length){
@@ -1234,7 +1284,8 @@
     const clips=yappingClips();
     box.innerHTML='';
     if(!clips.length){
-      box.innerHTML='<div class="empty">No clips yet. Use <b>Add videos</b> to upload one or more videos.</div>';
+      box.innerHTML='<div class="empty">No clips yet. Add your first yapping video below.</div>';
+      appendYappingAddMore(box,clips);
       return;
     }
     clips.forEach((clip,index)=>{
@@ -1284,6 +1335,7 @@
       row.querySelector('[data-yap-remove]').onclick=()=>{if(!confirm('Remove this Yapping Archive clip? The uploaded file itself stays in Media Library.'))return;clips.splice(index,1);dirty();renderYappingManager(false);toast('Clip removed — publish to save')};
       box.appendChild(row);
     });
+    appendYappingAddMore(box,clips);
   }
   window.renderYappingManager=()=>renderYappingManager(false);
 
