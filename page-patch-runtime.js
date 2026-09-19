@@ -94,6 +94,11 @@
   const MEDIA_FRAME_SELECTOR='.photo,.tile,.node,.player,.photo-frame,.popup-media,.polaroid,.image-frame,.media-frame,[data-media-frame]';
   function mediaFrameFor(el,anchor){
     if(!el)return anchor||null;
+    if(PAGE==='memories.html'){
+      const memorySlot=el.closest?.('[data-media-slot^="memories-"]')||anchor?.closest?.('[data-media-slot^="memories-"]')||null;
+      const memoryFrame=memorySlot?.closest?.('.photo');
+      if(memoryFrame)return memoryFrame;
+    }
     const framed=el.closest?.(MEDIA_FRAME_SELECTOR);
     if(framed&&framed!==el)return framed;
     const slot=el.closest?.('[data-media-slot]')||anchor?.closest?.('[data-media-slot]')||null;
