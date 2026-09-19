@@ -260,6 +260,16 @@ function validateState(data: unknown): string[] {
             if (layout.frameHeight !== undefined && (!Number.isFinite(Number(layout.frameHeight)) || Number(layout.frameHeight) < 0 || Number(layout.frameHeight) > 1200)) errors.push(`${at}.mediaLayout.frameHeight must be 0–1200.`);
           }
         }
+        if (patch.sectionLayout !== undefined) {
+          const layout = patch.sectionLayout;
+          if (!isRecord(layout)) errors.push(`${at}.sectionLayout must be an object.`);
+          else {
+            for (const key of ['paddingTop','paddingBottom','marginTop','marginBottom']) {
+              if (layout[key] !== undefined && (!Number.isFinite(Number(layout[key])) || Number(layout[key]) < 0 || Number(layout[key]) > 400)) errors.push(`${at}.sectionLayout.${key} must be 0–400.`);
+            }
+            if (layout.gap !== undefined && (!Number.isFinite(Number(layout.gap)) || Number(layout.gap) < 0 || Number(layout.gap) > 200)) errors.push(`${at}.sectionLayout.gap must be 0–200.`);
+          }
+        }
 
         if (patch.styles !== undefined) {
           if (!isRecord(patch.styles) || Object.keys(patch.styles).length > 60) errors.push(`${at}.styles is invalid.`);
