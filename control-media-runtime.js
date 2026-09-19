@@ -342,19 +342,17 @@
     };
     const xy=map[raw]||[50,50];return {x:xy[0],y:xy[1]};
   }
-  function isPrettyStripFrame(frame){
-    return pageName()==='pretty-photos.html'&&!!frame?.matches?.('.strip-card');
+  function isPrettyDesignedFrame(frame){
+    return pageName()==='pretty-photos.html'&&!!frame?.matches?.('.strip-card,.photo.p1,.photo.p2,.photo.p3');
   }
-  function rememberPrettyStripBaseWidth(frame,savedScale){
-    if(!isPrettyStripFrame(frame))return 0;
-    const cached=Number(frame.dataset?.bdayPrettyBaseWidth);
-    if(Number.isFinite(cached)&&cached>0)return cached;
+  function prettyDesignedBaseWidth(frame){
+    if(!isPrettyDesignedFrame(frame))return 0;
+    frame.style.removeProperty('width');
+    frame.style.removeProperty('max-width');
+    frame.style.removeProperty('margin-left');
+    frame.style.removeProperty('margin-right');
     const rendered=frame.getBoundingClientRect().width;
-    if(!Number.isFinite(rendered)||rendered<=0)return 0;
-    const scale=Number(savedScale);
-    const base=Number.isFinite(scale)&&scale>0&&scale!==100?rendered/(scale/100):rendered;
-    frame.dataset.bdayPrettyBaseWidth=String(base);
-    return base;
+    return Number.isFinite(rendered)&&rendered>0?rendered:0;
   }
 
   function mediaFitValues(el=previewElement()){
@@ -363,7 +361,7 @@
     const s=target.ownerDocument.defaultView.getComputedStyle(target),frame=mediaFrameElement(target);
     const fs=frame?frame.ownerDocument.defaultView.getComputedStyle(frame):null;
     const savedFrameWidth=Number.isFinite(Number(saved.frameWidth))?Number(saved.frameWidth):100;
-    rememberPrettyStripBaseWidth(frame,Number.isFinite(Number(saved.frameWidth))?Number(saved.frameWidth):100);
+    if(isPrettyDesignedFrame(frame))prettyDesignedBaseWidth(frame);
     const pos=positionToXY(saved.positionX!==undefined&&saved.positionY!==undefined?(saved.positionX+'% '+saved.positionY+'%'):(saved.position||p?.styles?.['object-position']||s.objectPosition||'center center'));
     return {
       fit:saved.fit||p?.styles?.['object-fit']||s.objectFit||'cover',
@@ -420,19 +418,10 @@
     if(!frame)return;
     const numericWidth=Number(width);
     const memoriesFrame=pageName()==='memories.html'&&frame.matches?.('.photo')&&applyMemoriesFrameWidth(frame,numericWidth);
-    if(!memoriesFrame&&isPrettyStripFrame(frame)&&Number.isFinite(numericWidth)&&numericWidth>0){
-      const base=rememberPrettyStripBaseWidth(frame,100);
-      if(Math.abs(numericWidth-100)<.001){
-        frame.style.removeProperty('width');
-        frame.style.removeProperty('max-width');
-        frame.style.removeProperty('margin-left');
-        frame.style.removeProperty('margin-right');
-      }else if(base>0){
-        frame.style.setProperty('width',(base*numericWidth/100)+'px','important');
-        frame.style.removeProperty('max-width');
-        frame.style.removeProperty('margin-left');
-        frame.style.removeProperty('margin-right');
-      }
+    if(!memoriesFrame&&isPrettyDesignedFrame(frame)&&Number.isFinite(numericWidth)&&numericWidth>0){
+      const scale=Math.max(25,Math.min(140,numericWidth));
+      const base=prettyDesignedBaseWidth(frame);
+      if(Math.abs(scale-100)>=.001&&base>0)frame.style.setProperty('width',(base*scale/100)+'px','important');
     }else if(!memoriesFrame&&Number.isFinite(numericWidth)&&numericWidth>0){
       frame.style.setProperty('width',numericWidth+'%','important');
       frame.style.setProperty('max-width','none','important');
