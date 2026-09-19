@@ -112,6 +112,18 @@
     }
     return anchor||el.parentElement||el;
   }
+  function isPrettyStripFrame(frame){
+    return PAGE==='pretty-photos.html'&&!!frame?.matches?.('.strip-card');
+  }
+  function prettyStripBaseWidth(frame){
+    if(!isPrettyStripFrame(frame))return 0;
+    const cached=Number(frame.dataset?.bdayPrettyBaseWidth);
+    if(Number.isFinite(cached)&&cached>0)return cached;
+    const rendered=frame.getBoundingClientRect().width;
+    if(!Number.isFinite(rendered)||rendered<=0)return 0;
+    frame.dataset.bdayPrettyBaseWidth=String(rendered);
+    return rendered;
+  }
   function applyMediaPresentation(el,item){
     if(!el||!item||el.tagName==='AUDIO')return;
     const x=Number.isFinite(Number(item.positionX))?Math.max(0,Math.min(100,Number(item.positionX))):50;
@@ -150,7 +162,21 @@
     const frame=mediaFrameFor(el,anchor);if(!frame)return;
     const width=Number(item.frameWidth),height=Number(item.frameHeight);
     const memoriesFrame=PAGE==='memories.html'&&frame.matches?.('.photo')&&Number.isFinite(width)&&width>0&&applyMemoriesFrameWidth(frame,width);
-    if(!memoriesFrame&&Number.isFinite(width)&&width>0){
+    if(!memoriesFrame&&isPrettyStripFrame(frame)&&Number.isFinite(width)&&width>0){
+      const scale=Math.max(25,Math.min(140,width));
+      const base=prettyStripBaseWidth(frame);
+      if(Math.abs(scale-100)<.001){
+        frame.style.removeProperty('width');
+        frame.style.removeProperty('max-width');
+        frame.style.removeProperty('margin-left');
+        frame.style.removeProperty('margin-right');
+      }else if(base>0){
+        frame.style.setProperty('width',(base*scale/100)+'px','important');
+        frame.style.removeProperty('max-width');
+        frame.style.removeProperty('margin-left');
+        frame.style.removeProperty('margin-right');
+      }
+    }else if(!memoriesFrame&&Number.isFinite(width)&&width>0){
       frame.style.setProperty('width',Math.max(25,Math.min(140,width))+'%','important');
       frame.style.setProperty('max-width','none','important');
       frame.style.setProperty('margin-left','auto','important');
