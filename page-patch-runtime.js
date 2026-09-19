@@ -178,18 +178,41 @@
     if(patch.text!==undefined&&patch.text!==null&&textEditable(anchor)&&!countdownManagedText(anchor))anchor.textContent=String(patch.text);
     if(patch.href&&anchor.matches?.('a')&&!anchor.matches?.('[data-journey-next],[data-journey-restart]'))anchor.setAttribute('href',patch.href);
     if(patch.styles&&typeof patch.styles==='object'){
-      for(const [name,value] of Object.entries(patch.styles))if(value!==undefined&&value!==null&&value!=='')anchor.style.setProperty(name,String(value));
+      for(const [name,value] of Object.entries(patch.styles))if(value!==undefined&&value!==null&&value!==''){
+        const priority=(name==='object-fit'||name==='object-position')?'important':'';
+        anchor.style.setProperty(name,String(value),priority);
+      }
     }
     const inserted=Array.isArray(patch.insertImages)?patch.insertImages:Array.isArray(patch.insertMedia)?patch.insertMedia:[];
     if(inserted.length&&mediaSlot(anchor))inserted.forEach((item,index)=>insertOne(anchor,item,patchIndex+'-'+index));
   }
 
 
+  const MEDIA_FITS=new Set(['cover','contain','fill','none','scale-down']);
+  const MEDIA_POSITIONS=new Set(['center center','center top','center bottom','left center','right center','left top','right top','left bottom','right bottom']);
+  function rebuildPersistentMediaRules(patches){
+    let style=document.getElementById('birthday-persistent-media-fit');
+    if(!style){style=document.createElement('style');style.id='birthday-persistent-media-fit';document.head.appendChild(style)}
+    const rules=[];
+    for(const patch of patches||[]){
+      if(!patch?.selector||GENERATED_SELECTOR.test(patch.selector))continue;
+      const fit=String(patch.styles?.['object-fit']||'');
+      const position=String(patch.styles?.['object-position']||'');
+      if(!MEDIA_FITS.has(fit)&&!MEDIA_POSITIONS.has(position))continue;
+      const declarations=[];
+      if(MEDIA_FITS.has(fit))declarations.push('object-fit:'+fit+'!important');
+      if(MEDIA_POSITIONS.has(position))declarations.push('object-position:'+position+'!important');
+      if(declarations.length)rules.push(patch.selector+'{'+declarations.join(';')+';}');
+    }
+    style.textContent=rules.join('\n');
+  }
+
   let cachedState=null;
   async function applyAll(forceRead=false){
     ensureEditIds(document);
     if(forceRead||!cachedState)cachedState=await readLive();
     const patches=cachedState?.patches?.[PAGE]||[];
+    rebuildPersistentMediaRules(patches);
     patches.forEach((patch,index)=>{
       if(!patch?.selector||GENERATED_SELECTOR.test(patch.selector))return;
       const anchors=findTargets(patch.selector);anchors.forEach((anchor,targetIndex)=>applyPatch(anchor,patch,index+'-'+targetIndex));
