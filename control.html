@@ -153,7 +153,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 </head>
 <body>
 <div class="app">
-<aside class="side"><div class="brand"><small>private control room</small><h1>Birthday Site</h1></div><nav class="nav" id="nav"><button data-view="general" class="active">General</button><button data-view="journey">Journey</button><button data-view="pages">Pages</button><button data-view="visual">Visual editor</button><button data-view="media">Media library</button><button data-view="yapping">Yapping archive</button><button data-view="fair">Fair</button><button data-view="finale">Finale</button><button data-view="security">Security</button><button data-view="advanced">Advanced</button></nav><div class="status"><b><span class="dot" style="background:#7fe0a3"></span>Live publishing</b><p>Publish pushes changes to the shared live site for every device.</p></div></aside>
+<aside class="side"><div class="brand"><small>private control room</small><h1>Birthday Site</h1></div><nav class="nav" id="nav"><button data-view="general" class="active">General</button><button data-view="journey">Journey</button><button data-view="pages">Pages</button><button data-view="heartintro">Heart intro</button><button data-view="visual">Visual editor</button><button data-view="media">Media library</button><button data-view="yapping">Yapping archive</button><button data-view="fair">Fair</button><button data-view="finale">Finale</button><button data-view="security">Security</button><button data-view="advanced">Advanced</button></nav><div class="status"><b><span class="dot" style="background:#7fe0a3"></span>Live publishing</b><p>Publish pushes changes to the shared live site for every device.</p></div></aside>
 <main class="main"><header class="top"><strong id="topTitle">General</strong><span class="pill" id="saveState">saved</span><div class="spacer"></div><a class="btn" id="openSite" href="index.html?adminPreview=1" target="_blank" rel="noopener">Open site ↗</a><button class="btn primary" id="saveAll">Publish changes</button></header><div class="content">
 <section class="view active" id="view-general"><div class="pagehead"><div><h2>General</h2><p>Personal details and the shared soundtrack used across the birthday experience.</p></div></div><div class="grid">
 <div class="card"><h3>Identity</h3><div class="row"><div class="field"><label>Her name</label><input data-bind="general.name"></div><div class="field"><label>Nickname</label><input data-bind="general.nickname"></div></div><div class="field"><label>Entry inside joke</label><textarea data-bind="general.insideJoke"></textarea></div><div class="field"><label>Entry personal line</label><textarea data-bind="general.introLine"></textarea></div></div>
@@ -181,6 +181,24 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 <div class="card full"><h3>Birthday access dialog</h3><div class="row"><div class="field"><label>Dialog title</label><input data-bind="pages.countdown.access.title"></div><div class="field"><label>Dialog subtitle</label><input data-bind="pages.countdown.access.text"></div></div><div class="help">The six-digit password remains the existing birthday gate. These fields only control its visible wording.</div></div>
 </div></section>
 <section class="view" id="view-pages"><div class="pagehead"><div><h2>Pages</h2><p>Enable, disable or reorder the optional chapters. Navigation skips disabled chapters automatically.</p></div></div><div class="card full"><div id="pageList" class="pages"></div></div></section>
+<section class="view" id="view-heartintro">
+  <div class="pagehead">
+    <div><h2>Heart intro</h2><p>Edit the opening screen of the Heart page directly. These fields use the same saved overrides as the Visual Editor.</p></div>
+    <button class="btn" type="button" id="heartIntroVisual">Open in visual editor</button>
+  </div>
+  <div class="grid">
+    <div class="card full">
+      <div class="field"><label>Chapter label</label><input id="heartIntroKicker"></div>
+      <div class="row">
+        <div class="field"><label>Main title</label><input id="heartIntroTitle"></div>
+        <div class="field"><label>Italic title</label><input id="heartIntroEmphasis"></div>
+      </div>
+      <div class="field"><label>Intro paragraph</label><textarea id="heartIntroCopy"></textarea></div>
+      <div class="field"><label>Enter button</label><input id="heartIntroButton"></div>
+      <div class="help">Changes are staged immediately here. Press <b>Publish changes</b> when you want them live.</div>
+    </div>
+  </div>
+</section>
 <section class="view" id="view-yapping">
   <div class="pagehead">
     <div><h2>Yapping Archive</h2><p>Add as many yapping videos as you want. Upload new videos or reuse videos already in the Media Library, then edit the session title/note and publish.</p></div>
@@ -428,7 +446,36 @@ document.getElementById('applyRaw').onclick=()=>{try{stageRecovery(JSON.parse(do
 document.getElementById('exportState').onclick=()=>download('birthday-site-settings.json',JSON.stringify(state,null,2));
 document.getElementById('importState').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{stageRecovery(JSON.parse(r.result),'Imported JSON')}catch(err){alert(err.message||'Invalid JSON')}finally{e.target.value=''}};r.readAsText(f)};
 document.getElementById('resetState').onclick=()=>{if(confirm('Stage the safe current defaults? Nothing goes live until you publish.')){state=modernDefaults();dirty();renderAll();toast('Safe defaults staged — publish when ready')}};
-function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();window.renderYappingManager?.();window.renderSoundtrackManager?.();window.renderPageSpacingManager?.()}
+function heartIntroPatch(selector){
+  state.patches??={};state.patches['heart.html']??=[];
+  let patch=state.patches['heart.html'].find(p=>p.selector===selector);
+  if(!patch){patch={selector,styles:{}};state.patches['heart.html'].push(patch)}
+  patch.styles??={};return patch;
+}
+function renderHeartIntroEditor(){
+  const fields=[
+    ['heartIntroKicker','#heartBootKicker','chapter four · heart memory field'],
+    ['heartIntroTitle','#heartBootTitle','these memories live'],
+    ['heartIntroEmphasis','#heartBootEmphasis','in my heart.'],
+    ['heartIntroCopy','#heartBootCopy','Not in a universe. Not in space. Just here — in my heart. You can look at it from my heart, or step in my heart and be surrounded by the little moments that stay with me.'],
+    ['heartIntroButton','#bootBtn','enter my heart']
+  ];
+  for(const [id,selector,fallback] of fields){
+    const el=document.getElementById(id);if(!el)continue;
+    const existing=(state.patches?.['heart.html']||[]).find(p=>p.selector===selector);
+    el.value=existing?.text??fallback;
+    el.oninput=()=>{heartIntroPatch(selector).text=el.value;dirty()};
+  }
+}
+function openHeartIntroVisual(){
+  const select=document.getElementById('previewPage');
+  if(select)select.value='heart.html';
+  updateCountdownPreviewControl();
+  document.querySelector('.nav button[data-view="visual"]')?.click();
+  reloadPreview();
+}
+document.getElementById('heartIntroVisual')?.addEventListener('click',openHeartIntroVisual);
+function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();renderHeartIntroEditor();window.renderYappingManager?.();window.renderSoundtrackManager?.();window.renderPageSpacingManager?.()}
 renderAll();bindFrame();
 document.getElementById('adminUnlock').onclick=unlock;
 document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
@@ -509,4 +556,4 @@ if(ADMIN_KEY){const err=document.getElementById('adminError');err.textContent='L
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260919-yapping-load7"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-heart-intro-edit8"></script></body></html>
