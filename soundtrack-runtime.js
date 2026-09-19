@@ -1,4 +1,5 @@
 (()=>{
+  const EDITOR_PREVIEW=window.self!==window.top&&new URLSearchParams(location.search).get('adminPreview')==='1';
   const PREF='birthdayMusic';
   const VOLUME_PREF='birthdayMusicVolume';
   const PLAYBACK='birthdaySoundtrackPlaybackV2';
@@ -297,6 +298,14 @@
     ensureControlStyles();
     ensureGlobalControl();
     controls().forEach(attachVolumeUi);
+    if(EDITOR_PREVIEW){
+      wanted=false;
+      audio?.pause?.();
+      audio?.remove?.();
+      audio=null;
+      for(const btn of controls())btn.hidden=true;
+      return;
+    }
     applyGeneral(config());
     document.addEventListener('click',e=>{
       const btn=e.target?.closest?.(CONTROL);if(!btn)return;
