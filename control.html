@@ -411,7 +411,7 @@ document.getElementById('applyRaw').onclick=()=>{try{stageRecovery(JSON.parse(do
 document.getElementById('exportState').onclick=()=>download('birthday-site-settings.json',JSON.stringify(state,null,2));
 document.getElementById('importState').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>{try{stageRecovery(JSON.parse(r.result),'Imported JSON')}catch(err){alert(err.message||'Invalid JSON')}finally{e.target.value=''}};r.readAsText(f)};
 document.getElementById('resetState').onclick=()=>{if(confirm('Stage the safe current defaults? Nothing goes live until you publish.')){state=modernDefaults();dirty();renderAll();toast('Safe defaults staged — publish when ready')}};
-function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();window.renderYappingManager?.();window.renderSoundtrackManager?.()}
+function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();window.renderYappingManager?.();window.renderSoundtrackManager?.();window.renderPageSpacingManager?.()}
 renderAll();bindFrame();
 document.getElementById('adminUnlock').onclick=unlock;
 document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
