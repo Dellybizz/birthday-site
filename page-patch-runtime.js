@@ -91,12 +91,17 @@
     if(t.startsWith('audio/')||/\.(mp3|wav|m4a|aac|ogg|flac)$/.test(u))return 'audio';
     return 'image';
   }
+  function applyMediaPresentation(el,item){
+    if(!el||!item||el.tagName==='AUDIO')return;
+    el.style.objectFit=item.fit||'cover';
+    el.style.objectPosition=item.position||'center center';
+  }
   function mediaNode(item){
     const kind=mediaKind(item);let el;
     if(kind==='video'){el=document.createElement('video');el.controls=true;el.playsInline=true;el.preload='metadata'}
     else if(kind==='audio'){el=document.createElement('audio');el.controls=true;el.preload='metadata'}
     else{el=document.createElement('img');el.alt=item?.alt||item?.name||'';el.loading='lazy';el.decoding='async'}
-    el.src=item.url;el.className='bday-added-media';el.dataset.bdayInserted=item.id||item.url;return el;
+    el.src=item.url;el.className='bday-added-media';el.dataset.bdayInserted=item.id||item.url;applyMediaPresentation(el,item);return el;
   }
   function safeAttr(value){return String(value||'').replace(/["\\]/g,'')}
   function insertedNode(item,root=document){
@@ -141,11 +146,12 @@
     const existing=insertedNode(item,scope);
     if(existing){
       if(existing.getAttribute('src')!==item.url){existing.setAttribute('src',item.url);if('src' in existing)existing.src=item.url;existing.load?.()}
+      applyMediaPresentation(existing,item);
       return;
     }
     if(anchor.matches?.('img,video,audio,source')){
       if(!anchor.dataset.bdayOriginalSrc)anchor.dataset.bdayOriginalSrc=anchor.getAttribute('src')||'';
-      anchor.setAttribute('src',item.url);if('src' in anchor)anchor.src=item.url;anchor.dataset.bdayInserted=item.id||item.url;anchor.load?.();return;
+      anchor.setAttribute('src',item.url);if('src' in anchor)anchor.src=item.url;anchor.dataset.bdayInserted=item.id||item.url;applyMediaPresentation(anchor,item);anchor.load?.();return;
     }
     if(!mediaSlot(anchor))return;
     const el=mediaNode(item);
