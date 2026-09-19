@@ -296,7 +296,93 @@
     }
 
     .envelope.open .flap{transform:rotateX(180deg)}
-    .envelope.open .letter{transform:translateY(-30%)}
+    .envelope.open .letter{transform:none}
+
+    .envelope-stage .envelope{
+      transition:opacity .42s ease,transform .42s cubic-bezier(.2,.8,.2,1);
+    }
+
+    .message-paper{
+      position:absolute;
+      left:50%;
+      top:50%;
+      width:min(92vw,520px);
+      min-height:min(68vh,560px);
+      padding:54px 42px 44px;
+      transform:translate(-50%,-48%) scale(.96);
+      opacity:0;
+      visibility:hidden;
+      pointer-events:none;
+      z-index:9;
+      text-align:left;
+      color:#3d3136;
+      background:
+        linear-gradient(rgba(255,255,255,.74),rgba(255,255,255,.74)),
+        repeating-linear-gradient(0deg,transparent 0 31px,rgba(186,97,123,.08) 31px 32px),
+        #fffaf6;
+      border:1px solid rgba(105,77,88,.13);
+      border-radius:4px;
+      box-shadow:0 28px 80px rgba(88,55,68,.18),0 2px 8px rgba(88,55,68,.07);
+      transition:opacity .5s ease,transform .55s cubic-bezier(.2,.8,.2,1),visibility 0s linear .5s;
+    }
+
+    .message-paper::before{
+      content:"";
+      position:absolute;
+      inset:0;
+      pointer-events:none;
+      opacity:.22;
+      background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 180 180' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='paperNoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.72' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23paperNoise)' opacity='.16'/%3E%3C/svg%3E");
+      mix-blend-mode:multiply;
+    }
+
+    .message-paper > *{position:relative;z-index:1}
+    .message-paper .paper-kicker{
+      font-size:12px;
+      letter-spacing:.12em;
+      text-transform:uppercase;
+      color:rgba(89,67,77,.5);
+      margin-bottom:38px;
+    }
+    .message-paper .rule-small{
+      color:#9a858e;
+      margin-bottom:12px;
+      font-size:14px;
+    }
+    .message-paper .rule-big{
+      font-family:Georgia,"Times New Roman",serif;
+      font-size:clamp(38px,8vw,56px);
+      line-height:1.08;
+      margin:0;
+      font-weight:500;
+      letter-spacing:-.03em;
+    }
+    .message-paper .rule-sub{
+      margin:24px 0 34px;
+      max-width:410px;
+      color:#7d6972;
+      line-height:1.75;
+      font-size:16px;
+    }
+    .message-paper .next{
+      margin-left:-8px;
+    }
+    .envelope-stage.paper-open .envelope{
+      opacity:0;
+      transform:scale(.94);
+      pointer-events:none;
+    }
+    .envelope-stage.paper-open .envelope-caption{
+      opacity:0;
+      pointer-events:none;
+    }
+    .envelope-stage.paper-open .message-paper{
+      opacity:1;
+      visibility:visible;
+      pointer-events:auto;
+      transform:translate(-50%,-50%) scale(1);
+      transition-delay:.08s,0s,0s;
+    }
 
     .letter .for{
       color:var(--muted);
@@ -469,6 +555,16 @@
       .footer{left:32px;right:32px}
     }
 
+    @media (max-width:560px){
+      .message-paper{
+        width:min(91vw,460px);
+        min-height:min(66vh,520px);
+        padding:42px 28px 36px;
+      }
+      .message-paper .paper-kicker{margin-bottom:30px}
+      .message-paper .rule-sub{font-size:15px;line-height:1.65}
+    }
+
     @media (prefers-reduced-motion:reduce){
       *,*::before,*::after{
         animation-duration:.01ms!important;
@@ -580,9 +676,9 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
       </div>
     </section>
 
-    <!-- SCREEN 3 -->
+    <!-- SCREEN 3 — opening the envelope reveals a paper message in this same scene -->
     <section class="screen" id="screenEnvelope">
-      <div class="envelope-stage">
+      <div class="envelope-stage" id="envelopeStage">
         <div class="envelope" id="envelope">
           <div class="flap"></div>
 
@@ -598,18 +694,16 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
         </div>
 
         <div class="envelope-caption" id="envelopeCaption">tap the seal to open it</div>
-      </div>
-    </section>
 
-    <!-- SCREEN 4 -->
-    <section class="screen" id="screenRule">
-      <div class="rule-wrap">
-        <div class="rule-small">okay, one tiny rule…</div>
-        <h2 class="rule-big">don’t skip anything.</h2>
-        <p class="rule-sub" id="ruleSub">
-          There are eight little pieces to this. Go in order, take your time, and please appreciate my unnecessary level of effort.
-        </p>
-        <a class="next" id="nextLink" data-journey-next="1" href="memories.html">chapter two starts here →</a>
+        <article class="message-paper" id="messagePaper" aria-hidden="true">
+          <div class="paper-kicker">a tiny note before you continue</div>
+          <div class="rule-small">okay, one tiny rule…</div>
+          <h2 class="rule-big">don’t skip anything.</h2>
+          <p class="rule-sub" id="ruleSub">
+            There are eight little pieces to this. Go in order, take your time, and please appreciate my unnecessary level of effort.
+          </p>
+          <a class="next" id="nextLink" data-journey-next="1" href="memories.html">chapter two starts here →</a>
+        </article>
       </div>
     </section>
   </main>
@@ -662,7 +756,9 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
     const startBtn = document.getElementById("startBtn");
     const intro = document.getElementById("screenIntro");
     const envelopeScreen = document.getElementById("screenEnvelope");
+    const envelopeStage = document.getElementById("envelopeStage");
     const envelope = document.getElementById("envelope");
+    const messagePaper = document.getElementById("messagePaper");
     const sealBtn = document.getElementById("sealBtn");
     const caption = document.getElementById("envelopeCaption");
     const musicBtn = document.getElementById("musicBtn");
@@ -702,8 +798,11 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
       e.stopPropagation();
       envelope.classList.add("open");
       sealBtn.classList.add("hidden");
-      caption.textContent = "okay… now this officially begins.";
-      setTimeout(()=> showScreen("screenRule"), 1450);
+      caption.textContent = "for you ♡";
+      setTimeout(()=>{
+        envelopeStage.classList.add("paper-open");
+        messagePaper.setAttribute("aria-hidden","false");
+      },520);
     });
 
     // Hidden notes
@@ -759,6 +858,6 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
   </script>
   
 
-<script src="./page-patch-runtime.js?v=20260919-section-media1"></script>
+<script src="./page-patch-runtime.js?v=20260919-entry-paper14"></script>
 </body>
 </html>
