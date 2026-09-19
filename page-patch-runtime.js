@@ -93,8 +93,8 @@
   }
   function applyMediaPresentation(el,item){
     if(!el||!item||el.tagName==='AUDIO')return;
-    el.style.objectFit=item.fit||'cover';
-    el.style.objectPosition=item.position||'center center';
+    el.style.setProperty('object-fit',item.fit||'cover','important');
+    el.style.setProperty('object-position',item.position||'center center','important');
   }
   function mediaNode(item){
     const kind=mediaKind(item);let el;
