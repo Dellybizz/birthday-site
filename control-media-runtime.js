@@ -1217,8 +1217,48 @@
   }
   function yappingTitle(index){return 'session '+String(index+1).padStart(3,'0')}
   function yappingVideoItems(){return mediaItems.filter(rec=>kind(rec)==='video')}
+  function yappingSectionMedia(clip){
+    if(Array.isArray(clip?.clips)&&clip.clips.length){
+      return clip.clips.filter(item=>item&&typeof item.src==='string'&&item.src).map(item=>({src:item.src,mediaType:'video',name:item.name||''}));
+    }
+    if(clip?.src)return [{src:clip.src,mediaType:'video',name:''}];
+    return [];
+  }
+  function syncYappingPrimary(clip){
+    const list=yappingSectionMedia(clip);
+    clip.clips=list;
+    clip.src=list[0]?.src||'';
+    clip.mediaType='video';
+    return list;
+  }
+  function yappingGridHtml(selectedUrls=[],multi=true){
+    const selected=new Set(selectedUrls||[]);
+    const items=yappingVideoItems();
+    if(!items.length)return '<div class="empty">No uploaded videos yet. Upload videos first or use the upload button here.</div>';
+    return '<div class="yap-video-grid">'+items.map((rec,index)=>
+      '<button class="yap-video-choice '+(selected.has(rec.url)?'selected':'')+'" type="button" data-yap-grid-url="'+attr(rec.url)+'" data-yap-grid-index="'+index+'" aria-pressed="'+(selected.has(rec.url)?'true':'false')+'">'+
+        '<video src="'+attr(rec.url)+'" muted playsinline preload="metadata"></video><small>'+esc(label(rec))+'</small>'+
+      '</button>'
+    ).join('')+'</div>';
+  }
+  function bindYappingGrid(root,multi=true){
+    const picked=new Set();
+    root.querySelectorAll('[data-yap-grid-url]').forEach(button=>{
+      button.onclick=()=>{
+        const url=button.dataset.yapGridUrl;
+        if(!multi){
+          root.querySelectorAll('[data-yap-grid-url]').forEach(b=>{b.classList.remove('selected');b.setAttribute('aria-pressed','false')});
+          picked.clear();
+        }
+        if(picked.has(url)){picked.delete(url);button.classList.remove('selected');button.setAttribute('aria-pressed','false')}
+        else{picked.add(url);button.classList.add('selected');button.setAttribute('aria-pressed','true')}
+      };
+    });
+    return picked;
+  }
   function yappingPreviewHtml(clip){
-    if(clip?.src)return '<video src="'+attr(clip.src)+'" controls muted playsinline preload="metadata"></video>';
+    const first=yappingSectionMedia(clip)[0];
+    if(first?.src)return '<video src="'+attr(first.src)+'" controls muted playsinline preload="metadata"></video>';
     return '<span>No video yet</span>';
   }
   function yappingMediaOptions(selectedUrl=''){
@@ -1250,7 +1290,8 @@
       title:label(rec).replace(/\.[^.]+$/,'')||yappingTitle(index),
       note:'archived yapping evidence',
       src:rec.url,
-      mediaType:'video'
+      mediaType:'video',
+      clips:[{src:rec.url,mediaType:'video',name:label(rec)}]
     });
     return clips[clips.length-1];
   }
@@ -1259,21 +1300,21 @@
     add.className='yap-add-more';
     add.innerHTML=
       '<div class="yap-add-more-head"><div><b>+ Add more yapping clips</b><small>Upload several clips at once, choose several existing videos, or add blank slots. New clips are appended to this same archive.</small></div><label class="btn primary upload">Upload multiple videos<input data-yap-add-more-upload type="file" multiple accept="video/mp4,video/webm"></label></div>'+
-      '<div class="yap-batch"><label>Select multiple from Media Library</label><select class="yap-batch-select" data-yap-batch-existing multiple size="6">'+yappingBatchOptions()+'</select><div class="yap-batch-note">Ctrl/Cmd-click for separate clips, or Shift-click for a range.</div><button class="btn" type="button" data-yap-batch-add>Add selected clips</button></div>'+
-      '<div class="yap-add-more-actions"><select data-yap-add-more-existing>'+yappingMediaOptions('')+'</select><button class="btn" type="button" data-yap-add-more-use>Add one selected video</button><button class="btn" type="button" data-yap-add-more-empty>Add blank slot</button></div>';
+      '<div class="yap-batch"><label>Select multiple from Media Library</label><div data-yap-batch-grid>'+yappingGridHtml([],true)+'</div><div class="yap-batch-note">Click thumbnails to select as many videos as you want.</div><button class="btn" type="button" data-yap-batch-add>Add selected clips</button></div>'+
+      '<div class="yap-add-more-actions"><button class="btn" type="button" data-yap-add-more-empty>Add blank section</button></div>';
+    const batchPicked=bindYappingGrid(add.querySelector('[data-yap-batch-grid]'),true);
     add.querySelector('[data-yap-batch-add]').onclick=()=>{
-      const select=add.querySelector('[data-yap-batch-existing]');
-      const urls=[...select.selectedOptions].map(option=>option.value).filter(Boolean);
-      if(!urls.length){toast('Select one or more uploaded videos first');return}
+      const urls=[...batchPicked];
+      if(!urls.length){toast('Select one or more video thumbnails first');return}
       try{
         const room=50-clips.length;
-        if(room<=0)throw new Error('The Yapping Archive supports up to 50 clips.');
+        if(room<=0)throw new Error('The Yapping Archive supports up to 50 sections.');
         const chosen=urls.slice(0,room).map(url=>yappingVideoItems().find(item=>item.url===url)).filter(Boolean);
         if(!chosen.length){toast('Those videos are no longer available. Refresh media.');return}
         chosen.forEach(addYappingClipFromRecord);
         dirty();
         renderYappingManager(false,true);
-        toast(chosen.length+' yapping clip'+(chosen.length===1?'':'s')+' added — publish to save');
+        toast(chosen.length+' yapping section'+(chosen.length===1?'':'s')+' added — publish to save');
       }catch(e){alert(e?.message||String(e))}
     };
     const upload=add.querySelector('[data-yap-add-more-upload]');
@@ -1291,15 +1332,6 @@
         }
         dirty();await renderYappingManager(false);toast(files.length+' new yapping video'+(files.length===1?'':'s')+' added — publish to save');
       }catch(e){alert(e?.message||String(e))}finally{upload.value=''}
-    };
-    add.querySelector('[data-yap-add-more-use]').onclick=()=>{
-      const select=add.querySelector('[data-yap-add-more-existing]');
-      const rec=yappingVideoItems().find(item=>item.url===select.value);
-      if(!rec){toast('Choose an uploaded video first');return}
-      try{
-        addYappingClipFromRecord(rec);
-        dirty();renderYappingManager(false);toast('New yapping video added — publish to save');
-      }catch(e){alert(e?.message||String(e))}
     };
     add.querySelector('[data-yap-add-more-empty]').onclick=()=>{
       if(clips.length>=50){alert('The Yapping Archive supports up to 50 clips.');return}
@@ -1346,8 +1378,12 @@
             '<div class="field"><label>Session title</label><input data-yap-title value="'+attr(clip?.title||yappingTitle(index))+'"></div>'+
             '<div class="field"><label>Archive note</label><input data-yap-note value="'+attr(clip?.note||'')+'"></div>'+
           '</div>'+
-          '<div class="yap-meta">'+(clip?.src?esc(clip.src):'No video attached')+'</div>'+
-          '<div class="yap-existing"><select data-yap-existing>'+yappingMediaOptions(clip?.src||'')+'</select><button class="btn" type="button" data-yap-use>Use selected</button></div>'+
+          '<div class="yap-meta">'+(yappingSectionMedia(clip).length?yappingSectionMedia(clip).length+' clip'+(yappingSectionMedia(clip).length===1?'':'s')+' in this section':'No video attached')+'</div>'+
+          '<div class="yap-section-media">'+
+            '<div class="yap-section-media-head"><b>Clips in this yapp section</b><button class="btn" type="button" data-yap-toggle-picker>+ Add clips</button></div>'+
+            '<div class="yap-attached-grid">'+yappingSectionMedia(clip).map((item,mediaIndex)=>'<div class="yap-attached"><video src="'+attr(item.src)+'" muted playsinline preload="metadata"></video><div class="yap-attached-actions"><button class="btn" type="button" data-yap-media-up="'+mediaIndex+'" '+(mediaIndex===0?'disabled':'')+'>↑</button><button class="btn" type="button" data-yap-media-down="'+mediaIndex+'" '+(mediaIndex===yappingSectionMedia(clip).length-1?'disabled':'')+'>↓</button><button class="btn danger" type="button" data-yap-media-remove="'+mediaIndex+'">×</button></div></div>').join('')+'</div>'+
+            '<div class="yap-section-picker" data-yap-section-picker><div data-yap-section-grid>'+yappingGridHtml([],true)+'</div><div class="yap-picker-actions"><button class="btn primary" type="button" data-yap-section-add>Add selected to this section</button><label class="btn upload">Upload clips<input data-yap-section-upload type="file" multiple accept="video/mp4,video/webm"></label></div></div>'+
+          '</div>'+
           '<div class="yap-actions">'+
             '<label class="btn upload">Replace upload<input data-yap-upload type="file" accept="video/mp4,video/webm"></label>'+
             '<button class="btn" type="button" data-yap-clear>Clear video</button>'+
@@ -1383,11 +1419,48 @@
       title.oninput=()=>{clip.title=title.value;dirty()};
       note.oninput=()=>{clip.note=note.value;dirty()};
 
-      row.querySelector('[data-yap-use]').onclick=()=>{
-        const sel=row.querySelector('[data-yap-existing]'),url=sel.value;
-        if(!url){toast('Choose an uploaded video first');return}
-        clip.src=url;clip.mediaType='video';dirty();renderYappingManager(false);toast('Video attached — publish to save');
+      const picker=row.querySelector('[data-yap-section-picker]');
+      const sectionPicked=bindYappingGrid(row.querySelector('[data-yap-section-grid]'),true);
+      row.querySelector('[data-yap-toggle-picker]').onclick=()=>picker.classList.toggle('open');
+      row.querySelector('[data-yap-section-add]').onclick=()=>{
+        const urls=[...sectionPicked];
+        if(!urls.length){toast('Select one or more video thumbnails first');return}
+        const list=yappingSectionMedia(clip);
+        const existing=new Set(list.map(item=>item.src));
+        for(const url of urls){
+          if(existing.has(url))continue;
+          const rec=yappingVideoItems().find(item=>item.url===url);
+          if(rec){list.push({src:rec.url,mediaType:'video',name:label(rec)});existing.add(url)}
+        }
+        clip.clips=list;syncYappingPrimary(clip);dirty();renderYappingManager(false,true);toast('Clips added to this yapp section — publish to save');
       };
+      row.querySelector('[data-yap-section-upload]').onchange=async e=>{
+        const files=[...(e.target.files||[])];if(!files.length)return;
+        try{
+          const list=yappingSectionMedia(clip);
+          for(const file of files){
+            if(!String(file.type||'').startsWith('video/'))throw new Error(file.name+' is not a video.');
+            toast('Uploading '+file.name+'…');
+            const rec=await uploadShared(file);
+            if(kind(rec)!=='video')throw new Error(file.name+' is not a supported video.');
+            mediaItems.unshift(rec);
+            list.push({src:rec.url,mediaType:'video',name:label(rec)});
+          }
+          clip.clips=list;syncYappingPrimary(clip);dirty();renderYappingManager(false,true);toast(files.length+' clip'+(files.length===1?'':'s')+' added to this section — publish to save');
+        }catch(err){alert(err?.message||String(err))}finally{e.target.value=''}
+      };
+      row.querySelectorAll('[data-yap-media-up]').forEach(button=>button.onclick=()=>{
+        const i=Number(button.dataset.yapMediaUp),list=yappingSectionMedia(clip);if(i<1)return;
+        [list[i-1],list[i]]=[list[i],list[i-1]];clip.clips=list;syncYappingPrimary(clip);dirty();renderYappingManager(false,true);
+      });
+      row.querySelectorAll('[data-yap-media-down]').forEach(button=>button.onclick=()=>{
+        const i=Number(button.dataset.yapMediaDown),list=yappingSectionMedia(clip);if(i<0||i>=list.length-1)return;
+        [list[i+1],list[i]]=[list[i],list[i+1]];clip.clips=list;syncYappingPrimary(clip);dirty();renderYappingManager(false,true);
+      });
+      row.querySelectorAll('[data-yap-media-remove]').forEach(button=>button.onclick=()=>{
+        const i=Number(button.dataset.yapMediaRemove),list=yappingSectionMedia(clip);if(i<0||i>=list.length)return;
+        list.splice(i,1);clip.clips=list;syncYappingPrimary(clip);dirty();renderYappingManager(false,true);
+      });
       row.querySelector('[data-yap-upload]').onchange=async e=>{
         const file=e.target.files?.[0];if(!file)return;
         try{
@@ -1395,12 +1468,15 @@
           toast('Uploading '+file.name+'…');
           const rec=await uploadShared(file);
           if(kind(rec)!=='video')throw new Error('The uploaded file is not a supported video.');
-          mediaItems.unshift(rec);clip.src=rec.url;clip.mediaType='video';
+          mediaItems.unshift(rec);
+          const list=yappingSectionMedia(clip);
+          if(list.length)list[0]={src:rec.url,mediaType:'video',name:label(rec)};else list.push({src:rec.url,mediaType:'video',name:label(rec)});
+          clip.clips=list;syncYappingPrimary(clip);
           if(!clip.title||/^session \d+$/i.test(clip.title))clip.title=file.name.replace(/\.[^.]+$/,'')||clip.title;
           dirty();await renderYappingManager(false);toast('Video ready — publish to save');
         }catch(err){alert(err?.message||String(err))}finally{e.target.value=''}
       };
-      row.querySelector('[data-yap-clear]').onclick=()=>{clip.src='';clip.mediaType='video';dirty();renderYappingManager(false);toast('Video cleared — publish to save')};
+      row.querySelector('[data-yap-clear]').onclick=()=>{clip.clips=[];clip.src='';clip.mediaType='video';dirty();renderYappingManager(false,true);toast('Section clips cleared — publish to save')};
       row.querySelector('[data-yap-up]').onclick=()=>moveYappingClip(index,index-1);
       row.querySelector('[data-yap-down]').onclick=()=>moveYappingClip(index,index+1);
       row.querySelector('[data-yap-remove]').onclick=()=>{if(!confirm('Remove this Yapping Archive clip? The uploaded file itself stays in Media Library.'))return;clips.splice(index,1);dirty();renderYappingManager(false);toast('Clip removed — publish to save')};
@@ -1424,10 +1500,10 @@
         mediaItems.unshift(rec);
         const empty=clips.findIndex(item=>!item?.src);
         if(empty>=0){
-          clips[empty]={...clips[empty],src:rec.url,mediaType:'video'};
+          clips[empty]={...clips[empty],src:rec.url,mediaType:'video',clips:[{src:rec.url,mediaType:'video',name:label(rec)}]};
           if(!clips[empty].title||/^session \d+$/i.test(clips[empty].title))clips[empty].title=file.name.replace(/\.[^.]+$/,'')||yappingTitle(empty);
         }else{
-          clips.push({title:file.name.replace(/\.[^.]+$/,'')||yappingTitle(clips.length),note:'archived yapping evidence',src:rec.url,mediaType:'video'});
+          clips.push({title:file.name.replace(/\.[^.]+$/,'')||yappingTitle(clips.length),note:'archived yapping evidence',src:rec.url,mediaType:'video',clips:[{src:rec.url,mediaType:'video',name:label(rec)}]});
         }
       }
       dirty();await renderYappingManager(false);toast(files.length+' video'+(files.length===1?'':'s')+' added — publish to save');
