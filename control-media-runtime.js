@@ -280,16 +280,31 @@
     const s=target.ownerDocument.defaultView.getComputedStyle(target),p=findPatch(selected?.selector||'');
     return {fit:p?.styles?.['object-fit']||s.objectFit||'cover',position:p?.styles?.['object-position']||s.objectPosition||'center center'};
   }
-  function applyMediaFitPreview(){
-    const fit=document.getElementById('iMediaFit')?.value,position=document.getElementById('iMediaPosition')?.value;
-    if(!fit||!position)return;
+  function mediaFitRuleSelector(){
     const owner=mediaFitOwner();
     if(owner){
       const token=String(owner.item?.id||owner.item?.url||'');
-      if(token)for(const el of currentDoc()?.querySelectorAll('[data-bday-inserted="'+CSS.escape(token)+'"]')||[]){el.style.objectFit=fit;el.style.objectPosition=position}
+      return token?'[data-bday-inserted="'+CSS.escape(token)+'"]':'';
+    }
+    const el=mediaFitElement();
+    if(!el)return '';
+    return selected?.selector||selectorFor(el)||'';
+  }
+  function applyMediaFitPreview(){
+    const fit=document.getElementById('iMediaFit')?.value,position=document.getElementById('iMediaPosition')?.value;
+    if(!fit||!position)return;
+    const doc=currentDoc();if(!doc)return;
+    let style=doc.getElementById('birthday-editor-media-fit-rule');
+    if(!style){style=doc.createElement('style');style.id='birthday-editor-media-fit-rule';doc.head?.appendChild(style)}
+    const selector=mediaFitRuleSelector();
+    style.textContent=selector?selector+'{object-fit:'+fit+'!important;object-position:'+position+'!important;}':'';
+    const owner=mediaFitOwner();
+    if(owner){
+      const token=String(owner.item?.id||owner.item?.url||'');
+      if(token)for(const el of doc.querySelectorAll('[data-bday-inserted="'+CSS.escape(token)+'"]')){el.style.setProperty('object-fit',fit,'important');el.style.setProperty('object-position',position,'important')}
       return;
     }
-    const el=mediaFitElement();if(el){el.style.objectFit=fit;el.style.objectPosition=position}
+    const el=mediaFitElement();if(el){el.style.setProperty('object-fit',fit,'important');el.style.setProperty('object-position',position,'important')}
   }
   function showMedia(rec,itemId,itemPlacement){
     const primary=previewElement();if(!primary)return;
@@ -551,6 +566,7 @@
     document.getElementById('removePatch').onclick=()=>removeOverride().catch(()=>{});
     for(const id of ['iText','iHref','iColor','iBg','iSize','iOpacity','iRadius','iTransform'])document.getElementById(id)?.addEventListener('input',livePreview);
     for(const id of ['iMediaFit','iMediaPosition'])document.getElementById(id)?.addEventListener('change',livePreview);
+    if(mediaFit)setTimeout(applyMediaFitPreview,0);
     document.getElementById('iHidden')?.addEventListener('change',async e=>{
       pushHistory();const patch=patchFor(selector);patch.hidden=e.target.checked;dirty();
       if(e.target.checked){el.style.outline='2px dashed #ff7f7f';el.style.outlineOffset='2px'}else{el.style.removeProperty('outline');el.style.removeProperty('outline-offset')}
@@ -569,7 +585,7 @@
     if(modelNode&&!clickedMedia)clicked=modelNode;else if(clickedMedia)clicked=clickedMedia;
     let token=clicked.dataset?.bdayInserted||'',el=clicked,selector='';
     if(token){
-      const owner=generatedOwnerByToken(token);if(owner){selector=owner.patch.selector;el=lookup(selector)||clicked}
+      const owner=generatedOwnerByToken(token);if(owner){selector=owner.patch.selector;el=clicked}
     }
     if(!selector)selector=selectorFor(el);
     if(!selector||GENERATED.test(selector))return;
@@ -705,6 +721,14 @@
   function attachFrame(){
     const frame=document.getElementById('previewFrame'),doc=currentDoc(),win=currentWin();if(!frame||!doc||!win)return;
     ensureEditIds(doc);if(win.__phase3EditorPicking)return;win.__phase3EditorPicking=true;
+    const editorObserver=new MutationObserver(records=>{
+      for(const record of records)for(const node of record.addedNodes){
+        if(node?.nodeType!==1)continue;
+        ensureEditIds(node);
+      }
+    });
+    editorObserver.observe(doc.documentElement,{subtree:true,childList:true});
+    win.addEventListener('beforeunload',()=>editorObserver.disconnect(),{once:true});
     const s=doc.createElement('style');s.textContent='.scribble,.handwritten,.note,[id*="scribble"],[class*="scribble"],[class*="handwritten"],svg text,svg tspan{pointer-events:auto!important}';doc.head?.appendChild(s);
     win.addEventListener('click',e=>{
       if(window.__previewInteractMode)return;
