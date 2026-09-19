@@ -262,9 +262,15 @@
     const position=(item.positionX!==undefined||item.positionY!==undefined)?(x+'% '+y+'%'):(item.position||'center center');
     node.style.setProperty('object-fit',item.fit||'cover','important');
     node.style.setProperty('object-position',position,'important');
-    const frameWidth=Number.isFinite(Number(item.frameWidth))?Number(item.frameWidth):100;
-    const frameHeight=Number.isFinite(Number(item.frameHeight))?Number(item.frameHeight):0;
-    applyFramePreview(mediaFrameElement(node),frameWidth,frameHeight);
+    const hasFrameWidth=item.frameWidth!==undefined&&Number.isFinite(Number(item.frameWidth));
+    const hasFrameHeight=item.frameHeight!==undefined&&Number.isFinite(Number(item.frameHeight));
+    if(hasFrameWidth||hasFrameHeight){
+      applyFramePreview(
+        mediaFrameElement(node),
+        hasFrameWidth?Number(item.frameWidth):100,
+        hasFrameHeight?Number(item.frameHeight):0
+      );
+    }
   }
   function prepareSlot(el){
     if(!el||isBroad(el))return false;
@@ -336,17 +342,34 @@
     };
     const xy=map[raw]||[50,50];return {x:xy[0],y:xy[1]};
   }
+  function isPrettyStripFrame(frame){
+    return pageName()==='pretty-photos.html'&&!!frame?.matches?.('.strip-card');
+  }
+  function rememberPrettyStripBaseWidth(frame,savedScale){
+    if(!isPrettyStripFrame(frame))return 0;
+    const cached=Number(frame.dataset?.bdayPrettyBaseWidth);
+    if(Number.isFinite(cached)&&cached>0)return cached;
+    const rendered=frame.getBoundingClientRect().width;
+    if(!Number.isFinite(rendered)||rendered<=0)return 0;
+    const scale=Number(savedScale);
+    const base=Number.isFinite(scale)&&scale>0&&scale!==100?rendered/(scale/100):rendered;
+    frame.dataset.bdayPrettyBaseWidth=String(base);
+    return base;
+  }
+
   function mediaFitValues(el=previewElement()){
     const owner=mediaFitOwner(),target=mediaFitElement(el);if(!target)return null;
     const p=findPatch(selected?.selector||''),saved=owner?.item||p?.mediaLayout||{};
     const s=target.ownerDocument.defaultView.getComputedStyle(target),frame=mediaFrameElement(target);
     const fs=frame?frame.ownerDocument.defaultView.getComputedStyle(frame):null;
+    const savedFrameWidth=Number.isFinite(Number(saved.frameWidth))?Number(saved.frameWidth):100;
+    rememberPrettyStripBaseWidth(frame,Number.isFinite(Number(saved.frameWidth))?Number(saved.frameWidth):100);
     const pos=positionToXY(saved.positionX!==undefined&&saved.positionY!==undefined?(saved.positionX+'% '+saved.positionY+'%'):(saved.position||p?.styles?.['object-position']||s.objectPosition||'center center'));
     return {
       fit:saved.fit||p?.styles?.['object-fit']||s.objectFit||'cover',
       x:Number.isFinite(Number(saved.positionX))?Number(saved.positionX):pos.x,
       y:Number.isFinite(Number(saved.positionY))?Number(saved.positionY):pos.y,
-      frameWidth:Number.isFinite(Number(saved.frameWidth))?Number(saved.frameWidth):100,
+      frameWidth:savedFrameWidth,
       frameHeight:Number.isFinite(Number(saved.frameHeight))?Number(saved.frameHeight):0,
       computedWidth:frame?Math.round(frame.getBoundingClientRect().width):0,
       computedHeight:frame?Math.round(frame.getBoundingClientRect().height):0,
@@ -395,9 +418,23 @@
   }
   function applyFramePreview(frame,width,height){
     if(!frame)return;
-    const memoriesFrame=pageName()==='memories.html'&&frame.matches?.('.photo')&&applyMemoriesFrameWidth(frame,width);
-    if(!memoriesFrame&&Number(width)>0){
-      frame.style.setProperty('width',Number(width)+'%','important');
+    const numericWidth=Number(width);
+    const memoriesFrame=pageName()==='memories.html'&&frame.matches?.('.photo')&&applyMemoriesFrameWidth(frame,numericWidth);
+    if(!memoriesFrame&&isPrettyStripFrame(frame)&&Number.isFinite(numericWidth)&&numericWidth>0){
+      const base=rememberPrettyStripBaseWidth(frame,100);
+      if(Math.abs(numericWidth-100)<.001){
+        frame.style.removeProperty('width');
+        frame.style.removeProperty('max-width');
+        frame.style.removeProperty('margin-left');
+        frame.style.removeProperty('margin-right');
+      }else if(base>0){
+        frame.style.setProperty('width',(base*numericWidth/100)+'px','important');
+        frame.style.removeProperty('max-width');
+        frame.style.removeProperty('margin-left');
+        frame.style.removeProperty('margin-right');
+      }
+    }else if(!memoriesFrame&&Number.isFinite(numericWidth)&&numericWidth>0){
+      frame.style.setProperty('width',numericWidth+'%','important');
       frame.style.setProperty('max-width','none','important');
       frame.style.setProperty('margin-left','auto','important');
       frame.style.setProperty('margin-right','auto','important');
@@ -412,7 +449,24 @@
       frame.style.removeProperty('aspect-ratio');
     }
   }
-  function applyMediaFitPreview(){
+  function mediaFitPreviewTargets(){
+    const doc=currentDoc();if(!doc)return [];
+    const targets=[];
+    const owner=mediaFitOwner();
+    if(owner){
+      const token=String(owner.item?.id||owner.item?.url||'');
+      if(token)try{targets.push(...doc.querySelectorAll('[data-bday-inserted="'+CSS.escape(token)+'"]'))}catch(e){}
+    }
+    if(selected?.selector){
+      for(const anchor of lookupAll(selected.selector)){
+        if(anchor.matches?.('img,video'))targets.push(anchor);
+        else targets.push(...anchor.querySelectorAll?.(':scope > img,:scope > video,:scope > .bday-added-media')||[]);
+      }
+    }
+    const direct=mediaFitElement();if(direct)targets.push(direct);
+    return [...new Set(targets)].filter(el=>el&&['IMG','VIDEO'].includes(el.tagName));
+  }
+  function applyMediaFitPreview(options={}){
     const fit=document.getElementById('iMediaFit')?.value;
     const x=Number(document.getElementById('iMediaPosX')?.value??50),y=Number(document.getElementById('iMediaPosY')?.value??50);
     const frameWidth=Number(document.getElementById('iFrameWidth')?.value??100),frameHeight=Number(document.getElementById('iFrameHeight')?.value??0);
@@ -422,16 +476,10 @@
     if(!style){style=doc.createElement('style');style.id='birthday-editor-media-fit-rule';doc.head?.appendChild(style)}
     const selector=mediaFitRuleSelector(),position=x+'% '+y+'%';
     style.textContent=selector?selector+'{object-fit:'+fit+'!important;object-position:'+position+'!important;}':'';
-    const owner=mediaFitOwner();
-    if(owner){
-      const token=String(owner.item?.id||owner.item?.url||'');
-      if(token)for(const el of doc.querySelectorAll('[data-bday-inserted="'+CSS.escape(token)+'"]')){
-        el.style.setProperty('object-fit',fit,'important');el.style.setProperty('object-position',position,'important');
-        applyFramePreview(mediaFrameElement(el),frameWidth,frameHeight);
-      }
-    }else{
-      const el=mediaFitElement();
-      if(el){el.style.setProperty('object-fit',fit,'important');el.style.setProperty('object-position',position,'important');applyFramePreview(mediaFrameElement(el),frameWidth,frameHeight)}
+    for(const el of mediaFitPreviewTargets()){
+      el.style.setProperty('object-fit',fit,'important');
+      el.style.setProperty('object-position',position,'important');
+      if(options.applyFrame===true)applyFramePreview(mediaFrameElement(el),frameWidth,frameHeight);
     }
     const xv=document.getElementById('iMediaPosXValue'),yv=document.getElementById('iMediaPosYValue'),wv=document.getElementById('iFrameWidthValue'),hv=document.getElementById('iFrameHeightValue');
     if(xv)xv.textContent=Math.round(x)+'%';if(yv)yv.textContent=Math.round(y)+'%';if(wv)wv.textContent=Math.round(frameWidth)+'%';if(hv)hv.textContent=frameHeight>0?Math.round(frameHeight)+'px':'Page default';
@@ -444,7 +492,11 @@
       const frameWidth=Number(document.getElementById('iFrameWidth')?.value??100),frameHeight=Number(document.getElementById('iFrameHeight')?.value??0);
       if(!el||!selected?.selector||!fit)return;
       pushHistory();
-      const p=patchFor(selected.selector),owner=mediaFitOwner(),layout={fit,positionX:x,positionY:y,frameWidth,frameHeight};
+      const p=patchFor(selected.selector),owner=mediaFitOwner(),existing=owner?.item||p?.mediaLayout||{};
+      const widthInput=document.getElementById('iFrameWidth'),heightInput=document.getElementById('iFrameHeight');
+      const layout={fit,positionX:x,positionY:y};
+      if(widthInput?.dataset.frameTouched==='1'||existing.frameWidth!==undefined)layout.frameWidth=frameWidth;
+      if(heightInput?.dataset.frameTouched==='1'||existing.frameHeight!==undefined)layout.frameHeight=frameHeight;
       if(owner){
         Object.assign(owner.item,layout);delete owner.item.position;
         if(p.styles){delete p.styles['object-fit'];delete p.styles['object-position']}
@@ -453,7 +505,7 @@
         p.mediaLayout=layout;
         p.styles??={};p.styles['object-fit']=fit;p.styles['object-position']=x+'% '+y+'%';
       }
-      prunePatch(p);dirty();applyMediaFitPreview();
+      prunePatch(p);dirty();applyMediaFitPreview({applyFrame:false});
       await publishNoReload();
       toast('Media layout updated');
     }).catch(err=>{console.warn('Media layout save failed',err)});
@@ -832,13 +884,17 @@
     document.getElementById('applyPatch').onclick=()=>applyInspector().catch(()=>{});
     document.getElementById('removePatch').onclick=()=>removeOverride().catch(()=>{});
     for(const id of ['iText','iHref','iColor','iBg','iSize','iOpacity','iRadius','iTransform'])document.getElementById(id)?.addEventListener('input',livePreview);
-    document.getElementById('iMediaFit')?.addEventListener('change',()=>{applyMediaFitPreview();saveMediaFit()});
-    for(const id of ['iFrameWidth','iFrameHeight','iMediaPosX','iMediaPosY']){
+    document.getElementById('iMediaFit')?.addEventListener('change',()=>{applyMediaFitPreview({applyFrame:false});saveMediaFit()});
+    for(const id of ['iFrameWidth','iFrameHeight']){
       const input=document.getElementById(id);
-      input?.addEventListener('input',applyMediaFitPreview);
+      input?.addEventListener('input',()=>{input.dataset.frameTouched='1';applyMediaFitPreview({applyFrame:true})});
       input?.addEventListener('change',saveMediaFit);
     }
-    if(mediaFit)setTimeout(applyMediaFitPreview,0);
+    for(const id of ['iMediaPosX','iMediaPosY']){
+      const input=document.getElementById(id);
+      input?.addEventListener('input',()=>applyMediaFitPreview({applyFrame:false}));
+      input?.addEventListener('change',saveMediaFit);
+    }
     bindSectionSpacing(section);
     document.getElementById('iHidden')?.addEventListener('change',async e=>{
       pushHistory();const patch=patchFor(selector);patch.hidden=e.target.checked;dirty();
