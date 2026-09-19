@@ -139,9 +139,20 @@ body::before{
 
 .main-window{left:19%;top:15%;width:min(560px,58vw)}
 .player{
-  aspect-ratio:16/9;background:#050605;border:2px inset #787268;display:grid;place-items:center;overflow:hidden
+  aspect-ratio:16/9;background:#050605;border:2px inset #787268;display:flex;align-items:center;justify-content:center;overflow:hidden
 }
-.player>video{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center center!important;transform:none!important;background:#050605;display:block}
+.player>video{
+  width:auto!important;
+  height:auto!important;
+  max-width:100%!important;
+  max-height:100%!important;
+  aspect-ratio:auto!important;
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:none!important;
+  background:#050605;
+  display:block
+}
 .player audio{width:min(92%,520px)}
 .player.is-empty{background:radial-gradient(circle at 50% 45%,#151a12 0,#070806 58%,#040504 100%)}
 .player-placeholder{
@@ -711,16 +722,20 @@ function renderClipPlayer(index,autoplay=false,ensureVisible=false,mediaIndex=0)
   media.src=activeMedia.src;media.controls=true;media.preload="metadata";
   if(kind==="video"){
     media.playsInline=true;
-    media.style.setProperty("width","100%","important");
-    media.style.setProperty("height","100%","important");
+    media.style.setProperty("width","auto","important");
+    media.style.setProperty("height","auto","important");
     media.style.setProperty("max-width","100%","important");
     media.style.setProperty("max-height","100%","important");
+    media.style.setProperty("aspect-ratio","auto","important");
     media.style.setProperty("object-fit","contain","important");
     media.style.setProperty("object-position","center center","important");
     media.style.setProperty("transform","none","important");
     media.style.setProperty("background","#050605","important");
   }
-  media.addEventListener("loadedmetadata",()=>{clipMeta.textContent="DURATION: "+formatDuration(media.duration)+" · "+kind.toUpperCase()},{once:true});
+  media.addEventListener("loadedmetadata",()=>{
+    const sourceSize=kind==="video"&&media.videoWidth&&media.videoHeight?(" · SOURCE "+media.videoWidth+"×"+media.videoHeight):"";
+    clipMeta.textContent="DURATION: "+formatDuration(media.duration)+" · "+kind.toUpperCase()+sourceSize;
+  },{once:true});
   media.addEventListener("play",()=>{clipMeta.textContent="PLAYING · "+kind.toUpperCase()});
   media.addEventListener("pause",()=>{if(!media.ended)clipMeta.textContent="PAUSED · "+formatDuration(media.currentTime)+" / "+formatDuration(media.duration)});
   media.addEventListener("ended",()=>{clipMeta.textContent="ENDED · "+formatDuration(media.duration)});
