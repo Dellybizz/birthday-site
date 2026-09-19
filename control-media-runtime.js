@@ -340,9 +340,35 @@
     if(!el)return '';
     return selected?.selector||selectorFor(el)||'';
   }
+  function applyMemoriesFrameWidth(frame,width){
+    const beat=frame?.closest?.('article.beat'),inner=frame?.closest?.('.beat-inner'),visual=frame?.closest?.('.visual');
+    if(!beat||!inner||!visual)return false;
+    const scale=Math.max(25,Math.min(140,Number(width)||100))/100;
+    if(frame.ownerDocument.defaultView.matchMedia('(max-width:760px)').matches){
+      inner.style.removeProperty('grid-template-columns');
+      visual.style.setProperty('width',Math.min(100,Math.max(25,Number(width)||100))+'%','important');
+      visual.style.setProperty('margin-left','auto','important');
+      visual.style.setProperty('margin-right','auto','important');
+    }else{
+      visual.style.setProperty('width','100%','important');
+      visual.style.removeProperty('margin-left');visual.style.removeProperty('margin-right');
+      const reverse=beat.classList.contains('reverse'),baseVisual=reverse?44:56;
+      const visualShare=Math.max(24,Math.min(76,baseVisual*scale)),copyShare=100-visualShare;
+      const visualFr=(visualShare/50).toFixed(3),copyFr=(copyShare/50).toFixed(3);
+      inner.style.setProperty('grid-template-columns',
+        reverse?'minmax(280px,'+copyFr+'fr) minmax(0,'+visualFr+'fr)':'minmax(0,'+visualFr+'fr) minmax(280px,'+copyFr+'fr)',
+        'important');
+    }
+    frame.style.setProperty('width','100%','important');
+    frame.style.setProperty('max-width','none','important');
+    frame.style.setProperty('margin-left','auto','important');
+    frame.style.setProperty('margin-right','auto','important');
+    return true;
+  }
   function applyFramePreview(frame,width,height){
     if(!frame)return;
-    if(Number(width)>0){
+    const memoriesFrame=pageName()==='memories.html'&&frame.matches?.('.photo')&&applyMemoriesFrameWidth(frame,width);
+    if(!memoriesFrame&&Number(width)>0){
       frame.style.setProperty('width',Number(width)+'%','important');
       frame.style.setProperty('max-width','none','important');
       frame.style.setProperty('margin-left','auto','important');
@@ -644,6 +670,10 @@
   }
   function sectionGapTarget(section){
     if(!section)return null;
+    if(pageName()==='memories.html'&&section.matches?.('article.beat')){
+      const inner=section.querySelector(':scope > .beat-inner');
+      if(inner)return inner;
+    }
     const win=section.ownerDocument.defaultView,display=win.getComputedStyle(section).display;
     if(display==='grid'||display==='flex')return section;
     return [...section.children].find(child=>{const cs=win.getComputedStyle(child);return cs.display==='grid'||cs.display==='flex'})||section;
@@ -950,7 +980,13 @@
     const read=(name,fallback)=>{const m=body.match(new RegExp(name+'\\s*:\\s*(\\d+(?:\\.\\d+)?)px'));return m?Number(m[1]):fallback};
     return {enabled:!!match,side:read('--bday-page-side',20),section:read('--bday-section-space',80),gap:read('--bday-card-gap',24)};
   }
-  function managedSpacingCss(values){
+  function managedSpacingCss(values,page=spacingPage()){
+    if(page==='memories.html'){
+      return SPACING_START+'\n'+
+        ':root{--bday-page-side:'+values.side+'px}\n'+
+        'main{padding-left:var(--bday-page-side)!important;padding-right:var(--bday-page-side)!important}\n'+
+        SPACING_END;
+    }
     return SPACING_START+'\n'+
       ':root{--bday-page-side:'+values.side+'px;--bday-section-space:'+values.section+'px;--bday-card-gap:'+values.gap+'px}\n'+
       'main{padding-left:var(--bday-page-side)!important;padding-right:var(--bday-page-side)!important}\n'+
@@ -969,7 +1005,7 @@
     const doc=currentDoc();if(!doc)return;
     let style=doc.getElementById('birthday-editor-page-spacing');
     if(!style){style=doc.createElement('style');style.id='birthday-editor-page-spacing';doc.head?.appendChild(style)}
-    style.textContent=enabled?managedSpacingCss({side,section,gap}).replace(SPACING_START,'').replace(SPACING_END,''):'';
+    style.textContent=enabled?managedSpacingCss({side,section,gap},spacingPage()).replace(SPACING_START,'').replace(SPACING_END,''):'';
   }
   let spacingSaveChain=Promise.resolve();
   function savePageSpacing(){
@@ -979,7 +1015,7 @@
       const values={side:Number(panel.querySelector('#veSpacingSide')?.value??20),section:Number(panel.querySelector('#veSpacingSection')?.value??80),gap:Number(panel.querySelector('#veSpacingGap')?.value??24)};
       state.pageCss??={};
       const custom=stripManagedSpacing(state.pageCss[page]||'');
-      state.pageCss[page]=[custom,enabled?managedSpacingCss(values):''].filter(Boolean).join('\n\n');
+      state.pageCss[page]=[custom,enabled?managedSpacingCss(values,page):''].filter(Boolean).join('\n\n');
       dirty();applySpacingPreview();
       await publishNoReload();
       toast(enabled?'Page spacing updated':'Page spacing reset');
@@ -993,6 +1029,13 @@
     panel.querySelector('#veSpacingSide').value=String(values.side);
     panel.querySelector('#veSpacingSection').value=String(values.section);
     panel.querySelector('#veSpacingGap').value=String(values.gap);
+    const memories=spacingPage()==='memories.html';
+    for(const id of ['veSpacingSection','veSpacingGap']){
+      const row=panel.querySelector('#'+id)?.closest('.ve-slider-field');
+      if(row)row.style.display=memories?'none':'';
+    }
+    const note=panel.querySelector('.ve-note');
+    if(note)note.textContent=memories?'Memories page default controls side padding only. Select a real section to adjust its own spacing.':'Sets defaults for the current page. Select any section to fine-tune that section separately.';
     applySpacingPreview();
   }
   function mountPageSpacingEditor(){
