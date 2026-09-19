@@ -141,7 +141,7 @@ body::before{
 .player{
   aspect-ratio:16/9;background:#050605;border:2px inset #787268;display:grid;place-items:center;overflow:hidden
 }
-.player video{width:100%;height:100%;object-fit:contain;object-position:center;background:#050605;display:block}
+.player>video{width:100%!important;height:100%!important;max-width:100%!important;max-height:100%!important;object-fit:contain!important;object-position:center center!important;transform:none!important;background:#050605;display:block}
 .player audio{width:min(92%,520px)}
 .player.is-empty{background:radial-gradient(circle at 50% 45%,#151a12 0,#070806 58%,#040504 100%)}
 .player-placeholder{
@@ -651,7 +651,12 @@ function renderSectionClipStrip(sectionIndex){
     const button=document.createElement("button");button.type="button";button.className="section-clip"+(index===activeSectionMediaIndex?" active":"");
     const video=document.createElement(item.mediaType==="audio"?"div":"video");
     if(item.mediaType==="audio"){video.textContent="AUDIO";video.style.cssText="aspect-ratio:16/9;display:grid;place-items:center;background:#111;color:#aaa;font-size:8px"}
-    else{video.src=item.src;video.muted=true;video.playsInline=true;video.preload="metadata"}
+    else{
+      video.src=item.src;video.muted=true;video.playsInline=true;video.preload="metadata";
+      video.style.setProperty("object-fit","contain","important");
+      video.style.setProperty("object-position","center center","important");
+      video.style.setProperty("transform","none","important");
+    }
     const label=document.createElement("small");label.textContent=item.name||("clip "+String(index+1).padStart(2,"0"));
     button.append(video,label);
     button.onclick=()=>renderClipPlayer(sectionIndex,false,false,index);
@@ -704,7 +709,17 @@ function renderClipPlayer(index,autoplay=false,ensureVisible=false,mediaIndex=0)
   }
   const media=document.createElement(kind);
   media.src=activeMedia.src;media.controls=true;media.preload="metadata";
-  if(kind==="video")media.playsInline=true;
+  if(kind==="video"){
+    media.playsInline=true;
+    media.style.setProperty("width","100%","important");
+    media.style.setProperty("height","100%","important");
+    media.style.setProperty("max-width","100%","important");
+    media.style.setProperty("max-height","100%","important");
+    media.style.setProperty("object-fit","contain","important");
+    media.style.setProperty("object-position","center center","important");
+    media.style.setProperty("transform","none","important");
+    media.style.setProperty("background","#050605","important");
+  }
   media.addEventListener("loadedmetadata",()=>{clipMeta.textContent="DURATION: "+formatDuration(media.duration)+" · "+kind.toUpperCase()},{once:true});
   media.addEventListener("play",()=>{clipMeta.textContent="PLAYING · "+kind.toUpperCase()});
   media.addEventListener("pause",()=>{if(!media.ended)clipMeta.textContent="PAUSED · "+formatDuration(media.currentTime)+" / "+formatDuration(media.duration)});
@@ -730,7 +745,11 @@ function renderClips(){
     const firstMedia=sectionMedia(clip)[0]||null,kind=firstMedia?.mediaType==="audio"?"audio":"video";
     const thumb=document.createElement("div");thumb.className="clip-thumb";
     if(firstMedia?.src&&kind==="video"){
-      const video=document.createElement("video");video.src=firstMedia.src;video.muted=true;video.playsInline=true;video.preload="metadata";thumb.appendChild(video);
+      const video=document.createElement("video");video.src=firstMedia.src;video.muted=true;video.playsInline=true;video.preload="metadata";
+      video.style.setProperty("object-fit","contain","important");
+      video.style.setProperty("object-position","center center","important");
+      video.style.setProperty("transform","none","important");
+      thumb.appendChild(video);
     }else thumb.textContent=firstMedia?.src?"♫ AUDIO":"NO FILE";
     const title=document.createElement("strong");title.textContent=clip.title||("session "+String(index+1).padStart(3,"0"));
     const note=document.createElement("span");note.textContent=clip.note||"no annotation";
@@ -837,6 +856,6 @@ let clockTimer=0;function scheduleClock(){clearTimeout(clockTimer);if(document.h
   
 
 <script src="./soundtrack-runtime.js?v=20260919-soundtrack3"></script>
-<script src="./page-patch-runtime.js?v=20260919-yapping-sections11"></script>
+<script src="./page-patch-runtime.js?v=20260919-yapping-no-crop13"></script>
 </body>
 </html>
