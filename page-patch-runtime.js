@@ -402,7 +402,20 @@
   const style=document.createElement('style');
   style.textContent='[data-media-slot] > .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:inherit;object-fit:cover}.bday-added-media-group:empty{display:none!important}.bday-added-media-group{display:grid;gap:14px;margin:16px 0}.bday-added-media{display:block;max-width:min(100%,680px);width:auto;height:auto;margin:0 auto;border-radius:18px;object-fit:cover}.bday-added-media-group>audio,.bday-added-media-group>video{width:min(100%,680px)}.bday-original-slot-content[hidden]{display:none!important}.node .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover}';
   document.head.appendChild(style);
-  window.BDAY_PATCH_RUNTIME={ensureEditIds,findTarget,findTargets,mediaSlot,textEditable,restoreReplaceSlot,applyAll:()=>applyAll(true),reconcileLayout:reconcileMemoriesChatSection};
+  function cloneRuntimeState(value){
+    try{return JSON.parse(JSON.stringify(value||{}))}catch(e){return value||{}}
+  }
+  function setEditorState(nextState,apply=true){
+    cachedState=cloneRuntimeState(nextState);
+    return apply?applyAll(false):Promise.resolve();
+  }
+  window.BDAY_PATCH_RUNTIME={
+    ensureEditIds,findTarget,findTargets,mediaSlot,textEditable,restoreReplaceSlot,
+    applyAll:()=>applyAll(true),
+    setState:nextState=>setEditorState(nextState,true),
+    cacheState:nextState=>setEditorState(nextState,false),
+    reconcileLayout:reconcileMemoriesChatSection
+  };
   [20,220,800,1800].forEach((delay,index)=>setTimeout(()=>applyAll(index===0),delay));
   let reapplyTimer=0;
   const observer=new MutationObserver(records=>{
