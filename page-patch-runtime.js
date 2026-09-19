@@ -280,6 +280,36 @@
     const gap=Number(layout.gap),target=sectionGapTarget(anchor);
     if(target&&Number.isFinite(gap)&&gap>=0)target.style.setProperty('gap',Math.min(200,gap)+'px','important');
   }
+  function elementVisible(node){
+    if(!node)return false;
+    const s=node.ownerDocument.defaultView.getComputedStyle(node);
+    return s.display!=='none'&&s.visibility!=='hidden'&&s.opacity!=='0';
+  }
+  function meaningfulVisibleContent(container){
+    if(!container||!elementVisible(container))return false;
+    for(const child of container.children){
+      if(!elementVisible(child))continue;
+      if(child.matches?.('img,video,audio,svg,canvas,button,a,input,textarea,select'))return true;
+      if(String(child.textContent||'').trim())return true;
+      if(meaningfulVisibleContent(child))return true;
+    }
+    return false;
+  }
+  function reconcileMemoriesChatSection(){
+    if(PAGE!=='memories.html')return;
+    const section=document.querySelector('.story > article.chat-beat');
+    if(!section||section.dataset.bdayHidden==='1')return;
+    const copy=section.querySelector(':scope > .chat-copy');
+    const phone=section.querySelector(':scope > .phone');
+    const empty=!meaningfulVisibleContent(copy)&&!meaningfulVisibleContent(phone);
+    if(empty){
+      section.style.setProperty('display','none','important');
+      section.dataset.bdayAutoCollapsed='1';
+    }else if(section.dataset.bdayAutoCollapsed==='1'){
+      section.style.removeProperty('display');
+      delete section.dataset.bdayAutoCollapsed;
+    }
+  }
   function applyPatch(anchor,patch,patchIndex){
     if(!anchor||isGeneratedTarget(anchor))return;
     if(patch.hidden){
@@ -342,12 +372,13 @@
       if(!patch?.selector||GENERATED_SELECTOR.test(patch.selector))return;
       const anchors=findTargets(patch.selector);anchors.forEach((anchor,targetIndex)=>applyPatch(anchor,patch,index+'-'+targetIndex));
     });
+    reconcileMemoriesChatSection();
   }
 
   const style=document.createElement('style');
   style.textContent='[data-media-slot] > .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:inherit;object-fit:cover}.bday-added-media-group:empty{display:none!important}.bday-added-media-group{display:grid;gap:14px;margin:16px 0}.bday-added-media{display:block;max-width:min(100%,680px);width:auto;height:auto;margin:0 auto;border-radius:18px;object-fit:cover}.bday-added-media-group>audio,.bday-added-media-group>video{width:min(100%,680px)}.bday-original-slot-content[hidden]{display:none!important}.node .bday-added-media{width:100%;height:100%;max-width:none;margin:0;border-radius:0;object-fit:cover}';
   document.head.appendChild(style);
-  window.BDAY_PATCH_RUNTIME={ensureEditIds,findTarget,findTargets,mediaSlot,textEditable,restoreReplaceSlot,applyAll:()=>applyAll(true)};
+  window.BDAY_PATCH_RUNTIME={ensureEditIds,findTarget,findTargets,mediaSlot,textEditable,restoreReplaceSlot,applyAll:()=>applyAll(true),reconcileLayout:reconcileMemoriesChatSection};
   [20,220,800,1800].forEach((delay,index)=>setTimeout(()=>applyAll(index===0),delay));
   let reapplyTimer=0;
   const observer=new MutationObserver(records=>{
