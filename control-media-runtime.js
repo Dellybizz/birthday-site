@@ -149,7 +149,12 @@
   function editSnapshot(){const key=pageDataKey();return {page:pageName(),selector:selected?.selector||'',patches:clone(pagePatches()),pageDataKey:key,pageData:key?clone(state.pages?.[key]||{}):null}}
   function updateHistoryButtons(){const u=document.getElementById('veUndo'),r=document.getElementById('veRedo');if(u)u.disabled=!undoStack.length||historyBusy;if(r)r.disabled=!redoStack.length||historyBusy}
   function pushHistory(){if(historyBusy)return;undoStack.push(editSnapshot());if(undoStack.length>HISTORY_LIMIT)undoStack.shift();redoStack=[];updateHistoryButtons()}
-  async function publishNoReload(){const result=await save({reload:false});if(!result)throw new Error('Publish did not complete.');return result}
+  async function publishNoReload(){
+    const result=await save({reload:false});
+    if(!result)throw new Error('Publish did not complete.');
+    try{await currentWin()?.BDAY_PATCH_RUNTIME?.setState?.(state)}catch(e){console.warn('Preview state sync failed',e)}
+    return result;
+  }
   async function restoreHistory(entry,targetStack){
     if(!entry||historyBusy)return;historyBusy=true;updateHistoryButtons();
     const current=editSnapshot();targetStack.push(current);if(targetStack.length>HISTORY_LIMIT)targetStack.shift();
