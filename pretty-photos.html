@@ -252,14 +252,14 @@
 
   .stack{
     position:relative;
-    min-height:720px;
+    min-height:680px;
     isolation:isolate;
   }
 
   .photo{
     position:absolute;
     overflow:hidden;
-    box-shadow:0 28px 80px rgba(68,43,51,.12);
+    box-shadow:0 26px 72px rgba(68,43,51,.12);
     background:linear-gradient(135deg,#ead8de,#fff);
     will-change:transform;
   }
@@ -276,47 +276,65 @@
   }
 
   .p1{
-    width:59%;
+    width:57%;
     aspect-ratio:4/5;
-    left:1.5%;top:2%;
+    left:2%;top:2%;
     z-index:1;
-    border-radius:26px;
-    transform:rotate(-5deg);
+    border-radius:28px;
+    transform:rotate(-4deg);
+    box-shadow:0 28px 74px rgba(68,43,51,.13);
   }
 
   .p2{
-    width:48%;
+    width:43%;
     aspect-ratio:1;
-    right:1%;top:13%;
-    z-index:2;
-    padding:10px;
+    right:2%;top:11%;
+    z-index:3;
+    padding:0;
+    border:9px solid rgba(255,255,255,.94);
     border-radius:50%;
-    transform:rotate(2deg);
-    background:rgba(255,255,255,.94);
+    overflow:hidden;
+    transform:rotate(1deg);
+    background:#fff;
     box-shadow:
-      0 24px 68px rgba(68,43,51,.14),
-      0 0 0 1px rgba(68,43,51,.05);
+      0 24px 64px rgba(68,43,51,.16),
+      0 0 0 1px rgba(68,43,51,.04);
   }
 
   .p2 .placeholder{
+    position:absolute;
+    inset:0;
+    width:auto;
+    height:auto;
     padding:0;
     border-radius:50%;
     overflow:hidden;
     background:linear-gradient(135deg,#ead8de,#fff);
   }
 
-  .p2 [data-media-slot] > .bday-added-media{
-    border-radius:50%;
+  .p2 [data-media-slot] > .bday-added-media,
+  .p2 .bday-added-media{
+    position:absolute;
+    inset:0;
+    width:100%!important;
+    height:100%!important;
+    max-width:none!important;
+    margin:0!important;
+    border-radius:50%!important;
+    object-fit:cover;
   }
 
   .p3{
-    width:52%;
+    width:47%;
     aspect-ratio:4/5;
-    right:7%;bottom:1%;
+    right:5%;top:51%;
+    bottom:auto;
     left:auto;
-    z-index:3;
-    border-radius:22px;
-    transform:rotate(5deg);
+    z-index:4;
+    border:7px solid rgba(255,255,255,.82);
+    border-radius:24px;
+    transform:rotate(4deg);
+    box-shadow:0 24px 66px rgba(68,43,51,.13);
   }
 
   .spread-copy{
@@ -616,28 +634,30 @@
     .spread{grid-template-columns:1fr}
     .stack{
       width:min(100%,620px);
-      min-height:clamp(520px,108vw,650px);
+      min-height:clamp(500px,103vw,625px);
       margin-inline:auto;
     }
     .p1{
-      width:58%;
+      width:57%;
       left:3%;
       top:1%;
-      transform:rotate(-4deg);
+      transform:rotate(-3.5deg);
     }
     .p2{
-      width:45%;
+      width:42%;
       right:3%;
-      top:12%;
-      padding:8px;
+      top:11%;
+      border-width:8px;
       transform:rotate(1deg);
     }
     .p3{
-      width:53%;
-      right:8%;
-      bottom:1%;
+      width:47%;
+      right:6%;
+      top:50%;
+      bottom:auto;
       left:auto;
-      transform:rotate(4deg);
+      border-width:6px;
+      transform:rotate(3.5deg);
     }
     .spread-copy{padding-top:0}
     .solo{grid-template-columns:1fr;padding-top:70px}
@@ -656,24 +676,26 @@
     .hero-orbit{width:82vw}
     .section{padding-left:14px;padding-right:14px}
     .stack{
-      min-height:clamp(470px,122vw,590px);
+      min-height:clamp(455px,112vw,545px);
     }
     .p1{
-      width:61%;
+      width:59%;
       left:1%;
       top:1%;
     }
     .p2{
-      width:47%;
-      right:0;
-      top:13%;
-      padding:7px;
+      width:43%;
+      right:1%;
+      top:11%;
+      border-width:7px;
     }
     .p3{
-      width:56%;
-      right:7%;
-      bottom:0;
+      width:47%;
+      right:5%;
+      top:52%;
+      bottom:auto;
       left:auto;
+      border-width:5px;
     }
     .strip-card{width:190px}
     .solo{padding-left:14px;padding-right:14px}
@@ -972,6 +994,6 @@ musicBtn.addEventListener("click",async()=>{
 </script>
   
 
-<script src="./page-patch-runtime.js?v=20260919-media-sync4"></script>
+<script src="./page-patch-runtime.js?v=20260919-collage-clean5"></script>
 </body>
 </html>
