@@ -242,7 +242,8 @@ const COUNTDOWN_DEFAULTS={
   },
   access:{
     title:'come on! you know the password',
-    text:'Six digits. You definitely know this one.'
+    text:'Six digits. You definitely know this one.',
+    password:'200905'
   }
 };
 const stage=document.getElementById('stage');
@@ -438,7 +439,10 @@ if(!adminPreview){
 </style>
 <script>
 (()=>{
-  const PASSWORD='200905';
+  function currentPassword(){
+    const configured=String(window.COUNTDOWN_PAGE?.getAccessSettings?.()?.password||COUNTDOWN_DEFAULTS.access.password||'200905').replace(/\D/g,'').slice(0,6);
+    return /^\d{6}$/.test(configured)?configured:'200905';
+  }
   const inner=document.querySelector('.inner');
   const chapter=document.querySelector('.chapter');
   if(chapter)chapter.textContent='birthday lock · first screen';
@@ -487,7 +491,7 @@ if(!adminPreview){
   modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
   function submit(){
     const v=code.value.replace(/\D/g,'').slice(0,6);code.value=v;
-    if(v===PASSWORD){
+    if(v===currentPassword()){
       if(adminPreview){
         const next=new URL('entry.html',location.href);
         next.searchParams.set('adminPreview','1');
