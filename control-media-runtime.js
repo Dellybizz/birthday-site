@@ -152,7 +152,10 @@
   async function publishNoReload(){
     const result=await save({reload:false});
     if(!result)throw new Error('Publish did not complete.');
-    try{await currentWin()?.BDAY_PATCH_RUNTIME?.setState?.(state)}catch(e){console.warn('Preview state sync failed',e)}
+    try{
+      await currentWin()?.BDAY_PATCH_RUNTIME?.setState?.(state);
+      currentWin()?.FAIR_RUNTIME?.applyState?.(state);
+    }catch(e){console.warn('Preview state sync failed',e)}
     return result;
   }
   async function restoreHistory(entry,targetStack){
