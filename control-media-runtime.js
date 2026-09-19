@@ -837,7 +837,12 @@
         el.style.removeProperty('display');
         delete el.dataset.bdayHidden;
       }
-      try{await publishNoReload();toast(e.target.checked?'Element removed from layout':'Element restored')}catch(err){}
+      currentWin()?.BDAY_PATCH_RUNTIME?.reconcileLayout?.();
+      try{
+        await publishNoReload();
+        currentWin()?.BDAY_PATCH_RUNTIME?.reconcileLayout?.();
+        toast(e.target.checked?'Element removed from layout':'Element restored');
+      }catch(err){}
     });
     addColorPicker('iColor');addColorPicker('iBg');
     updateMediaPanel();
