@@ -334,9 +334,17 @@
       }
     }
     if(patch.sectionLayout)applySectionLayout(anchor,patch.sectionLayout);
-    if(patch.mediaLayout&&anchor.matches?.('img,video')){
-      applyMediaPresentation(anchor,patch.mediaLayout);
-      applyMediaFrame(anchor,patch.mediaLayout,anchor);
+    if(patch.mediaLayout){
+      if(anchor.matches?.('img,video')){
+        applyMediaPresentation(anchor,patch.mediaLayout);
+        applyMediaFrame(anchor,patch.mediaLayout,anchor);
+      }else if(PAGE==='heart.html'&&anchor.matches?.('[data-model-page="heart"][data-model-index]')){
+        const media=anchor.querySelector(':scope > img,:scope > video');
+        if(media){
+          applyMediaPresentation(media,patch.mediaLayout);
+          applyMediaFrame(media,patch.mediaLayout,anchor);
+        }
+      }
     }
     const inserted=Array.isArray(patch.insertImages)?patch.insertImages:Array.isArray(patch.insertMedia)?patch.insertMedia:[];
     if(inserted.length&&mediaSlot(anchor))inserted.forEach((item,index)=>insertOne(anchor,item,patchIndex+'-'+index));
