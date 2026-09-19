@@ -112,17 +112,17 @@
     }
     return anchor||el.parentElement||el;
   }
-  function isPrettyStripFrame(frame){
-    return PAGE==='pretty-photos.html'&&!!frame?.matches?.('.strip-card');
+  function isPrettyDesignedFrame(frame){
+    return PAGE==='pretty-photos.html'&&!!frame?.matches?.('.strip-card,.photo.p1,.photo.p2,.photo.p3');
   }
-  function prettyStripBaseWidth(frame){
-    if(!isPrettyStripFrame(frame))return 0;
-    const cached=Number(frame.dataset?.bdayPrettyBaseWidth);
-    if(Number.isFinite(cached)&&cached>0)return cached;
+  function prettyDesignedBaseWidth(frame){
+    if(!isPrettyDesignedFrame(frame))return 0;
+    frame.style.removeProperty('width');
+    frame.style.removeProperty('max-width');
+    frame.style.removeProperty('margin-left');
+    frame.style.removeProperty('margin-right');
     const rendered=frame.getBoundingClientRect().width;
-    if(!Number.isFinite(rendered)||rendered<=0)return 0;
-    frame.dataset.bdayPrettyBaseWidth=String(rendered);
-    return rendered;
+    return Number.isFinite(rendered)&&rendered>0?rendered:0;
   }
   function applyMediaPresentation(el,item){
     if(!el||!item||el.tagName==='AUDIO')return;
@@ -162,20 +162,10 @@
     const frame=mediaFrameFor(el,anchor);if(!frame)return;
     const width=Number(item.frameWidth),height=Number(item.frameHeight);
     const memoriesFrame=PAGE==='memories.html'&&frame.matches?.('.photo')&&Number.isFinite(width)&&width>0&&applyMemoriesFrameWidth(frame,width);
-    if(!memoriesFrame&&isPrettyStripFrame(frame)&&Number.isFinite(width)&&width>0){
+    if(!memoriesFrame&&isPrettyDesignedFrame(frame)&&Number.isFinite(width)&&width>0){
       const scale=Math.max(25,Math.min(140,width));
-      const base=prettyStripBaseWidth(frame);
-      if(Math.abs(scale-100)<.001){
-        frame.style.removeProperty('width');
-        frame.style.removeProperty('max-width');
-        frame.style.removeProperty('margin-left');
-        frame.style.removeProperty('margin-right');
-      }else if(base>0){
-        frame.style.setProperty('width',(base*scale/100)+'px','important');
-        frame.style.removeProperty('max-width');
-        frame.style.removeProperty('margin-left');
-        frame.style.removeProperty('margin-right');
-      }
+      const base=prettyDesignedBaseWidth(frame);
+      if(Math.abs(scale-100)>=.001&&base>0)frame.style.setProperty('width',(base*scale/100)+'px','important');
     }else if(!memoriesFrame&&Number.isFinite(width)&&width>0){
       frame.style.setProperty('width',Math.max(25,Math.min(140,width))+'%','important');
       frame.style.setProperty('max-width','none','important');
