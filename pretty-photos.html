@@ -253,6 +253,7 @@
   .stack{
     position:relative;
     min-height:720px;
+    isolation:isolate;
   }
 
   .photo{
@@ -260,6 +261,7 @@
     overflow:hidden;
     box-shadow:0 28px 80px rgba(68,43,51,.12);
     background:linear-gradient(135deg,#ead8de,#fff);
+    will-change:transform;
   }
 
   .photo .placeholder{
@@ -274,27 +276,47 @@
   }
 
   .p1{
-    width:62%;
+    width:59%;
     aspect-ratio:4/5;
-    left:4%;top:4%;
-    border-radius:24px;
-    transform:rotate(-6deg);
+    left:1.5%;top:2%;
+    z-index:1;
+    border-radius:26px;
+    transform:rotate(-5deg);
   }
 
   .p2{
-    width:54%;
+    width:48%;
     aspect-ratio:1;
-    right:2%;top:18%;
+    right:1%;top:13%;
+    z-index:2;
+    padding:10px;
     border-radius:50%;
-    transform:rotate(4deg);
+    transform:rotate(2deg);
+    background:rgba(255,255,255,.94);
+    box-shadow:
+      0 24px 68px rgba(68,43,51,.14),
+      0 0 0 1px rgba(68,43,51,.05);
+  }
+
+  .p2 .placeholder{
+    padding:0;
+    border-radius:50%;
+    overflow:hidden;
+    background:linear-gradient(135deg,#ead8de,#fff);
+  }
+
+  .p2 [data-media-slot] > .bday-added-media{
+    border-radius:50%;
   }
 
   .p3{
-    width:47%;
+    width:52%;
     aspect-ratio:4/5;
-    left:28%;bottom:0;
-    border-radius:20px;
-    transform:rotate(7deg);
+    right:7%;bottom:1%;
+    left:auto;
+    z-index:3;
+    border-radius:22px;
+    transform:rotate(5deg);
   }
 
   .spread-copy{
@@ -592,7 +614,31 @@
     .hero-copy{align-self:start;padding-top:9vh}
     .scribble.one{left:6vw;bottom:10vh}
     .spread{grid-template-columns:1fr}
-    .stack{min-height:560px}
+    .stack{
+      width:min(100%,620px);
+      min-height:clamp(520px,108vw,650px);
+      margin-inline:auto;
+    }
+    .p1{
+      width:58%;
+      left:3%;
+      top:1%;
+      transform:rotate(-4deg);
+    }
+    .p2{
+      width:45%;
+      right:3%;
+      top:12%;
+      padding:8px;
+      transform:rotate(1deg);
+    }
+    .p3{
+      width:53%;
+      right:8%;
+      bottom:1%;
+      left:auto;
+      transform:rotate(4deg);
+    }
     .spread-copy{padding-top:0}
     .solo{grid-template-columns:1fr;padding-top:70px}
     .solo-copy{order:2;padding-bottom:0}
@@ -609,10 +655,26 @@
     }
     .hero-orbit{width:82vw}
     .section{padding-left:14px;padding-right:14px}
-    .stack{min-height:490px}
-    .p1{width:66%}
-    .p2{width:57%}
-    .p3{width:48%}
+    .stack{
+      min-height:clamp(470px,122vw,590px);
+    }
+    .p1{
+      width:61%;
+      left:1%;
+      top:1%;
+    }
+    .p2{
+      width:47%;
+      right:0;
+      top:13%;
+      padding:7px;
+    }
+    .p3{
+      width:56%;
+      right:7%;
+      bottom:0;
+      left:auto;
+    }
     .strip-card{width:190px}
     .solo{padding-left:14px;padding-right:14px}
     .solo-image{border-radius:34px 34px 8px 34px}
