@@ -116,7 +116,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 .yap-drag{display:flex;flex-direction:column;align-items:center;justify-content:flex-start;gap:5px;padding-top:4px;color:#737985;user-select:none}
 .yap-drag-handle{font-size:19px;line-height:1;letter-spacing:-2px}.yap-order{font-size:9px;color:#9aa0aa}
 .yap-preview{aspect-ratio:16/10;background:#090a0d;border:1px solid var(--line);border-radius:10px;display:grid;place-items:center;overflow:hidden;color:var(--muted);font-size:11px;text-align:center}
-.yap-preview video{width:100%;height:100%;object-fit:cover}
+.yap-preview video{width:100%;height:100%;object-fit:contain;object-position:center;background:#090a0d}
 .yap-fields{display:grid;gap:9px}
 .yap-actions{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
 .yap-existing{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;min-width:min(100%,420px)}
@@ -562,4 +562,4 @@ if(ADMIN_KEY){const err=document.getElementById('adminError');err.textContent='L
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260919-yapping-multi-reorder9"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-yapping-fit10"></script></body></html>
