@@ -1276,13 +1276,26 @@
     };
     box.appendChild(add);
   }
-  async function renderYappingManager(refreshMedia=false){
-    const box=document.getElementById('yappingClipManager');if(!box)return;
-    if(refreshMedia||!mediaItems.length){
-      try{await sharedMedia()}catch(e){box.innerHTML='<div class="empty">'+esc(e?.message||String(e))+'</div>';return}
+  let yappingMediaReady=false,yappingMediaLoading=false;
+  async function refreshYappingMedia(force=false){
+    if(yappingMediaLoading)return;
+    if(yappingMediaReady&&!force)return;
+    yappingMediaLoading=true;
+    try{
+      await sharedMedia();
+      yappingMediaReady=true;
+    }catch(e){
+      console.warn('Could not refresh Yapping media library',e);
+    }finally{
+      yappingMediaLoading=false;
+      renderYappingManager(false,true);
     }
+  }
+  async function renderYappingManager(refreshMedia=false,skipMediaLoad=false){
+    const box=document.getElementById('yappingClipManager');if(!box)return;
     const clips=yappingClips();
     box.innerHTML='';
+    if(!skipMediaLoad&&(refreshMedia||!yappingMediaReady))refreshYappingMedia(refreshMedia);
     if(!clips.length){
       box.innerHTML='<div class="empty">No clips yet. Add your first yapping video below.</div>';
       appendYappingAddMore(box,clips);
@@ -1366,9 +1379,9 @@
     const clips=yappingClips();if(clips.length>=50){alert('The Yapping Archive supports up to 50 clips.');return}
     clips.push({title:yappingTitle(clips.length),note:'archived yapping evidence',src:'',mediaType:'video'});dirty();renderYappingManager(false);
   });
-  document.getElementById('yappingRefreshMedia')?.addEventListener('click',()=>renderYappingManager(true));
+  document.getElementById('yappingRefreshMedia')?.addEventListener('click',()=>{renderYappingManager(false);refreshYappingMedia(true)});
   document.getElementById('nav')?.addEventListener('click',e=>{
-    const y=e.target.closest('button[data-view="yapping"]');if(y)setTimeout(()=>renderYappingManager(true),0);
+    const y=e.target.closest('button[data-view="yapping"]');if(y)setTimeout(()=>{renderYappingManager(false);refreshYappingMedia(false)},0);
     const g=e.target.closest('button[data-view="general"]');if(g)setTimeout(()=>renderSoundtrackManager(true),0);
   });
   renderYappingManager(false);
