@@ -66,10 +66,24 @@ button,input,select,textarea{font:inherit}
 
   const setText=(id,value)=>{const el=document.getElementById(id);if(el&&value!==undefined&&value!==null)el.textContent=String(value)};
 
+  function normalizedPageCss(state,page){
+    let css=String(state?.pageCss?.[page]||'');
+    if(page!=='memories.html'||!css)return css;
+    const re=/\/\* BDAY_SPACING_START \*\/[\s\S]*?\/\* BDAY_SPACING_END \*\//;
+    const match=css.match(re);
+    if(!match)return css;
+    const sideMatch=match[0].match(/--bday-page-side\s*:\s*(\d+(?:\.\d+)?)px/);
+    const side=sideMatch?Number(sideMatch[1]):20;
+    const managed='/* BDAY_SPACING_START */\n'+
+      ':root{--bday-page-side:'+side+'px}\n'+
+      'main{padding-left:var(--bday-page-side)!important;padding-right:var(--bday-page-side)!important}\n'+
+      '/* BDAY_SPACING_END */';
+    return css.replace(re,managed);
+  }
   function applyRuntimeCss(state){
     const raw=location.pathname.split('/').filter(Boolean).pop()||'index.html';
     const page=raw==='entry.html'?'index.html':raw;
-    const css=[state?.general?.globalCss||'',state?.pageCss?.[page]||''].filter(Boolean).join('\n');
+    const css=[state?.general?.globalCss||'',normalizedPageCss(state,page)].filter(Boolean).join('\n');
     let node=document.getElementById('birthday-runtime-css');
     if(css){
       if(!node){node=document.createElement('style');node.id='birthday-runtime-css';document.head.appendChild(node)}
