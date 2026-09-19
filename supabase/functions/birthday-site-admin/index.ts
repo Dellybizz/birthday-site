@@ -273,6 +273,8 @@ function validateState(data: unknown): string[] {
             if (item.name !== undefined && !str(item.name,500)) errors.push(`${mt}.name is invalid.`);
             if (item.alt !== undefined && !str(item.alt,2000)) errors.push(`${mt}.alt is invalid.`);
             if (item.placement !== undefined && !['replace','inside','before','after'].includes(item.placement)) errors.push(`${mt}.placement is invalid.`);
+            if (item.fit !== undefined && !['cover','contain','fill','none','scale-down'].includes(item.fit)) errors.push(`${mt}.fit is invalid.`);
+            if (item.position !== undefined && !['center center','center top','center bottom','left center','right center','left top','right top','left bottom','right bottom'].includes(item.position)) errors.push(`${mt}.position is invalid.`);
           });
         }
       });
