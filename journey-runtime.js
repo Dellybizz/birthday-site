@@ -2,7 +2,8 @@
   const STATE_KEY='birthday-site-state-v2';
   const UNLOCK_KEY='birthdayUnlocked';
   const FALLBACK_BIRTHDAY='2026-09-18T00:00:00+05:30';
-  const CANONICAL=['countdown.html','index.html','memories.html','pretty-photos.html','heart.html','yapping.html','fair.html','finale.html'];
+  const CANONICAL=['countdown.html','index.html','memories.html','pretty-photos.html','heart.html','yapping.html','finale.html'];
+  const REMOVED=new Set(['fair.html']);
   const ESSENTIAL=new Set(['countdown.html','index.html','finale.html']);
   const raw=location.pathname.split('/').filter(Boolean).pop()||'index.html';
   const key=raw==='entry.html'?'index.html':raw;
@@ -77,6 +78,10 @@
     }
     if(!open){
       go('countdown.html',true);
+      return true;
+    }
+    if(REMOVED.has(key)){
+      go('finale.html',true);
       return true;
     }
     if(CANONICAL.includes(key)&&!enabled(state,key)){
