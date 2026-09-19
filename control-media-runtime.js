@@ -575,7 +575,7 @@
     const mediaFitControls=mediaFit?'<div class="row"><div class="field"><label>Media fit</label><select id="iMediaFit"><option value="cover" '+(mediaFit.fit==='cover'?'selected':'')+'>Cover</option><option value="contain" '+(mediaFit.fit==='contain'?'selected':'')+'>Contain</option><option value="fill" '+(mediaFit.fit==='fill'?'selected':'')+'>Fill</option><option value="none" '+(mediaFit.fit==='none'?'selected':'')+'>None</option><option value="scale-down" '+(mediaFit.fit==='scale-down'?'selected':'')+'>Scale down</option></select></div><div class="field"><label>Media position</label><select id="iMediaPosition"><option value="center center" '+(mediaFit.position==='center center'?'selected':'')+'>Center</option><option value="center top" '+(mediaFit.position==='center top'?'selected':'')+'>Top</option><option value="center bottom" '+(mediaFit.position==='center bottom'?'selected':'')+'>Bottom</option><option value="left center" '+(mediaFit.position==='left center'?'selected':'')+'>Left</option><option value="right center" '+(mediaFit.position==='right center'?'selected':'')+'>Right</option><option value="left top" '+(mediaFit.position==='left top'?'selected':'')+'>Top left</option><option value="right top" '+(mediaFit.position==='right top'?'selected':'')+'>Top right</option><option value="left bottom" '+(mediaFit.position==='left bottom'?'selected':'')+'>Bottom left</option><option value="right bottom" '+(mediaFit.position==='right bottom'?'selected':'')+'>Bottom right</option></select></div></div>':'';
     fields.innerHTML=(canText?'<div class="field"><label>Text</label><textarea id="iText">'+esc(inspectorText)+'</textarea></div>':'<div class="ve-note">Container text editing is disabled to protect child elements. Select the actual text element instead.</div>')+
       (isLink?'<div class="field"><label>Link href</label><input id="iHref" value="'+attr(p.href??el.getAttribute('href')??'')+'"></div>':'')+
-      '<div class="toggle"><div><b>Hide element</b></div><label class="switch"><input id="iHidden" type="checkbox" '+(p.hidden?'checked':'')+'><i></i></label></div>'+
+      '<div class="toggle"><div><b>Hide element</b><div class="help">Hidden items collapse out of the layout so nearby content fills the space.</div></div><label class="switch"><input id="iHidden" type="checkbox" '+(p.hidden?'checked':'')+'><i></i></label></div>'+
       '<div class="row"><div class="field"><label>Text color</label><input id="iColor" value="'+attr(style.color)+'"></div><div class="field"><label>Background</label><input id="iBg" value="'+attr(style.bg)+'"></div></div>'+
       '<div class="row"><div class="field"><label>Font size</label><input id="iSize" value="'+attr(style.size)+'"></div><div class="field"><label>Opacity</label><input id="iOpacity" value="'+attr(style.opacity)+'"></div></div>'+
       '<div class="row"><div class="field"><label>Border radius</label><input id="iRadius" value="'+attr(style.radius)+'"></div><div class="field"><label>Transform</label><input id="iTransform" value="'+attr(style.transform)+'"></div></div>'+
@@ -588,8 +588,14 @@
     if(mediaFit)setTimeout(applyMediaFitPreview,0);
     document.getElementById('iHidden')?.addEventListener('change',async e=>{
       pushHistory();const patch=patchFor(selector);patch.hidden=e.target.checked;dirty();
-      if(e.target.checked){el.style.outline='2px dashed #ff7f7f';el.style.outlineOffset='2px'}else{el.style.removeProperty('outline');el.style.removeProperty('outline-offset')}
-      try{await publishNoReload();toast(e.target.checked?'Element hidden':'Element visible')}catch(err){}
+      if(e.target.checked){
+        el.style.setProperty('display','none','important');
+        el.dataset.bdayHidden='1';
+      }else{
+        el.style.removeProperty('display');
+        delete el.dataset.bdayHidden;
+      }
+      try{await publishNoReload();toast(e.target.checked?'Element removed from layout':'Element restored')}catch(err){}
     });
     addColorPicker('iColor');addColorPicker('iBg');
     updateMediaPanel();
