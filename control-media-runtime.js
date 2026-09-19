@@ -252,6 +252,17 @@
     if(k!=='audio'){el.style.objectFit=fit||'cover';el.style.objectPosition=position||'center center'}
     return el;
   }
+  function applySavedMediaPreviewLayout(node,item){
+    if(!node||!item||node.tagName==='AUDIO')return;
+    const x=Number.isFinite(Number(item.positionX))?Math.max(0,Math.min(100,Number(item.positionX))):50;
+    const y=Number.isFinite(Number(item.positionY))?Math.max(0,Math.min(100,Number(item.positionY))):50;
+    const position=(item.positionX!==undefined||item.positionY!==undefined)?(x+'% '+y+'%'):(item.position||'center center');
+    node.style.setProperty('object-fit',item.fit||'cover','important');
+    node.style.setProperty('object-position',position,'important');
+    const frameWidth=Number.isFinite(Number(item.frameWidth))?Number(item.frameWidth):100;
+    const frameHeight=Number.isFinite(Number(item.frameHeight))?Number(item.frameHeight):0;
+    applyFramePreview(mediaFrameElement(node),frameWidth,frameHeight);
+  }
   function prepareSlot(el){
     if(!el||isBroad(el))return false;
     if(el.dataset.bdayMediaReplaced==='1')return true;
@@ -288,6 +299,11 @@
   const MEDIA_FRAME_SELECTOR='.photo,.tile,.node,.player,.photo-frame,.popup-media,.polaroid,.image-frame,.media-frame,[data-media-frame]';
   function mediaFrameElement(media=mediaFitElement()){
     if(!media)return null;
+    if(pageName()==='memories.html'){
+      const memorySlot=media.closest?.('[data-media-slot^="memories-"]');
+      const memoryFrame=memorySlot?.closest?.('.photo');
+      if(memoryFrame)return memoryFrame;
+    }
     const framed=media.closest?.(MEDIA_FRAME_SELECTOR);
     if(framed&&framed!==media)return framed;
     const slot=media.closest?.('[data-media-slot]');
@@ -441,13 +457,14 @@
         el.setAttribute('src',rec.url);if('src' in el)el.src=rec.url;el.load?.();continue;
       }
       if(!mediaSlot(el))continue;
-      const owner=ownerForSelection(),node=mediaNode(rec,itemId,owner?.item?.fit||'cover',owner?.item?.position||'center center'),p=itemPlacement||placement;
+      const owner=ownerForSelection(),node=mediaNode(rec,itemId),p=itemPlacement||placement;
       if(p==='replace'){prepareSlot(el);el.querySelectorAll(':scope > .bday-added-media').forEach(n=>n.remove());el.appendChild(node)}
       else if(p==='inside')el.appendChild(node);
       else{
         const group=doc.createElement('div');group.className='bday-added-media-group';group.dataset.bdayGroup='editor-preview-'+itemId;group.appendChild(node);
         if(p==='before')el.parentNode?.insertBefore(group,el);else el.parentNode?.insertBefore(group,el.nextSibling);
       }
+      if(owner?.item)applySavedMediaPreviewLayout(node,owner.item);
     }
   }
   function removeMediaPreview(owner){
