@@ -419,10 +419,7 @@ document.querySelectorAll('[data-countdown-preview]').forEach(button=>button.onc
 document.querySelectorAll('[data-countdown-moment]').forEach(button=>button.onclick=()=>openCountdownMoment(button.dataset.countdownMoment));
 document.getElementById('reloadPreview').onclick=reloadPreview;
 document.getElementById('openSite').onclick=e=>{
-  e.preventDefault();
-  const url=previewUrl();
-  const win=window.open(url,'_blank','noopener');
-  if(!win)location.href=url;
+  e.currentTarget.href=previewUrl();
 };
 document.getElementById('mediaUpload').onchange=async e=>{for(const f of e.target.files)await addMedia(f);e.target.value=''};
 document.getElementById('loadCss').onclick=()=>document.getElementById('pageCss').value=state.pageCss[document.getElementById('cssPage').value]||'';
@@ -512,4 +509,4 @@ if(ADMIN_KEY){const err=document.getElementById('adminError');err.textContent='L
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260919-yapping-addmore6"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-yapping-load7"></script></body></html>
