@@ -215,6 +215,7 @@ body::before{
 
 @media(max-width:880px){
   .diag{display:none}
+  .window.maximized{left:16px!important;right:16px!important;top:50px!important;bottom:48px!important}
   .main-window{left:17%;top:14%;width:70vw}
   .note-window{left:6%;bottom:12%}
   .alert-window{right:5%;bottom:9%}
@@ -431,7 +432,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
   <div class="window alert-window">
     <div class="titlebar">
       <strong>system_warning.exe</strong>
-      <div class="win-actions"><button class="win-btn">×</button></div>
+      <div class="win-actions"><button class="win-btn" type="button" data-window-action="close" aria-label="Close window">×</button></div>
     </div>
     <div class="win-content">
       <div class="alert-box">
@@ -447,7 +448,7 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,load,publish,ping,
   <div class="popup" id="popup" role="dialog" aria-modal="true" aria-hidden="true" tabindex="-1">
     <div class="titlebar">
       <strong id="popupTitle">SYSTEM MESSAGE</strong>
-      <div class="win-actions"><button class="win-btn" id="popupClose">×</button></div>
+      <div class="win-actions"><button class="win-btn" type="button" id="popupClose" aria-label="Close dialog">×</button></div>
     </div>
     <div class="popup-body">
       <strong id="popupStrong">ERROR</strong>
