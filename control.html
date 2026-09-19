@@ -284,9 +284,10 @@ function syncFairPreviewDraft(){
   if(document.getElementById('previewPage')?.value!=='fair.html')return;
   try{frame?.contentWindow?.FAIR_RUNTIME?.applyState?.(state)}catch(e){}
 }
-function renderShopTabs(){const t=document.getElementById('shopTabs');t.innerHTML='';shopIds.forEach(id=>{const b=document.createElement('button');b.textContent=id;b.classList.toggle('active',id===activeShop);b.onclick=()=>{activeShop=id;renderShopTabs();renderShopEditor()};t.appendChild(b)})}
+function renderShopTabs(){const t=document.getElementById('shopTabs');if(!t)return;t.innerHTML='';shopIds.forEach(id=>{const b=document.createElement('button');b.textContent=id;b.classList.toggle('active',id===activeShop);b.onclick=()=>{activeShop=id;renderShopTabs();renderShopEditor()};t.appendChild(b)})}
 function renderShopEditor(){
- const d=shopData(activeShop),photos=state.fairPhotos[activeShop]||{},e=document.getElementById('shopEditor');
+ const e=document.getElementById('shopEditor');if(!e)return;
+ const d=shopData(activeShop),photos=state.fairPhotos[activeShop]||{};
  const mediaField=(key,label)=>{
    const url=photos[key]||'';
    return `<div class="field"><label>${label}</label><input data-pf="${key}" value="${attr(url)}"><div class="fair-photo-preview">${url?'<img src="'+attr(url)+'" alt="">':'<span>No custom photo selected</span>'}</div><label class="btn upload" style="margin-top:6px;text-align:center">Upload<input type="file" data-fair-upload="${key}" accept="image/*"></label></div>`;
@@ -518,7 +519,7 @@ function openHeartIntroVisual(){
   reloadPreview();
 }
 document.getElementById('heartIntroVisual')?.addEventListener('click',openHeartIntroVisual);
-function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderShopTabs();renderShopEditor();renderPageSelects();renderRaw();renderHeartIntroEditor();window.renderYappingManager?.();window.renderSoundtrackManager?.();window.renderPageSpacingManager?.()}
+function renderAll(){ensureCountdownSettings();renderBindings();renderPages();renderPageSelects();renderRaw();renderHeartIntroEditor();window.renderYappingManager?.();window.renderSoundtrackManager?.();window.renderPageSpacingManager?.()}
 renderAll();bindFrame();
 document.getElementById('adminUnlock').onclick=unlock;
 document.getElementById('adminKeyInput').addEventListener('keydown',e=>{if(e.key==='Enter')unlock()});
