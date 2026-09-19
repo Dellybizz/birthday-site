@@ -119,7 +119,12 @@ window.BDAY={key:KEY,defaults:DEFAULTS,read,write,fetchRemote,publish,ping,uploa
 .yap-existing{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;min-width:min(100%,420px)}
 .yap-existing select{width:100%;border:1px solid var(--line);background:#101217;color:#f5f5f5;padding:9px 10px;border-radius:9px}
 .yap-meta{font-size:10px;color:var(--muted);word-break:break-all}
-@media(max-width:700px){.yap-row{grid-template-columns:1fr}.yap-preview{max-height:240px}.yap-existing{grid-template-columns:1fr}.yap-actions>.btn,.yap-actions>.upload{flex:1 1 130px;text-align:center}}
+.yap-add-more{display:grid;gap:10px;padding:16px;border:1px dashed #3b404a;border-radius:14px;background:#0d0f13}
+.yap-add-more-head{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.yap-add-more-head b{font-size:12px}.yap-add-more-head small{display:block;margin-top:4px;color:var(--muted);font-size:10px;line-height:1.45}
+.yap-add-more-actions{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:8px;align-items:center}
+.yap-add-more-actions select{width:100%;border:1px solid var(--line);background:#101217;color:#f5f5f5;padding:9px 10px;border-radius:9px}
+@media(max-width:700px){.yap-row{grid-template-columns:1fr}.yap-preview{max-height:240px}.yap-existing{grid-template-columns:1fr}.yap-actions>.btn,.yap-actions>.upload{flex:1 1 130px;text-align:center}.yap-add-more-head{display:block}.yap-add-more-actions{grid-template-columns:1fr}.yap-add-more-actions>.btn,.yap-add-more-actions>.upload{text-align:center}}
 </style>
 <style id="animation-soundtrack-control-css">
 .ve-selected-animation{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:#101217}
@@ -507,4 +512,4 @@ if(ADMIN_KEY){const err=document.getElementById('adminError');err.textContent='L
     finally{button.disabled=false}
   });
 })();
-</script><script src="./control-media-runtime.js?v=20260919-media-sync4"></script></body></html>
+</script><script src="./control-media-runtime.js?v=20260919-yapping-addmore6"></script></body></html>
