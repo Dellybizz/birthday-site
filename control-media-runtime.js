@@ -137,7 +137,7 @@
     const owner=ownerForSelection();
     if(owner){
       const slot=lookup(owner.patch.selector);
-      if(slot&&mediaSlot(slot))return slot;
+      if(slot)return slot;
     }
     const nearest=el.closest?.('[data-media-slot]');
     if(nearest&&mediaSlot(nearest))return nearest;
