@@ -824,6 +824,87 @@
   }
 
 
+
+  const SPACING_START='/* BDAY_SPACING_START */',SPACING_END='/* BDAY_SPACING_END */';
+  function spacingPage(){return pageName()}
+  function stripManagedSpacing(css){
+    return String(css||'').replace(/\/\* BDAY_SPACING_START \*\/[\s\S]*?\/\* BDAY_SPACING_END \*\//g,'').trim();
+  }
+  function spacingValues(page=spacingPage()){
+    const css=String(state.pageCss?.[page]||''),match=css.match(/\/\* BDAY_SPACING_START \*\/([\s\S]*?)\/\* BDAY_SPACING_END \*\//);
+    const body=match?.[1]||'';
+    const read=(name,fallback)=>{const m=body.match(new RegExp(name+'\\s*:\\s*(\\d+(?:\\.\\d+)?)px'));return m?Number(m[1]):fallback};
+    return {enabled:!!match,side:read('--bday-page-side',20),section:read('--bday-section-space',80),gap:read('--bday-card-gap',24)};
+  }
+  function managedSpacingCss(values){
+    return SPACING_START+'\n'+
+      ':root{--bday-page-side:'+values.side+'px;--bday-section-space:'+values.section+'px;--bday-card-gap:'+values.gap+'px}\n'+
+      'main{padding-left:var(--bday-page-side)!important;padding-right:var(--bday-page-side)!important}\n'+
+      'main>section,main>article{margin-bottom:var(--bday-section-space)!important}\n'+
+      ':is(.grid,.collage,.cards,.gallery,.beat-inner,.chat-beat,.stall-grid,.evidence-strip,.media-grid,.sound-track-list,.row,.stack,.items,.list){gap:var(--bday-card-gap)!important}\n'+
+      SPACING_END;
+  }
+  function applySpacingPreview(){
+    const panel=document.getElementById('vePageSpacing');if(!panel)return;
+    const enabled=panel.querySelector('#veSpacingEnabled')?.checked;
+    const side=Number(panel.querySelector('#veSpacingSide')?.value??20),section=Number(panel.querySelector('#veSpacingSection')?.value??80),gap=Number(panel.querySelector('#veSpacingGap')?.value??24);
+    panel.querySelector('#veSpacingSideValue').textContent=side+'px';
+    panel.querySelector('#veSpacingSectionValue').textContent=section+'px';
+    panel.querySelector('#veSpacingGapValue').textContent=gap+'px';
+    panel.querySelectorAll('input[type=range]').forEach(input=>input.disabled=!enabled);
+    const doc=currentDoc();if(!doc)return;
+    let style=doc.getElementById('birthday-editor-page-spacing');
+    if(!style){style=doc.createElement('style');style.id='birthday-editor-page-spacing';doc.head?.appendChild(style)}
+    style.textContent=enabled?managedSpacingCss({side,section,gap}).replace(SPACING_START,'').replace(SPACING_END,''):'';
+  }
+  let spacingSaveChain=Promise.resolve();
+  function savePageSpacing(){
+    spacingSaveChain=spacingSaveChain.then(async()=>{
+      const panel=document.getElementById('vePageSpacing');if(!panel)return;
+      const page=spacingPage(),enabled=panel.querySelector('#veSpacingEnabled')?.checked;
+      const values={side:Number(panel.querySelector('#veSpacingSide')?.value??20),section:Number(panel.querySelector('#veSpacingSection')?.value??80),gap:Number(panel.querySelector('#veSpacingGap')?.value??24)};
+      state.pageCss??={};
+      const custom=stripManagedSpacing(state.pageCss[page]||'');
+      state.pageCss[page]=[custom,enabled?managedSpacingCss(values):''].filter(Boolean).join('\n\n');
+      dirty();applySpacingPreview();
+      await publishNoReload();
+      toast(enabled?'Page spacing updated':'Page spacing reset');
+    }).catch(err=>{console.warn('Page spacing save failed',err)});
+    return spacingSaveChain;
+  }
+  function renderPageSpacingEditor(){
+    const panel=document.getElementById('vePageSpacing');if(!panel)return;
+    const values=spacingValues();
+    panel.querySelector('#veSpacingEnabled').checked=values.enabled;
+    panel.querySelector('#veSpacingSide').value=String(values.side);
+    panel.querySelector('#veSpacingSection').value=String(values.section);
+    panel.querySelector('#veSpacingGap').value=String(values.gap);
+    applySpacingPreview();
+  }
+  function mountPageSpacingEditor(){
+    if(document.getElementById('vePageSpacing'))return;
+    const selectedBox=document.getElementById('selectorBox');if(!selectedBox)return;
+    const panel=document.createElement('div');panel.id='vePageSpacing';panel.className='ve-page-spacing';
+    panel.innerHTML='<div class="ve-page-spacing-head"><h4>Page spacing</h4><label class="switch"><input id="veSpacingEnabled" type="checkbox"><i></i></label></div>'+
+      '<div class="ve-note">Adjusts only the page currently open in the preview.</div>'+
+      '<div class="ve-spacing-grid">'+
+      '<div class="ve-slider-field"><label>Side padding <span id="veSpacingSideValue">20px</span></label><input id="veSpacingSide" type="range" min="0" max="100" step="2" value="20"></div>'+
+      '<div class="ve-slider-field"><label>Section spacing <span id="veSpacingSectionValue">80px</span></label><input id="veSpacingSection" type="range" min="0" max="220" step="5" value="80"></div>'+
+      '<div class="ve-slider-field"><label>Card / grid gap <span id="veSpacingGapValue">24px</span></label><input id="veSpacingGap" type="range" min="0" max="100" step="2" value="24"></div>'+
+      '</div><button class="btn" type="button" id="veSpacingReset">Use page defaults</button>';
+    selectedBox.after(panel);
+    panel.querySelector('#veSpacingEnabled').onchange=()=>{applySpacingPreview();savePageSpacing()};
+    for(const id of ['veSpacingSide','veSpacingSection','veSpacingGap']){
+      const input=panel.querySelector('#'+id);input.oninput=applySpacingPreview;input.onchange=savePageSpacing;
+    }
+    panel.querySelector('#veSpacingReset').onclick=()=>{
+      panel.querySelector('#veSpacingEnabled').checked=false;applySpacingPreview();savePageSpacing();
+    };
+    renderPageSpacingEditor();
+  }
+  window.renderPageSpacingManager=renderPageSpacingEditor;
+  mountPageSpacingEditor();
+
   function attachFrame(){
     const frame=document.getElementById('previewFrame'),doc=currentDoc(),win=currentWin();if(!frame||!doc||!win)return;
     ensureEditIds(doc);if(win.__phase3EditorPicking)return;win.__phase3EditorPicking=true;
@@ -879,7 +960,7 @@
   }
   mountHistory();
   document.addEventListener('keydown',e=>{const mod=e.ctrlKey||e.metaKey;if(!mod)return;const tag=document.activeElement?.tagName?.toLowerCase();if(['input','textarea','select'].includes(tag))return;if(e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?redo().catch(()=>{}):undo().catch(()=>{})}else if(e.key.toLowerCase()==='y'){e.preventDefault();redo().catch(()=>{})}});
-  document.getElementById('previewPage')?.addEventListener('change',()=>{selected=null;updateMediaPanel()});
+  document.getElementById('previewPage')?.addEventListener('change',()=>{selected=null;updateMediaPanel();renderPageSpacingEditor()});
   const YAPPING_DEFAULTS=[
     {title:'session 001',note:'topic lost at 00:43',src:'',mediaType:'video'},
     {title:'session 002',note:'side quest detected',src:'',mediaType:'video'},
