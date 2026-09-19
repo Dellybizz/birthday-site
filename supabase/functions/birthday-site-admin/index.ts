@@ -250,6 +250,16 @@ function validateState(data: unknown): string[] {
         if (patch.src !== undefined && !str(patch.src,4096)) errors.push(`${at}.src must be a string.`);
         if (patch.href !== undefined && !str(patch.href,4096)) errors.push(`${at}.href must be a string.`);
         if (patch.hidden !== undefined && typeof patch.hidden !== 'boolean') errors.push(`${at}.hidden must be boolean.`);
+        if (patch.mediaLayout !== undefined) {
+          const layout = patch.mediaLayout;
+          if (!isRecord(layout)) errors.push(`${at}.mediaLayout must be an object.`);
+          else {
+            if (layout.fit !== undefined && !['cover','contain','fill','none','scale-down'].includes(layout.fit)) errors.push(`${at}.mediaLayout.fit is invalid.`);
+            for (const key of ['positionX','positionY']) if (layout[key] !== undefined && (!Number.isFinite(Number(layout[key])) || Number(layout[key]) < 0 || Number(layout[key]) > 100)) errors.push(`${at}.mediaLayout.${key} must be 0–100.`);
+            if (layout.frameWidth !== undefined && (!Number.isFinite(Number(layout.frameWidth)) || Number(layout.frameWidth) < 25 || Number(layout.frameWidth) > 140)) errors.push(`${at}.mediaLayout.frameWidth must be 25–140.`);
+            if (layout.frameHeight !== undefined && (!Number.isFinite(Number(layout.frameHeight)) || Number(layout.frameHeight) < 0 || Number(layout.frameHeight) > 1200)) errors.push(`${at}.mediaLayout.frameHeight must be 0–1200.`);
+          }
+        }
 
         if (patch.styles !== undefined) {
           if (!isRecord(patch.styles) || Object.keys(patch.styles).length > 60) errors.push(`${at}.styles is invalid.`);
@@ -275,6 +285,9 @@ function validateState(data: unknown): string[] {
             if (item.placement !== undefined && !['replace','inside','before','after'].includes(item.placement)) errors.push(`${mt}.placement is invalid.`);
             if (item.fit !== undefined && !['cover','contain','fill','none','scale-down'].includes(item.fit)) errors.push(`${mt}.fit is invalid.`);
             if (item.position !== undefined && !['center center','center top','center bottom','left center','right center','left top','right top','left bottom','right bottom'].includes(item.position)) errors.push(`${mt}.position is invalid.`);
+            for (const key of ['positionX','positionY']) if (item[key] !== undefined && (!Number.isFinite(Number(item[key])) || Number(item[key]) < 0 || Number(item[key]) > 100)) errors.push(`${mt}.${key} must be 0–100.`);
+            if (item.frameWidth !== undefined && (!Number.isFinite(Number(item.frameWidth)) || Number(item.frameWidth) < 25 || Number(item.frameWidth) > 140)) errors.push(`${mt}.frameWidth must be 25–140.`);
+            if (item.frameHeight !== undefined && (!Number.isFinite(Number(item.frameHeight)) || Number(item.frameHeight) < 0 || Number(item.frameHeight) > 1200)) errors.push(`${mt}.frameHeight must be 0–1200.`);
           });
         }
       });
