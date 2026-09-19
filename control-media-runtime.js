@@ -1226,6 +1226,22 @@
     for(const rec of yappingVideoItems())options.push('<option value="'+attr(rec.url)+'" '+(rec.url===selectedUrl?'selected':'')+'>'+esc(label(rec))+'</option>');
     return options.join('');
   }
+  function yappingBatchOptions(){
+    const items=yappingVideoItems();
+    if(!items.length)return '<option value="" disabled>No uploaded videos available yet</option>';
+    return items.map(rec=>'<option value="'+attr(rec.url)+'">'+esc(label(rec))+'</option>').join('');
+  }
+  function moveYappingClip(from,to){
+    const clips=yappingClips();
+    from=Number(from);to=Number(to);
+    if(!Number.isInteger(from)||!Number.isInteger(to)||from<0||to<0||from>=clips.length||to>=clips.length||from===to)return false;
+    const [item]=clips.splice(from,1);
+    clips.splice(to,0,item);
+    dirty();
+    renderYappingManager(false,true);
+    toast('Yapping order updated — publish to save');
+    return true;
+  }
   function addYappingClipFromRecord(rec){
     const clips=yappingClips();
     if(clips.length>=50)throw new Error('The Yapping Archive supports up to 50 clips.');
@@ -1242,8 +1258,24 @@
     const add=document.createElement('div');
     add.className='yap-add-more';
     add.innerHTML=
-      '<div class="yap-add-more-head"><div><b>+ Add another yapping video</b><small>Add a new clip without replacing any of the existing ones.</small></div><label class="btn primary upload">Upload video<input data-yap-add-more-upload type="file" multiple accept="video/mp4,video/webm"></label></div>'+
-      '<div class="yap-add-more-actions"><select data-yap-add-more-existing>'+yappingMediaOptions('')+'</select><button class="btn" type="button" data-yap-add-more-use>Add selected video</button><button class="btn" type="button" data-yap-add-more-empty>Add blank slot</button></div>';
+      '<div class="yap-add-more-head"><div><b>+ Add more yapping clips</b><small>Upload several clips at once, choose several existing videos, or add blank slots. New clips are appended to this same archive.</small></div><label class="btn primary upload">Upload multiple videos<input data-yap-add-more-upload type="file" multiple accept="video/mp4,video/webm"></label></div>'+
+      '<div class="yap-batch"><label>Select multiple from Media Library</label><select class="yap-batch-select" data-yap-batch-existing multiple size="6">'+yappingBatchOptions()+'</select><div class="yap-batch-note">Ctrl/Cmd-click for separate clips, or Shift-click for a range.</div><button class="btn" type="button" data-yap-batch-add>Add selected clips</button></div>'+
+      '<div class="yap-add-more-actions"><select data-yap-add-more-existing>'+yappingMediaOptions('')+'</select><button class="btn" type="button" data-yap-add-more-use>Add one selected video</button><button class="btn" type="button" data-yap-add-more-empty>Add blank slot</button></div>';
+    add.querySelector('[data-yap-batch-add]').onclick=()=>{
+      const select=add.querySelector('[data-yap-batch-existing]');
+      const urls=[...select.selectedOptions].map(option=>option.value).filter(Boolean);
+      if(!urls.length){toast('Select one or more uploaded videos first');return}
+      try{
+        const room=50-clips.length;
+        if(room<=0)throw new Error('The Yapping Archive supports up to 50 clips.');
+        const chosen=urls.slice(0,room).map(url=>yappingVideoItems().find(item=>item.url===url)).filter(Boolean);
+        if(!chosen.length){toast('Those videos are no longer available. Refresh media.');return}
+        chosen.forEach(addYappingClipFromRecord);
+        dirty();
+        renderYappingManager(false,true);
+        toast(chosen.length+' yapping clip'+(chosen.length===1?'':'s')+' added — publish to save');
+      }catch(e){alert(e?.message||String(e))}
+    };
     const upload=add.querySelector('[data-yap-add-more-upload]');
     upload.onchange=async()=>{
       const files=[...(upload.files||[])];if(!files.length)return;
@@ -1302,8 +1334,12 @@
       return;
     }
     clips.forEach((clip,index)=>{
-      const row=document.createElement('div');row.className='yap-row';row.dataset.index=String(index);
+      const row=document.createElement('div');
+      row.className='yap-row';
+      row.dataset.index=String(index);
+      row.draggable=true;
       row.innerHTML=
+        '<div class="yap-drag" title="Drag to reorder"><span class="yap-drag-handle">⋮⋮</span><span class="yap-order">#'+String(index+1).padStart(2,'0')+'</span></div>'+
         '<div class="yap-preview">'+yappingPreviewHtml(clip)+'</div>'+
         '<div class="yap-fields">'+
           '<div class="row">'+
@@ -1320,6 +1356,28 @@
             '<button class="btn danger" type="button" data-yap-remove>Remove clip</button>'+
           '</div>'+
         '</div>';
+
+      row.addEventListener('dragstart',e=>{
+        e.dataTransfer.effectAllowed='move';
+        e.dataTransfer.setData('text/plain',String(index));
+        row.classList.add('yap-dragging');
+      });
+      row.addEventListener('dragend',()=>{
+        row.classList.remove('yap-dragging');
+        box.querySelectorAll('.yap-drop-target').forEach(el=>el.classList.remove('yap-drop-target'));
+      });
+      row.addEventListener('dragover',e=>{
+        e.preventDefault();
+        e.dataTransfer.dropEffect='move';
+        box.querySelectorAll('.yap-drop-target').forEach(el=>{if(el!==row)el.classList.remove('yap-drop-target')});
+        row.classList.add('yap-drop-target');
+      });
+      row.addEventListener('dragleave',()=>row.classList.remove('yap-drop-target'));
+      row.addEventListener('drop',e=>{
+        e.preventDefault();row.classList.remove('yap-drop-target');
+        const from=Number(e.dataTransfer.getData('text/plain'));
+        moveYappingClip(from,index);
+      });
 
       const title=row.querySelector('[data-yap-title]'),note=row.querySelector('[data-yap-note]');
       title.oninput=()=>{clip.title=title.value;dirty()};
@@ -1343,8 +1401,8 @@
         }catch(err){alert(err?.message||String(err))}finally{e.target.value=''}
       };
       row.querySelector('[data-yap-clear]').onclick=()=>{clip.src='';clip.mediaType='video';dirty();renderYappingManager(false);toast('Video cleared — publish to save')};
-      row.querySelector('[data-yap-up]').onclick=()=>{if(index<1)return;[clips[index-1],clips[index]]=[clips[index],clips[index-1]];dirty();renderYappingManager(false)};
-      row.querySelector('[data-yap-down]').onclick=()=>{if(index>=clips.length-1)return;[clips[index+1],clips[index]]=[clips[index],clips[index+1]];dirty();renderYappingManager(false)};
+      row.querySelector('[data-yap-up]').onclick=()=>moveYappingClip(index,index-1);
+      row.querySelector('[data-yap-down]').onclick=()=>moveYappingClip(index,index+1);
       row.querySelector('[data-yap-remove]').onclick=()=>{if(!confirm('Remove this Yapping Archive clip? The uploaded file itself stays in Media Library.'))return;clips.splice(index,1);dirty();renderYappingManager(false);toast('Clip removed — publish to save')};
       box.appendChild(row);
     });
