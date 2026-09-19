@@ -52,7 +52,7 @@
   function patchFor(selector){const s=stableSelector(selector);let p=findPatch(s);if(!p){p={selector:s,styles:{}};pagePatches().push(p)}else p.selector=s;p.styles??={};return p}
   function patchMeaningful(p){
     if(!p)return false;
-    if(p.text!==undefined||p.src!==undefined||p.href!==undefined||p.hidden!==undefined||p.mediaLayout!==undefined)return true;
+    if(p.text!==undefined||p.src!==undefined||p.href!==undefined||p.hidden!==undefined||p.mediaLayout!==undefined||p.sectionLayout!==undefined)return true;
     if(p.styles&&Object.keys(p.styles).some(k=>p.styles[k]!==''&&p.styles[k]!=null))return true;
     if(Array.isArray(p.insertImages)&&p.insertImages.length)return true;
     if(Array.isArray(p.insertMedia)&&p.insertMedia.length)return true;
@@ -131,6 +131,18 @@
     return /(^|[\s_-])(photo|image|media|polaroid|poster|picture|pic|frame|shot|avatar|placeholder|thumb)([\s_-]|$)/.test(signature);
   }
   function directMedia(el=previewElement()){return !!el&&['IMG','VIDEO','AUDIO','SOURCE'].includes(el.tagName)}
+  function mediaPanelTarget(){
+    const el=previewElement();if(!el)return null;
+    if(mediaSlot(el))return el;
+    const owner=ownerForSelection();
+    if(owner){
+      const slot=lookup(owner.patch.selector);
+      if(slot&&mediaSlot(slot))return slot;
+    }
+    const nearest=el.closest?.('[data-media-slot]');
+    if(nearest&&mediaSlot(nearest))return nearest;
+    return null;
+  }
   function editSnapshot(){const key=pageDataKey();return {page:pageName(),selector:selected?.selector||'',patches:clone(pagePatches()),pageDataKey:key,pageData:key?clone(state.pages?.[key]||{}):null}}
   function updateHistoryButtons(){const u=document.getElementById('veUndo'),r=document.getElementById('veRedo');if(u)u.disabled=!undoStack.length||historyBusy;if(r)r.disabled=!redoStack.length||historyBusy}
   function pushHistory(){if(historyBusy)return;undoStack.push(editSnapshot());if(undoStack.length>HISTORY_LIMIT)undoStack.shift();redoStack=[];updateHistoryButtons()}
@@ -430,7 +442,7 @@
   }
 
   const style=document.createElement('style');
-  style.textContent='.ve-media-tools{display:none;margin:12px 0;padding:12px;border:1px solid var(--line);background:#111318;border-radius:12px}.ve-media-tools.show{display:block}.ve-media-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;margin-top:8px}.ve-media-tile{border:1px solid var(--line);background:#101217;border-radius:10px;padding:5px;cursor:pointer;color:#fff;text-align:left;min-width:0}.ve-media-tile.active{border-color:#fff}.ve-thumb{aspect-ratio:1;border-radius:7px;overflow:hidden;background:#171a20;display:grid;place-items:center}.ve-thumb img,.ve-thumb video{width:100%;height:100%;object-fit:cover}.ve-name{display:block;margin-top:5px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ve-place{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ve-place button{border:1px solid var(--line);background:#101217;color:#aaa;border-radius:999px;padding:6px 9px;font-size:9px}.ve-place button.active{background:#fff;color:#111}.ve-actions{display:flex;gap:8px;flex-wrap:wrap}.ve-status{min-height:16px;margin-top:8px;font-size:10px;color:#aeb3bd}.ve-color-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:7px}.ve-color-row input[type=color]{width:44px;height:42px;padding:3px;border:1px solid var(--line);border-radius:9px;background:#101217}.ve-note{font-size:10px;color:#858b96;margin:5px 0 10px}.ve-media-layout{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f1116}.ve-media-layout>b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}.ve-slider-field{display:grid;gap:6px;margin:9px 0;min-width:0}.ve-slider-field label{font-size:9px;color:#9ba1ac;display:flex;justify-content:space-between;gap:8px}.ve-slider-field input[type=range]{width:100%}.ve-page-spacing{margin:10px 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f1116}.ve-page-spacing-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.ve-page-spacing h4{margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.ve-spacing-grid{display:grid;gap:7px;margin-top:8px}.bday-original-slot-content[hidden]{display:none!important}@media(max-width:650px){.ve-media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}';
+  style.textContent='.ve-media-tools{display:none;margin:12px 0;padding:12px;border:1px solid var(--line);background:#111318;border-radius:12px}.ve-media-tools.show{display:block}.ve-media-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;max-height:300px;overflow:auto;margin-top:8px}.ve-media-tile{border:1px solid var(--line);background:#101217;border-radius:10px;padding:5px;cursor:pointer;color:#fff;text-align:left;min-width:0}.ve-media-tile.active{border-color:#fff}.ve-thumb{aspect-ratio:1;border-radius:7px;overflow:hidden;background:#171a20;display:grid;place-items:center}.ve-thumb img,.ve-thumb video{width:100%;height:100%;object-fit:cover}.ve-name{display:block;margin-top:5px;font-size:9px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}.ve-place{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}.ve-place button{border:1px solid var(--line);background:#101217;color:#aaa;border-radius:999px;padding:6px 9px;font-size:9px}.ve-place button.active{background:#fff;color:#111}.ve-actions{display:flex;gap:8px;flex-wrap:wrap}.ve-status{min-height:16px;margin-top:8px;font-size:10px;color:#aeb3bd}.ve-color-row{display:grid;grid-template-columns:minmax(0,1fr) 44px;gap:7px}.ve-color-row input[type=color]{width:44px;height:42px;padding:3px;border:1px solid var(--line);border-radius:9px;background:#101217}.ve-note{font-size:10px;color:#858b96;margin:5px 0 10px}.ve-media-layout{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f1116}.ve-media-layout>b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:5px}.ve-slider-field{display:grid;gap:6px;margin:9px 0;min-width:0}.ve-slider-field label{font-size:9px;color:#9ba1ac;display:flex;justify-content:space-between;gap:8px}.ve-slider-field input[type=range]{width:100%}.ve-page-spacing{margin:10px 0 14px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f1116}.ve-page-spacing-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.ve-page-spacing h4{margin:0;font-size:10px;text-transform:uppercase;letter-spacing:.1em}.ve-spacing-grid{display:grid;gap:7px;margin-top:8px}.ve-section-spacing{margin:12px 0;padding:12px;border:1px solid var(--line);border-radius:12px;background:#0f1116}.ve-section-spacing>b{display:block;font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px}.bday-original-slot-content[hidden]{display:none!important}@media(max-width:650px){.ve-media-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}';
   document.head.appendChild(style);
 
   const fields=document.getElementById('inspectorFields');
@@ -453,20 +465,24 @@
   }
   async function loadMedia(force=false){if(force||!mediaItems.length)await sharedMedia();if(picked>=mediaItems.length)picked=-1;renderMediaGrid()}
   function updateMediaPanel(){
-    if(!mediaPanel)return;const el=previewElement(),capable=mediaSlot(el);mediaPanel.classList.toggle('show',capable);
+    if(!mediaPanel)return;
+    const selectedEl=previewElement(),target=mediaPanelTarget(),capable=!!target;
+    mediaPanel.classList.toggle('show',capable);
     if(!capable)return;
     placement='replace';
-    mediaPanel.querySelectorAll('#vePlace button').forEach(b=>{b.disabled=directMedia(el);b.classList.toggle('active',b.dataset.p===placement)});
-    const slotName=el.getAttribute?.('data-media-label')||el.getAttribute?.('data-media-slot')||'';mediaPanel.querySelector('#veMediaNote').textContent=(slotName?slotName+' · ':'')+(directMedia(el)?'Replacing this media changes only its source.':'This is an explicit media slot. Replace is reversible and never deletes the slot DOM.');
-    const binding=modelBinding(el),record=modelRecord(binding),p=findPatch(selected?.selector||''),owner=ownerForSelection();
+    const nativeDirect=directMedia(selectedEl)&&!selectedEl.matches?.('[data-bday-inserted],.bday-added-media');
+    mediaPanel.querySelectorAll('#vePlace button').forEach(b=>{b.disabled=nativeDirect;b.classList.toggle('active',b.dataset.p===placement)});
+    const slotName=target.getAttribute?.('data-media-label')||target.getAttribute?.('data-media-slot')||'';
+    mediaPanel.querySelector('#veMediaNote').textContent=(slotName?slotName+' · ':'')+(ownerForSelection()?'Uploaded media selected — choose another file to replace it.':nativeDirect?'Choose media to replace this image/video.':'This media slot can be replaced from the shared library.');
+    const binding=modelBinding(selectedEl),record=modelRecord(binding),p=findPatch(selected?.selector||''),owner=ownerForSelection();
     const modelHasMedia=binding?(binding.page==='heart'?!!record?.mediaUrl:!!record?.src):false;
-    removeMediaBtn.disabled=!(modelHasMedia||owner||(directMedia(el)&&p?.src));
+    removeMediaBtn.disabled=!(modelHasMedia||owner||(nativeDirect&&p?.src));
   }
   async function applySelected(rec){
-    const el=previewElement();if(!el||!mediaSlot(el))throw new Error('Select an explicit media slot first.');
+    const selectedEl=previewElement(),el=mediaPanelTarget();if(!selectedEl||!el)throw new Error('Select an image, video, or media slot first.');
     if(!rec?.url)throw new Error('Pick media first.');
     pushHistory();
-    const binding=modelBinding(el);
+    const binding=modelBinding(selectedEl);
     if(binding){
       const record=ensureModelData(binding),mediaKind=kind(rec);
       if(binding.page==='yapping'&&!['video','audio'].includes(mediaKind))throw new Error('Yapping clips support video or audio files.');
@@ -483,7 +499,7 @@
       selected.mediaToken=itemId;
     }else{
       const p=patchFor(selected.selector);
-      if(directMedia(el)){p.src=rec.url;itemId=rec.url}
+      if(directMedia(selectedEl)&&!selectedEl.matches?.('[data-bday-inserted],.bday-added-media')){p.src=rec.url;itemId=rec.url}
       else{
         p.insertImages??=[];
         const item={id:'media-'+Date.now().toString(36)+Math.random().toString(36).slice(2,7),url:rec.url,type:rec.type||'',name:label(rec),alt:'',placement:placement};
@@ -491,7 +507,12 @@
         itemId=item.id;itemPlacement=item.placement;selected.mediaToken=itemId;
       }
     }
-    dirty();showMedia(rec,itemId,itemPlacement);status.textContent='Publishing…';
+    dirty();
+    if(directMedia(selectedEl)&&!selectedEl.matches?.('[data-bday-inserted],.bday-added-media')){
+      if(!selectedEl.dataset.bdayOriginalSrc)selectedEl.dataset.bdayOriginalSrc=selectedEl.getAttribute('src')||'';
+      selectedEl.setAttribute('src',rec.url);if('src' in selectedEl)selectedEl.src=rec.url;selectedEl.load?.();
+    }else showMedia(rec,itemId,itemPlacement);
+    status.textContent='Publishing…';
     try{await publishNoReload();status.textContent='Media updated.';updateMediaPanel()}
     catch(e){status.textContent=e?.message||String(e);throw e}
   }
@@ -590,6 +611,96 @@
     try{currentWin()?.COUNTDOWN_PAGE?.applyState?.(state)}catch(e){}
   }
 
+  const SECTION_SELECTOR='section,article,.beat,.quote-beat,.chat-beat,.bridge,.collage-beat,.hero,.story,.stall-view,.stall,.card,.node';
+  function sectionForElement(el=previewElement()){
+    if(!el)return null;
+    const section=el.matches?.(SECTION_SELECTOR)?el:el.closest?.(SECTION_SELECTOR);
+    if(!section||section===currentDoc()?.body||section===currentDoc()?.documentElement)return null;
+    return section;
+  }
+  function sectionSelector(section){
+    if(!section)return '';
+    return selectorFor(section);
+  }
+  function sectionLayoutValues(section){
+    if(!section)return null;
+    const selector=sectionSelector(section),patch=findPatch(selector),saved=patch?.sectionLayout||{};
+    const win=section.ownerDocument.defaultView,s=win.getComputedStyle(section);
+    const numeric=value=>{const n=parseFloat(value);return Number.isFinite(n)?n:0};
+    let gap=numeric(s.gap);
+    if(!gap){
+      const inner=[...section.children].find(child=>{const cs=win.getComputedStyle(child);return cs.display==='grid'||cs.display==='flex'});
+      if(inner)gap=numeric(win.getComputedStyle(inner).gap);
+    }
+    return {
+      selector,
+      top:Number.isFinite(Number(saved.paddingTop))?Number(saved.paddingTop):Math.round(numeric(s.paddingTop)),
+      bottom:Number.isFinite(Number(saved.paddingBottom))?Number(saved.paddingBottom):Math.round(numeric(s.paddingBottom)),
+      before:Number.isFinite(Number(saved.marginTop))?Number(saved.marginTop):Math.max(0,Math.round(numeric(s.marginTop))),
+      after:Number.isFinite(Number(saved.marginBottom))?Number(saved.marginBottom):Math.max(0,Math.round(numeric(s.marginBottom))),
+      gap:Number.isFinite(Number(saved.gap))?Number(saved.gap):Math.round(gap),
+      label:section.id?'#'+section.id:(section.classList?.length?'.'+[...section.classList].slice(0,2).join('.'):section.tagName.toLowerCase())
+    };
+  }
+  function sectionGapTarget(section){
+    if(!section)return null;
+    const win=section.ownerDocument.defaultView,display=win.getComputedStyle(section).display;
+    if(display==='grid'||display==='flex')return section;
+    return [...section.children].find(child=>{const cs=win.getComputedStyle(child);return cs.display==='grid'||cs.display==='flex'})||section;
+  }
+  function applySectionSpacingPreview(section,layout){
+    if(!section||!layout)return;
+    section.style.setProperty('padding-top',layout.paddingTop+'px','important');
+    section.style.setProperty('padding-bottom',layout.paddingBottom+'px','important');
+    section.style.setProperty('margin-top',layout.marginTop+'px','important');
+    section.style.setProperty('margin-bottom',layout.marginBottom+'px','important');
+    const gapTarget=sectionGapTarget(section);
+    if(gapTarget)gapTarget.style.setProperty('gap',layout.gap+'px','important');
+  }
+  let sectionSpacingSaveChain=Promise.resolve();
+  function saveSectionSpacing(section,selector){
+    sectionSpacingSaveChain=sectionSpacingSaveChain.then(async()=>{
+      const read=id=>Number(document.getElementById(id)?.value||0);
+      const layout={
+        paddingTop:read('iSectionPadTop'),paddingBottom:read('iSectionPadBottom'),
+        marginTop:read('iSectionMarginTop'),marginBottom:read('iSectionMarginBottom'),
+        gap:read('iSectionGap')
+      };
+      const p=patchFor(selector);p.sectionLayout=layout;dirty();
+      applySectionSpacingPreview(section,layout);
+      await publishNoReload();toast('Section spacing updated');
+    }).catch(err=>console.warn('Section spacing save failed',err));
+    return sectionSpacingSaveChain;
+  }
+  function sectionSpacingMarkup(section){
+    const v=sectionLayoutValues(section);if(!v)return '';
+    const slider=(id,label,value,max=240)=>'<div class="ve-slider-field"><label>'+label+' <span id="'+id+'Value">'+Math.round(value)+'px</span></label><input id="'+id+'" type="range" min="0" max="'+max+'" step="2" value="'+Math.round(value)+'"></div>';
+    return '<div class="ve-section-spacing" data-section-selector="'+attr(v.selector)+'"><b>Selected section spacing</b><div class="ve-note">'+esc(v.label)+' · adjust this section only.</div>'+
+      slider('iSectionPadTop','Inside top',v.top)+slider('iSectionPadBottom','Inside bottom',v.bottom)+
+      slider('iSectionMarginTop','Space before',v.before)+slider('iSectionMarginBottom','Space after',v.after)+
+      slider('iSectionGap','Content gap',v.gap,140)+'</div>';
+  }
+  function bindSectionSpacing(section){
+    if(!section)return;
+    const selector=sectionSelector(section);if(!selector)return;
+    const ids=['iSectionPadTop','iSectionPadBottom','iSectionMarginTop','iSectionMarginBottom','iSectionGap'];
+    const readLayout=()=>({
+      paddingTop:Number(document.getElementById('iSectionPadTop')?.value||0),
+      paddingBottom:Number(document.getElementById('iSectionPadBottom')?.value||0),
+      marginTop:Number(document.getElementById('iSectionMarginTop')?.value||0),
+      marginBottom:Number(document.getElementById('iSectionMarginBottom')?.value||0),
+      gap:Number(document.getElementById('iSectionGap')?.value||0)
+    });
+    for(const id of ids){
+      const input=document.getElementById(id);if(!input)continue;
+      input.addEventListener('input',()=>{
+        const value=document.getElementById(id+'Value');if(value)value.textContent=input.value+'px';
+        applySectionSpacingPreview(section,readLayout());
+      });
+      input.addEventListener('change',()=>saveSectionSpacing(section,selector));
+    }
+  }
+
   function fieldStyle(el,p){
     const s=el.ownerDocument.defaultView.getComputedStyle(el);return {
       color:p.styles?.color??s.color,bg:p.styles?.['background-color']??s.backgroundColor,
@@ -641,8 +752,9 @@
   function renderInspector(el,selector,mediaToken=''){
     selected={selector,tag:el.tagName.toLowerCase(),mediaToken,element:el};
     document.getElementById('selectorBox').textContent=selector;
-    const p=findPatch(selector)||{selector,styles:{}},style=fieldStyle(el,p),canText=textEditable(el),isLink=el.matches('a'),countdownBinding=countdownTextBinding(el),mediaFit=mediaFitValues(el);
+    const p=findPatch(selector)||{selector,styles:{}},style=fieldStyle(el,p),canText=textEditable(el),isLink=el.matches('a'),countdownBinding=countdownTextBinding(el),mediaFit=mediaFitValues(el),section=sectionForElement(el);
     const inspectorText=countdownBinding?(readStatePath(countdownBinding.path)??el.textContent.trim()):(p.text??el.textContent.trim());
+    const sectionSpacingControls=sectionSpacingMarkup(section);
     const mediaFitControls=mediaFit?'<div class="ve-media-layout"><b>Media & card layout</b><div class="ve-note">These controls resize the card/frame as well as the image/video inside it.</div>'+
       '<div class="field"><label>Media fit</label><select id="iMediaFit"><option value="cover" '+(mediaFit.fit==='cover'?'selected':'')+'>Cover</option><option value="contain" '+(mediaFit.fit==='contain'?'selected':'')+'>Contain</option><option value="fill" '+(mediaFit.fit==='fill'?'selected':'')+'>Fill</option><option value="none" '+(mediaFit.fit==='none'?'selected':'')+'>None</option><option value="scale-down" '+(mediaFit.fit==='scale-down'?'selected':'')+'>Scale down</option></select></div>'+
       '<div class="ve-slider-field"><label>Card width <span id="iFrameWidthValue">'+Math.round(mediaFit.frameWidth)+'%</span></label><input id="iFrameWidth" type="range" min="25" max="140" step="1" value="'+Math.round(mediaFit.frameWidth)+'"></div>'+
@@ -656,6 +768,7 @@
       '<div class="row"><div class="field"><label>Font size</label><input id="iSize" value="'+attr(style.size)+'"></div><div class="field"><label>Opacity</label><input id="iOpacity" value="'+attr(style.opacity)+'"></div></div>'+
       '<div class="row"><div class="field"><label>Border radius</label><input id="iRadius" value="'+attr(style.radius)+'"></div><div class="field"><label>Transform</label><input id="iTransform" value="'+attr(style.transform)+'"></div></div>'+
       mediaFitControls+
+      sectionSpacingControls+
       '<div style="display:flex;gap:8px"><button class="btn primary" id="applyPatch" type="button">Apply</button><button class="btn danger" id="removePatch" type="button">Remove override</button></div>';
     document.getElementById('applyPatch').onclick=()=>applyInspector().catch(()=>{});
     document.getElementById('removePatch').onclick=()=>removeOverride().catch(()=>{});
@@ -667,6 +780,7 @@
       input?.addEventListener('change',saveMediaFit);
     }
     if(mediaFit)setTimeout(applyMediaFitPreview,0);
+    bindSectionSpacing(section);
     document.getElementById('iHidden')?.addEventListener('change',async e=>{
       pushHistory();const patch=patchFor(selector);patch.hidden=e.target.checked;dirty();
       if(e.target.checked){
@@ -885,8 +999,8 @@
     if(document.getElementById('vePageSpacing'))return;
     const selectedBox=document.getElementById('selectorBox');if(!selectedBox)return;
     const panel=document.createElement('div');panel.id='vePageSpacing';panel.className='ve-page-spacing';
-    panel.innerHTML='<div class="ve-page-spacing-head"><h4>Page spacing</h4><label class="switch"><input id="veSpacingEnabled" type="checkbox"><i></i></label></div>'+
-      '<div class="ve-note">Adjusts only the page currently open in the preview.</div>'+
+    panel.innerHTML='<div class="ve-page-spacing-head"><h4>Page spacing defaults</h4><label class="switch"><input id="veSpacingEnabled" type="checkbox"><i></i></label></div>'+
+      '<div class="ve-note">Sets defaults for the current page. Select any section to fine-tune that section separately.</div>'+
       '<div class="ve-spacing-grid">'+
       '<div class="ve-slider-field"><label>Side padding <span id="veSpacingSideValue">20px</span></label><input id="veSpacingSide" type="range" min="0" max="100" step="2" value="20"></div>'+
       '<div class="ve-slider-field"><label>Section spacing <span id="veSpacingSectionValue">80px</span></label><input id="veSpacingSection" type="range" min="0" max="220" step="5" value="80"></div>'+
